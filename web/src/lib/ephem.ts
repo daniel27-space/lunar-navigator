@@ -36,6 +36,16 @@ export async function loadEphem(base: string): Promise<Ephem> {
 export const ephemStartMs = (e: Ephem) => e.t0Ms
 export const ephemEndMs = (e: Ephem) => e.t0Ms + (e.count - 1) * e.stepS * 1000
 
+/**
+ * Dates the app's clock may take. Every site card looks up to 60 days ahead of the clock and
+ * 2 days behind it, so the clock stops that far short of each end of the ephemeris; nothing is
+ * ever computed from positions the table does not hold.
+ */
+export function clockRange(e: Ephem): [number, number] {
+  const DAY = 86400000
+  return [ephemStartMs(e) + 3 * DAY, ephemEndMs(e) - 61 * DAY]
+}
+
 export interface BodyVectors {
   /** km, Moon centre to Sun centre, body-fixed */
   sun: Vec3

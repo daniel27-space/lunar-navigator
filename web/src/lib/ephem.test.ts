@@ -1,7 +1,7 @@
 // Checks the browser's Sun/Earth angles against JPL Horizons values (an independent source).
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { skyAt, type Ephem } from './ephem'
+import { clockRange, ephemEndMs, ephemStartMs, skyAt, type Ephem } from './ephem'
 import { eclipseFactor } from './windows'
 
 const dir = new URL('../../public/data/ephem/', import.meta.url)
@@ -67,5 +67,30 @@ describe('eclipse of the Sun by Earth', () => {
     const f = eclipseFactor(partial)
     expect(f).toBeGreaterThan(0)
     expect(f).toBeLessThan(1)
+  })
+})
+
+describe('supported dates', () => {
+  it('the clock range leaves room for the 60-day analysis window inside the ephemeris', () => {
+    const [lo, hi] = clockRange(ephem)
+    const DAY = 86400000
+    expect(lo - 2 * DAY).toBeGreaterThanOrEqual(ephemStartMs(ephem))
+    expect(hi + 60 * DAY).toBeLessThanOrEqual(ephemEndMs(ephem))
+    expect(new Date(lo).toISOString().slice(0, 10)).toBe('2024-01-04')
+    expect(new Date(hi).toISOString().slice(0, 10)).toBe('2035-11-01')
+  })
+
+  it('inside the range the Sun keeps moving: a mid-latitude site has day and night', () => {
+    // The bug this guards against: past the end of the table the last position was reused,
+    // so the Sun stood still and a site showed 100 % sunlight for ever.
+    const [, hi] = clockRange(ephem)
+    let up = 0
+    let n = 0
+    for (let t = hi; t < hi + 60 * 86400000; t += 6 * 3600000) {
+      if (skyAt(ephem, t, -45.456, 177.589, 0).sun.el > 0) up++
+      n++
+    }
+    expect(up / n).toBeGreaterThan(0.35)
+    expect(up / n).toBeLessThan(0.65)
   })
 })

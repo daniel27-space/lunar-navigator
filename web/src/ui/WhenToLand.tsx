@@ -30,7 +30,8 @@ function yearSeries(a: SiteAnalysis, startMs: number): Series {
   const key = `${startMs}:${a.hM}`
   let s = perSite.get(key)
   if (!s) {
-    const end = Math.min(startMs + YEAR_DAYS * DAY, ephemEndMs(a.ephem))
+    // Never past the ephemeris, and never an empty period (the clock is kept 61 days short of the end).
+    const end = Math.max(Math.min(startMs + YEAR_DAYS * DAY, ephemEndMs(a.ephem)), startMs + 2 * HOUR)
     s = computeSeries(a.ephem, a.horizon, a.hM, startMs, end - HOUR, HOUR)
     perSite.clear()
     perSite.set(key, s)

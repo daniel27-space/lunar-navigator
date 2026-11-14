@@ -43,7 +43,8 @@ export function computeSeries(
   t1Ms: number,
   stepMs: number,
 ): Series {
-  const count = Math.floor((t1Ms - t0Ms) / stepMs) + 1
+  // An end before the start gives an empty series rather than an error.
+  const count = Math.max(Math.floor((t1Ms - t0Ms) / stepMs) + 1, 0)
   const s: Series = {
     t0Ms,
     stepMs,

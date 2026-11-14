@@ -49,8 +49,10 @@ export interface GlobeRelief {
 }
 
 /** Loads the whole-Moon elevation once. Null until it arrives; the globe is smooth until then. */
-export function useGlobeRelief(dataBase: string): GlobeRelief | null {
+export function useGlobeRelief(dataBase: string): { relief: GlobeRelief | null; settled: boolean } {
   const [relief, setRelief] = useState<GlobeRelief | null>(null)
+  // true once the map has arrived or failed: results wait for it, but not for ever
+  const [settled, setSettled] = useState(false)
   useEffect(() => {
     let cancelled = false
     let tex: THREE.DataTexture | null = null
@@ -68,14 +70,19 @@ export function useGlobeRelief(dataBase: string): GlobeRelief | null {
         tex.wrapT = THREE.ClampToEdgeWrapping
         tex.needsUpdate = true
         setRelief({ dem, tex })
+        setSettled(true)
       })
-      .catch(() => setRelief(null))
+      .catch(() => {
+        if (cancelled) return
+        setRelief(null)
+        setSettled(true)
+      })
     return () => {
       cancelled = true
       tex?.dispose()
     }
   }, [dataBase])
-  return relief
+  return { relief, settled }
 }
 
 export const shadingUniforms = () => ({

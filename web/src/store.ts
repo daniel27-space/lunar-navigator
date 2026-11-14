@@ -86,6 +86,9 @@ interface State {
   activePin: number | null
   view: ViewGoal
   goTo: (v: { kind: 'pole' } | { kind: 'globe'; lat?: number; lon?: number } | { kind: 'site'; lat: number; lon: number; hM: number }) => void
+  /** dates the clock may take: the ephemeris, less room for the 60-day analysis window; null until loaded */
+  timeRange: [number, number] | null
+  setTimeRange: (r: [number, number]) => void
   setTime: (t: number) => void
   setPlaying: (p: boolean) => void
   setRate: (r: number) => void
@@ -134,7 +137,11 @@ export const useStore = create<State>((set) => ({
   activePin: null,
   view: { kind: 'pole', seq: 0 },
   goTo: (v) => set((s) => ({ view: { ...v, seq: s.view.seq + 1 } as ViewGoal })),
-  setTime: (tMs) => set({ tMs }),
+  timeRange: null,
+  setTimeRange: (timeRange) => set((s) => ({ timeRange, tMs: Math.min(Math.max(s.tMs, timeRange[0]), timeRange[1]) })),
+  // A date outside the supported range is pulled back to its nearest end, never used as is:
+  // beyond the ephemeris there are no Sun and Earth positions to compute from.
+  setTime: (t) => set((s) => ({ tMs: s.timeRange ? Math.min(Math.max(t, s.timeRange[0]), s.timeRange[1]) : t })),
   setPlaying: (playing) => set({ playing }),
   setRate: (rate) => set({ rate }),
   setLayer: (layer) => set({ layer }),

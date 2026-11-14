@@ -1,12 +1,13 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, invalidate } from '@react-three/fiber'
 import * as THREE from 'three'
-import { fmtDateTime } from './lib/format'
-import { bodyVectors, ephemEndMs, ephemStartMs, loadEphem, type Ephem } from './lib/ephem'
+import { fmtDay, fmtDateTime } from './lib/format'
+import { bodyVectors, clockRange, loadEphem, type Ephem } from './lib/ephem'
 import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
-import { sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
+import { latLonOf, sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
 import type { GlobalDem } from './lib/globalDem'
 import {
+  frameDirection,
   heightAt,
   loadPatch,
   loadPatchIndex,
@@ -26,6 +27,7 @@ import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality }
 import { AddByCoords } from './ui/AddByCoords'
 import { Compare } from './ui/Compare'
 import { INK, ON_ACCENT, Segmented, SITE_LETTERS } from './ui/controls'
+import { ErrorBoundary } from './ui/ErrorBoundary'
 import { FinderPanel } from './ui/FinderPanel'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
 import { SiteCard } from './ui/SiteCard'
@@ -62,7 +64,7 @@ function useClock(ephem: Ephem | null) {
       const { tMs, rate, setTime, setPlaying } = useStore.getState()
       const next = tMs + (now - last) * rate
       last = now
-      if (next >= ephemEndMs(ephem)) setPlaying(false)
+      if (next >= clockRange(ephem)[1]) setPlaying(false)
       else setTime(next)
       raf = requestAnimationFrame(tick)
     }
@@ -133,8 +135,11 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
   const { tMs, playing, rate, setTime, setPlaying, setRate } = useStore()
   // The slider scrubs a 60-day window centred where the user last jumped to.
   const [centre, setCentre] = useState(tMs)
-  const lo = Math.max(centre - WINDOW_MS, ephemStartMs(ephem))
-  const hi = Math.min(centre + WINDOW_MS, ephemEndMs(ephem))
+  const [first, last] = clockRange(ephem)
+  // Set when a typed date was outside the supported range and had to be pulled back.
+  const [outOfRange, setOutOfRange] = useState(false)
+  const lo = Math.max(centre - WINDOW_MS, first)
+  const hi = Math.min(centre + WINDOW_MS, last)
   useEffect(() => {
     if (tMs < lo || tMs > hi) setCentre(tMs)
   }, [tMs, lo, hi])
@@ -174,13 +179,15 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
           className="date"
           type="datetime-local"
           value={toInput(tMs)}
-          min={toInput(ephemStartMs(ephem))}
-          max={toInput(ephemEndMs(ephem))}
+          min={toInput(first)}
+          max={toInput(last)}
           onChange={(e) => {
             const t = Date.parse(`${e.target.value}Z`)
             if (!Number.isNaN(t)) {
-              setTime(t)
-              setCentre(t)
+              const inRange = Math.min(Math.max(t, first), last)
+              setOutOfRange(inRange !== t)
+              setTime(inRange)
+              setCentre(inRange)
             }
           }}
           onBlur={() => setEditing(false)}
@@ -191,6 +198,11 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
         <button className="btn date" onClick={() => setEditing(true)} aria-label={`Date and time: ${fmtDateTime(tMs)}. Change`}>
           {fmtDateTime(tMs)}
         </button>
+      )}
+      {outOfRange && (
+        <p className="caption range-note" role="status">
+          Sun and Earth positions are available from {fmtDay(first)} to {fmtDay(last)}; the date was set to the nearest end.
+        </p>
       )}
     </div>
   )
@@ -215,6 +227,28 @@ function PinMarkers({ elevation }: { elevation: (lat: number, lon: number) => nu
       ))}
     </>
   )
+}
+
+/** Latitude and longitude of the highest cell within `radiusM` of a patch's centre. */
+function highestNear(t: Terrain, radiusM: number): { lat: number; lon: number } {
+  const l = t.levels[0]
+  let best = -Infinity
+  let bx = 0
+  let by = 0
+  for (let r = 0; r < l.size; r++) {
+    const y = l.yMax - (r + 0.5) * l.pixel
+    if (Math.abs(y) > radiusM) continue
+    for (let c = 0; c < l.size; c++) {
+      const x = l.xMin + (c + 0.5) * l.pixel
+      const h = l.h[r * l.size + c]
+      if (x * x + y * y <= radiusM * radiusM && h > best) {
+        best = h
+        bx = x
+        by = y
+      }
+    }
+  }
+  return latLonOf(frameDirection(t.frame, bx, by, t.radiusM))
 }
 
 /** Numbered markers for the site finder's shortlist. */
@@ -256,12 +290,14 @@ interface SitesPanelProps {
   ephem: Ephem
   terrain: Terrain
   patchOf: (lat: number, lon: number) => Terrain | null
+  /** true while the terrain a point's figures depend on is still downloading */
+  pending: (lat: number, lon: number) => boolean
   global: GlobalDem | null
   onAddCoords: (lat: number, lon: number) => void
 }
 
 /** Right-hand panel: one card per pinned site, or the comparison once there are two or more. */
-function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global, onAddCoords }: SitesPanelProps) {
+function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global, onAddCoords }: SitesPanelProps) {
   const [mode, setMode] = useState<'compare' | 'cards'>('compare')
   const setTab = useStore((s) => s.setTab)
   // Sites are listed in badge order (A, B, C), whatever order they were pinned in.
@@ -270,11 +306,15 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global, onAddCoo
     return [sorted[0] ?? null, sorted[1] ?? null, sorted[2] ?? null]
   }, [pins])
   // Always three calls (hooks cannot be called in a loop of changing length).
-  const a0 = useSiteAnalysis(p[0], ephem, terrain, p[0] ? patchOf(p[0].lat, p[0].lon) : null, global)
-  const a1 = useSiteAnalysis(p[1], ephem, terrain, p[1] ? patchOf(p[1].lat, p[1].lon) : null, global)
-  const a2 = useSiteAnalysis(p[2], ephem, terrain, p[2] ? patchOf(p[2].lat, p[2].lon) : null, global)
+  // A point whose terrain is still downloading is not analysed yet (it shows as loading).
+  const ready = p.map((x) => (x && !pending(x.lat, x.lon) ? x : null))
+  const waiting = p.filter((x, i): x is Pin => x !== null && ready[i] === null)
+  const a0 = useSiteAnalysis(ready[0], ephem, terrain, ready[0] ? patchOf(ready[0].lat, ready[0].lon) : null, global)
+  const a1 = useSiteAnalysis(ready[1], ephem, terrain, ready[1] ? patchOf(ready[1].lat, ready[1].lon) : null, global)
+  const a2 = useSiteAnalysis(ready[2], ephem, terrain, ready[2] ? patchOf(ready[2].lat, ready[2].lon) : null, global)
   const sites = [a0, a1, a2].filter((a): a is SiteAnalysis => a !== null)
-  const comparing = sites.length >= 2 && mode === 'compare'
+  // The comparison waits until every pinned site has its figures, so a verdict never changes under the user.
+  const comparing = sites.length >= 2 && waiting.length === 0 && mode === 'compare'
   // A newly pinned point brings this panel forward where only one panel fits (phone, tablet).
   const newest = pins.at(-1)?.id ?? null
   useEffect(() => {
@@ -282,7 +322,12 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global, onAddCoo
   }, [newest, setTab])
   return (
     <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
-      {sites.length === 0 && (
+      {waiting.map((x) => (
+        <p key={x.id} className="empty loading" role="status">
+          Loading detailed terrain for {x.label}…
+        </p>
+      ))}
+      {sites.length === 0 && waiting.length === 0 && (
         <div className="empty">
           <p>Click or tap the surface, or a mission marker, to pin a point. Pin two or three to compare them.</p>
           <div className="group">
@@ -346,7 +391,11 @@ export default function App() {
   const { ephem, terrain, error, missions, patchIndex } = useData()
   useClock(ephem)
   const globeMap = useGlobeMap(BASE)
-  const globeRelief = useGlobeRelief(BASE)
+  const { relief: globeRelief, settled: reliefSettled } = useGlobeRelief(BASE)
+  const setTimeRange = useStore((s) => s.setTimeRange)
+  useEffect(() => {
+    if (ephem) setTimeRange(clockRange(ephem))
+  }, [ephem, setTimeRange])
   const tMs = useStore((s) => s.tMs)
   const layer = useStore((s) => s.layer)
   const setLayer = useStore((s) => s.setLayer)
@@ -411,7 +460,8 @@ export default function App() {
   }, [ephem, tMs])
 
   // 80 m patches around mission sites, fetched when a pinned point needs one.
-  const [patches, setPatches] = useState<Record<string, Terrain>>({})
+  // null marks a patch that failed to load: the point then keeps the coarser data.
+  const [patches, setPatches] = useState<Record<string, Terrain | null>>({})
   const patchIdFor = useCallback(
     (lat: number, lon: number) => {
       if (!patchIndex || !terrain) return null
@@ -430,7 +480,7 @@ export default function App() {
       if (!entry) continue
       loadPatch(BASE, patchIndex, entry).then(
         (t) => setPatches((m) => (entry.id in m ? m : { ...m, [entry.id]: t })),
-        () => {}, // the point keeps the coarser data
+        () => setPatches((m) => (entry.id in m ? m : { ...m, [entry.id]: null })),
       )
     }
   }, [pins, patchIndex, patchIdFor, patches])
@@ -441,6 +491,16 @@ export default function App() {
     },
     [patchIdFor, patches],
   )
+  // A point's figures are held back until the terrain they depend on has arrived (its detailed
+  // patch and the whole-Moon map), so numbers never appear from coarse data and then change.
+  const terrainPending = useCallback(
+    (lat: number, lon: number) => {
+      if (!reliefSettled) return true
+      const id = patchIdFor(lat, lon)
+      return id !== null && !(id in patches)
+    },
+    [reliefSettled, patchIdFor, patches],
+  )
   // Patches on screen: those under the pinned points.
   const shownPatches = useMemo(() => {
     const ids = new Set<string>()
@@ -448,7 +508,7 @@ export default function App() {
       const id = patchIdFor(p.lat, p.lon)
       if (id && patches[id] && patches[id].render !== false) ids.add(id)
     }
-    return [...ids].map((id) => patches[id])
+    return [...ids].map((id) => patches[id] as Terrain)
   }, [pins, patchIdFor, patches])
   const patchCuts: Cut[] = useMemo(
     () => shownPatches.map((t) => ({ frame: t.frame, halfKm: t.levels[0].xMax / 1000 })),
@@ -601,9 +661,24 @@ export default function App() {
                 const m = missions.find((x) => x.id === e.target.value)
                 if (m) selectMission(m)
                 const place = patchIndex?.patches.find((x) => `place:${x.id}` === e.target.value)
-                if (place) {
-                  pick(place.lat, place.lon, place.name ?? place.id)
-                  goTo({ kind: 'site', lat: place.lat, lon: place.lon, hM: elevation(place.lat, place.lon) })
+                if (place && patchIndex) {
+                  // A named crest is pinned at the highest ground within 300 m of its listed
+                  // coordinates: the listed point itself can sit in a small pit beside the crest.
+                  const pin = (t: Terrain | null) => {
+                    const at = t ? highestNear(t, 300) : { lat: place.lat, lon: place.lon }
+                    pick(at.lat, at.lon, place.name ?? place.id)
+                    goTo({ kind: 'site', lat: at.lat, lon: at.lon, hM: elevation(at.lat, at.lon) })
+                  }
+                  const have = patches[place.id]
+                  if (have !== undefined) pin(have)
+                  else
+                    loadPatch(BASE, patchIndex, place).then(
+                      (t) => {
+                        setPatches((m) => (place.id in m ? m : { ...m, [place.id]: t }))
+                        pin(t)
+                      },
+                      () => pin(null),
+                    )
                 }
                 setMenu(null)
               }}
@@ -668,7 +743,9 @@ export default function App() {
           <SheetHead finderOn={finderOn} />
           <div className="dock dock-left" onClick={expandOnTap}>
             {finderOn ? (
-              <FinderPanel result={finderResult} onPick={pickCandidate} onCompareTop={(cs) => cs.forEach((k) => pickCandidate(k, false))} />
+              <ErrorBoundary what="The site finder">
+                <FinderPanel result={finderResult} onPick={pickCandidate} onCompareTop={(cs) => cs.forEach((k) => pickCandidate(k, false))} />
+              </ErrorBoundary>
             ) : (
               <div className="legend panel-surface">
                 {current.ramp && (
@@ -684,7 +761,9 @@ export default function App() {
           </div>
           <div className="dock dock-right" onClick={expandOnTap}>
             {ephem && terrain ? (
-              <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} />
+              <ErrorBoundary what="The sites panel">
+                <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} pending={terrainPending} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} />
+              </ErrorBoundary>
             ) : null}
           </div>
         </div>
