@@ -10,6 +10,7 @@ import {
   fmtMissionDate,
   fmtMonth,
   fmtPeriod,
+  fmtSpan,
   parseCoord,
   splitCoordPair,
   fmtDegrees,
@@ -106,6 +107,12 @@ describe('format', () => {
   it('periods are named by their real dates', () => {
     expect(fmtPeriod(Date.UTC(2027, 2, 3), 60)).toBe('3 Mar \u2013 2 May 2027 (60 days)')
     expect(fmtPeriod(Date.UTC(2026, 10, 12), 60)).toBe('12 Nov 2026 \u2013 11 Jan 2027 (60 days)')
+  })
+
+  it('a basis tag names a period by both full dates', () => {
+    expect(fmtSpan(Date.UTC(2026, 10, 12), 60)).toBe('12 Nov 2026 \u2013 11 Jan 2027')
+    expect(fmtSpan(Date.UTC(2027, 2, 3), 60)).toBe('3 Mar 2027 \u2013 2 May 2027')
+    expect(fmtSpan(NaN, 60)).toBe('\u2013')
   })
 
   it('parses typed coordinates: signs, hemisphere letters, 0..360 longitude', () => {

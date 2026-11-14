@@ -22,6 +22,15 @@ Pick any point near the Moon's south pole and any date from 2024 to 2036, and se
   ranked for a 7, 14 or 30-day stay, and the selected date compared with them. Keep one date
   as a baseline and the app states what a slip to another date gains and loses;
 - pin a point by typing its latitude and longitude, as well as by clicking the map;
+- **assumptions you can change**: what counts as sunlit (any part, half or all of the Sun's
+  disc), how high Earth must be for a radio link, and the height of the panel and antenna.
+  Every card, comparison and landing-date ranking follows them, and a marker shows when they
+  are not the defaults;
+- **export and share**: one CSV with the sites, the period, the assumptions, the data used and
+  every sunrise, sunset, earthrise and earthset in UTC; and a link that reopens the same sites,
+  date and settings;
+- two ways in for a first visit: "Explore" (a sunlit ridge against a permanently shadowed
+  crater floor) and "Plan a landing" (straight to the site finder);
 - **a comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
   one shared timeline, and one row per measure with the winner marked;
 - 41 past, failed and planned landing sites across the whole Moon, each with detailed terrain

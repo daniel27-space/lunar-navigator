@@ -97,7 +97,10 @@ export function slipSentence(baseline: WindowStats | null, selected: WindowStats
   duration('longest Earth gap', baseline.longestNoCommH, selected.longestNoCommH, !wants.earthHigh)
   const sameYear = new Date(baseline.startMs).getUTCFullYear() === new Date(selected.startMs).getUTCFullYear()
   const date = sameYear ? fmtTick : fmtDay
-  const head = `${selected.startMs > baseline.startMs ? 'Slipping' : 'Moving earlier,'} from ${date(baseline.startMs)} to ${date(selected.startMs)}`
+  // A slip of a whole number of days says how long it is: "Slipping 21 days, from 14 Nov to 5 Dec, ...".
+  const days = (selected.startMs - baseline.startMs) / 86400000
+  const length = days > 0 && Number.isInteger(days) ? ` ${days} ${days === 1 ? 'day' : 'days'},` : ''
+  const head = `${selected.startMs > baseline.startMs ? `Slipping${length}` : 'Moving earlier,'} from ${date(baseline.startMs)} to ${date(selected.startMs)}${length ? ',' : ''}`
   const good = [...keeps, ...gains]
   if (losses.length === 0) return `${head} ${list(good)}.`
   if (good.length === 0) return `${head} ${list(losses)}.`

@@ -3,7 +3,7 @@
 // for the selected time.
 import { useMemo } from 'react'
 import { fmtDateTime, fmtMonth, fmtTick } from '../lib/format'
-import { DEFAULT_CRITERIA, hasComm, isSunlit, type Series } from '../lib/windows'
+import { hasComm, isSunlit, type Series } from '../lib/windows'
 import { useStore } from '../store'
 import { Badge } from './controls'
 import { DAY, runs, WINDOW_DAYS, type SiteAnalysis } from './useSiteAnalysis'
@@ -75,12 +75,13 @@ export interface StayMark {
 export function YearStrip({ series, marks, baselineMs }: { series: Series; marks: StayMark[]; baselineMs?: number }) {
   const n = series.count
   const span = n * series.stepMs
+  const criteria = useStore((s) => s.criteria)
   const lanes = useMemo(
     () => ({
-      sun: runs(n, (i) => isSunlit(series, i, DEFAULT_CRITERIA)),
-      comm: runs(n, (i) => hasComm(series, i, DEFAULT_CRITERIA)),
+      sun: runs(n, (i) => isSunlit(series, i, criteria)),
+      comm: runs(n, (i) => hasComm(series, i, criteria)),
     }),
-    [series, n],
+    [series, n, criteria],
   )
   const months = useMemo(() => {
     const out: number[] = []
@@ -137,19 +138,20 @@ export function SiteTimeline({ sites, compare = false }: { sites: SiteAnalysis[]
   const s0 = sites[0].series
   const n = s0.count
   const span = n * s0.stepMs
+  const criteria = useStore((s) => s.criteria)
   const lanes = useMemo(
     () =>
       sites.map((a) => ({
-        sun: runs(a.series.count, (i) => isSunlit(a.series, i, DEFAULT_CRITERIA)),
-        comm: runs(a.series.count, (i) => hasComm(a.series, i, DEFAULT_CRITERIA)),
-        night: longest(runs(a.series.count, (i) => !isSunlit(a.series, i, DEFAULT_CRITERIA))),
+        sun: runs(a.series.count, (i) => isSunlit(a.series, i, criteria)),
+        comm: runs(a.series.count, (i) => hasComm(a.series, i, criteria)),
+        night: longest(runs(a.series.count, (i) => !isSunlit(a.series, i, criteria))),
       })),
-    [sites],
+    [sites, criteria],
   )
   // When every site is in sunlight at once.
   const allLit = useMemo(
-    () => (compare ? runs(n, (i) => sites.every((a) => isSunlit(a.series, i, DEFAULT_CRITERIA))) : []),
-    [compare, sites, n],
+    () => (compare ? runs(n, (i) => sites.every((a) => isSunlit(a.series, i, criteria))) : []),
+    [compare, sites, n, criteria],
   )
   const { f, hit } = useClockSeek(s0.t0Ms, span, compare ? 'Selected time, shared by every site' : 'Selected time within these 60 days')
 

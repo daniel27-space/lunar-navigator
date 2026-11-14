@@ -139,6 +139,12 @@ export function fmtPeriod(startMs: number, days: number): string {
   return `${sameYear ? fmtTick(startMs) : fmtDay(startMs)} \u2013 ${fmtDay(end)} (${days} days)`
 }
 
+/** A period without its length, for a basis tag: "12 Nov 2026 \u2013 11 Jan 2027" (UTC). */
+export function fmtSpan(startMs: number, days: number): string {
+  if (!known(startMs) || !known(days)) return MISSING
+  return `${fmtDay(startMs)} \u2013 ${fmtDay(startMs + days * 86400000)}`
+}
+
 /** Month tick on a year strip: "Mar" (UTC). */
 export function fmtMonth(ms: number): string {
   return known(ms) ? MONTHS[new Date(ms).getUTCMonth()] : MISSING

@@ -97,6 +97,7 @@
   --showcase-img: 220px;
   --phone-timebar: 112px; /* time bar plus its margins on a phone */ /* the comparison's sticky identity row, for scroll offsets */ /* value column of the landing-date grid (four columns in a card) */
   --tabs-h: 40px;
+  --sites-head-h: 32px; /* the sites panel's head row (Assumptions) */
   --w-finder: 320px;
   --w-sites: 360px;
   --w-compare: 400px;
@@ -184,6 +185,15 @@
   font-weight: var(--fw-semibold);
   color: var(--text-2);
 }
+/* What a group of figures is for (period, terrain, step), at the head of the group. */
+.basis {
+  font-size: var(--fs-cap);
+  line-height: var(--lh-cap);
+  color: var(--text-3);
+}
+.basis.live {
+  color: var(--text-1);
+}
 .num {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -213,8 +223,7 @@
   box-shadow: var(--focus-ring);
 }
 .btn,
-.app select,
-.app input.date {
+.app select {
   height: var(--ctl-h);
   padding: 0 var(--sp-3);
   border: var(--hairline) solid var(--border);
@@ -271,6 +280,11 @@
 .app .link {
   color: var(--text-1);
   text-decoration: underline;
+  text-underline-offset: var(--sp-0);
+  border-radius: var(--r-sm);
+}
+.app a {
+  color: var(--text-1);
   text-underline-offset: var(--sp-0);
   border-radius: var(--r-sm);
 }
@@ -728,6 +742,91 @@ h2.panel-head {
   font-variant-numeric: tabular-nums;
 }
 
+/* Date and time editor: a popover above the time bar's date button (a bottom panel on a phone). */
+.date-editor {
+  position: absolute;
+  right: var(--sp-4);
+  bottom: calc(var(--sp-4) + var(--timebar-h) + var(--sp-2));
+  z-index: 30;
+  width: var(--w-compare);
+  max-width: calc(100% - 2 * var(--sp-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  background: var(--surface-1-solid);
+  pointer-events: auto;
+}
+.date-editor header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-right: calc(-1 * var(--sp-2));
+}
+.date-editor h2 {
+  display: grid;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-semibold);
+}
+.date-editor h2 .caption {
+  font-weight: var(--fw-regular);
+}
+.de-fields {
+  display: grid;
+  grid-template-columns: 3fr 2fr 2fr 2fr 2fr auto;
+  align-items: end;
+  gap: var(--sp-2);
+}
+.de-fields label {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
+.app .de-fields input {
+  width: 100%;
+  min-width: 0;
+  height: var(--ctl-h);
+  padding: 0 var(--sp-1);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--fs-input);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--text-1);
+}
+.app .de-fields input[aria-invalid='true'] {
+  border-color: var(--data-danger);
+}
+.de-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+.app .de-steps .btn {
+  padding: 0 var(--sp-1);
+  font-variant-numeric: tabular-nums;
+}
+.de-foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.de-note {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  color: var(--text-1);
+}
+.de-note .dot {
+  flex: none;
+}
+
 /* Tooltip, loading and error */
 .tip {
   position: fixed;
@@ -901,6 +1000,71 @@ h2.panel-head {
 }
 
 /* ---------- pinned sites: tabs, cards ---------- */
+/* Sites panel head: the Assumptions button, and a marker whenever a setting is not the default. */
+.sites-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3);
+  min-height: var(--sites-head-h);
+  padding: 0 var(--sp-4);
+  z-index: 4;
+}
+.assume-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-right: auto;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-1);
+}
+.sites .tabs.panel-head {
+  top: var(--sites-head-h);
+}
+.assume {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border-bottom: var(--hairline) solid var(--border);
+}
+.assume .seg {
+  display: flex;
+}
+.assume .seg button {
+  flex: 1;
+}
+.assume-foot {
+  display: grid;
+  gap: var(--sp-2);
+  justify-items: start;
+}
+.export-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.app .share-url {
+  flex: 1;
+  min-width: 0;
+  height: var(--ctl-h);
+  padding: 0 var(--sp-2);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--fs-input);
+  color: var(--text-1);
+}
+.stats-block,
+.now {
+  gap: var(--sp-0);
+}
+.stats-block {
+  display: grid;
+}
 .tabs {
   display: flex;
   gap: var(--sp-4);
@@ -946,9 +1110,8 @@ h2.panel-head {
   gap: 0 var(--sp-2);
 }
 .site header strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .site header .btn {
   margin: calc(-1 * var(--sp-1)) calc(-1 * var(--sp-1)) calc(-1 * var(--sp-1)) 0;
@@ -961,13 +1124,22 @@ h2.panel-head {
 }
 .now {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
+/* One row per state. The Sun or Earth figure sits at the right and drops to its own line when the row is full. */
 .now > div {
-  display: grid;
-  grid-template-columns: var(--dot) var(--w-state) 1fr auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--sp-2);
+  gap: 0 var(--sp-2);
   min-height: var(--row-h);
+}
+.now > div > b {
+  flex: none;
+  width: var(--w-state);
+}
+.now > div > .dot {
+  flex: none;
 }
 .now b {
   font-weight: var(--fw-medium);
@@ -977,6 +1149,7 @@ h2.panel-head {
   white-space: nowrap;
 }
 .now .aside {
+  margin-left: auto;
   font-size: var(--fs-sm);
   color: var(--text-3);
 }
@@ -1591,6 +1764,47 @@ h2.panel-head {
   font-weight: var(--fw-semibold);
   color: var(--text-1);
 }
+.intro.compact {
+  gap: var(--sp-2);
+}
+.intro.compact h2 {
+  font-size: var(--fs-md);
+  line-height: var(--lh-md);
+}
+.intro-q {
+  font-size: var(--fs-md);
+  line-height: var(--lh-md);
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+}
+.intro-try {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+.app .intro-try .btn {
+  min-width: 0;
+  padding: 0 var(--sp-1);
+}
+.app .intro-try .btn[aria-pressed='true'] {
+  border-color: var(--border-strong);
+}
+.intro-plan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: var(--hairline) solid var(--border);
+}
+.intro .disclosure[open] > summary {
+  margin-bottom: 0;
+}
+.intro-how {
+  display: grid;
+  gap: var(--sp-3);
+  padding-top: var(--sp-2);
+}
 .intro ol {
   display: grid;
   gap: var(--sp-2);
@@ -1644,11 +1858,6 @@ h2.panel-head {
   line-height: 1;
   color: var(--text-1);
 }
-.intro-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--sp-2);
-}
 .wtl-title {
   display: flex;
   align-items: center;
@@ -1679,6 +1888,24 @@ h2.panel-head {
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
+}
+.wtl-base {
+  flex-wrap: wrap;
+}
+.wtl-slip {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.app .wtl-slip .btn {
+  flex: 1;
+  padding: 0 var(--sp-2);
+}
+.app .wtl-slip .btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 .sw.base {
   width: var(--sp-2);
@@ -1725,19 +1952,8 @@ h2.panel-head {
   padding-top: var(--sp-4);
   border-top: var(--hairline) solid var(--border);
 }
-.timebar .utc {
-  font-size: var(--fs-sm);
-  color: var(--text-2);
-}
 .timebar {
   flex-wrap: wrap;
-}
-.range-note {
-  flex: 1 0 100%;
-  display: flex;
-  align-items: baseline;
-  gap: var(--sp-2);
-  padding-bottom: var(--sp-2);
 }
 .empty.loading {
   flex-direction: row;
@@ -1861,9 +2077,7 @@ h2.panel-head {
   font-size: var(--fs-lg);
   line-height: var(--lh-lg);
   font-weight: var(--fw-semibold);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .showcase-head .caption {
   grid-column: 1 / -1;
@@ -2238,11 +2452,41 @@ h2.panel-head {
   .intro {
     padding: 0 var(--sp-3) var(--sp-3);
   }
+  :root {
+    --sites-head-h: var(--touch);
+  }
+  .sites-head,
+  .assume {
+    padding-left: var(--sp-3);
+    padding-right: var(--sp-3);
+  }
+  /* Minimised, the head row gives way to the summary line unless a setting is not the default. */
+  .app[data-sheet='peek'] .sites-head[data-changed='false'],
+  .app[data-sheet='peek'] .assume {
+    display: none;
+  }
   .notice {
     padding-left: var(--sp-3);
   }
-  .range-note {
-    order: 3;
+  .date-editor {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-width: none;
+    max-height: 88dvh;
+    overflow-y: auto;
+    padding: var(--sp-3) var(--sp-3) calc(var(--sp-4) + env(safe-area-inset-bottom));
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    border-width: var(--hairline) 0 0;
+    box-shadow: var(--shadow-up);
+  }
+  .de-fields {
+    grid-template-columns: 3fr 2fr 2fr 2fr 2fr;
+  }
+  .de-fields .btn {
+    grid-column: 1 / -1;
   }
   .menu .help-btn {
     justify-content: flex-start;

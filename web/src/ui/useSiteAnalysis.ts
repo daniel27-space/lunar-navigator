@@ -7,13 +7,13 @@ import { upVector } from '../lib/geo'
 import type { GlobalDem } from '../lib/globalDem'
 import { computeHorizon, discVisibleFraction, horizonAt, type Horizon } from '../lib/horizon'
 import { slopeAt, sourceHeight, terrainTier, type HeightSource, type Terrain } from '../lib/terrain'
+import { horizonKey } from '../lib/assumptions'
 import {
+  changeAfter,
   computeSeries,
-  DEFAULT_CRITERIA,
   eclipseFactor,
   hasComm,
   isSunlit,
-  nextChange,
   summarise,
   type NextChange,
   type Series,
@@ -60,6 +60,9 @@ export function useSiteAnalysis(
 ): SiteAnalysis | null {
   const tMs = useStore((s) => s.tMs)
   const windowStart = useStore((s) => s.windowStart)
+  // The planner's assumptions: the sunlit and Earth-link rules, and the panel and antenna height.
+  const criteria = useStore((s) => s.criteria)
+  const observerM = useStore((s) => s.observerM)
   const lat = pin?.lat ?? 0
   const lon = pin?.lon ?? 0
   const has = pin !== null
@@ -74,10 +77,10 @@ export function useSiteAnalysis(
     const u = upVector(lat, lon)
     const h = sourceHeight(source, u[0], u[1], u[2])
     const patch = source.terrains.length > 1 ? source.terrains[0] : null
-    const key = `${lat},${lon},${patchKey || '-'},${global ? 1 : 0}`
+    const key = horizonKey(lat, lon, patchKey, !!global, observerM)
     let horizon = horizons.get(key)
     if (!horizon) {
-      horizon = computeHorizon(source, lat, lon)
+      horizon = computeHorizon(source, lat, lon, { observerHeightM: observerM })
       if (horizons.size > 24) horizons.clear()
       horizons.set(key, horizon)
     }
@@ -85,17 +88,19 @@ export function useSiteAnalysis(
     const polarTier = terrainTier(terrain, lat, lon)
     const tier: Tier = patch?.kind === 'crest20' ? 'crest' : patch ? 'patch' : polarTier !== 'none' ? polarTier : global ? 'global' : 'none'
     return { hM: Number.isNaN(h) ? 0 : h, horizon, slope: Number.isNaN(s) ? slopeAt(terrain, lat, lon) : s, tier }
-  }, [has, lat, lon, source, patchKey, terrain, global])
+  }, [has, lat, lon, source, patchKey, terrain, global, observerM])
 
   const series = useMemo(
     () => (fixed ? computeSeries(ephem, fixed.horizon, fixed.hM, windowStart, windowStart + WINDOW_DAYS * DAY, STEP_MS) : null),
     [ephem, fixed, windowStart],
   )
-  const summary = useMemo(() => (series ? summarise(series) : null), [series])
+  const summary = useMemo(() => (series ? summarise(series, criteria) : null), [series, criteria])
 
   if (!pin || !fixed || !series || !summary) return null
   const sky = skyAt(ephem, tMs, lat, lon, fixed.hM + fixed.horizon.observerHeightM)
   const eclipse = eclipseFactor(sky)
+  const sunFrac = discVisibleFraction(fixed.horizon, sky.sun.az, sky.sun.el, sky.sun.radius) * eclipse
+  const earthClear = sky.earth.el - horizonAt(fixed.horizon, sky.earth.az)
   return {
     pin,
     ephem,
@@ -104,10 +109,11 @@ export function useSiteAnalysis(
     summary,
     sky,
     eclipse,
-    sunFrac: discVisibleFraction(fixed.horizon, sky.sun.az, sky.sun.el, sky.sun.radius) * eclipse,
-    earthClear: sky.earth.el - horizonAt(fixed.horizon, sky.earth.az),
-    sunNext: nextChange(series, tMs, (i) => isSunlit(series, i, DEFAULT_CRITERIA)),
-    commNext: nextChange(series, tMs, (i) => hasComm(series, i, DEFAULT_CRITERIA)),
+    sunFrac,
+    earthClear,
+    // The state now is judged from the same two figures the card prints, by the same rules as the period.
+    sunNext: changeAfter(series, tMs, sunFrac >= criteria.minSunFrac, (i) => isSunlit(series, i, criteria)),
+    commNext: changeAfter(series, tMs, earthClear >= criteria.earthMaskDeg, (i) => hasComm(series, i, criteria)),
   }
 }
 

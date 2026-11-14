@@ -1,31 +1,14 @@
 // One pinned point: what the Sun and Earth are doing there now, and over the next two months.
 import { useEffect, useState } from 'react'
-import { fmtAngle, fmtCoord, fmtDegrees, fmtDuration, fmtPeriod, fmtElevation, fmtShare, fmtSlope } from '../lib/format'
+import { assumptionsText, earthRuleText, sunRuleText } from '../lib/assumptions'
+import { fmtAngle, fmtCoord, fmtDegrees, fmtDuration, fmtPeriod, fmtElevation, fmtShare, fmtSlope, fmtSpan } from '../lib/format'
 import type { Series } from '../lib/windows'
-import { useStore } from '../store'
+import { useAssumptions, useStore } from '../store'
 import { Badge } from './controls'
 import { SiteTimeline } from './Timeline'
 import { WhenToLand } from './WhenToLand'
-import { DAY, WINDOW_DAYS, type SiteAnalysis, type Tier } from './useSiteAnalysis'
-
-const TIER_NOTE: Record<Tier, string> = {
-  crest: 'Horizon from LOLA 20 m terrain within about 5 km of this point, and 80 m terrain beyond.',
-  patch: 'Horizon from 80 m terrain within about 30 km of this site, 160 m terrain out to about 60 km, and the whole-Moon map (2.7 km pixels) beyond.',
-  fine: 'Horizon from LOLA 80 m terrain.',
-  coarse: 'Horizon from LOLA terrain at about 300 m: rise and set times are less certain here.',
-  global:
-    'Horizon from the whole-Moon map only (2.7 km pixels): hills smaller than a few km are missed, so treat times as rough.',
-  none: 'No terrain data here: smooth-sphere horizon, so real hills are ignored.',
-}
-/** [short name, true when times are only approximate] */
-const TIER_SHORT: Record<Tier, [string, boolean]> = {
-  crest: ['20 m terrain', false],
-  patch: ['80 m terrain', false],
-  fine: ['80 m terrain', false],
-  coarse: ['300 m terrain, times less certain', true],
-  global: ['2.7 km terrain, times are rough', true],
-  none: ['No terrain data, hills ignored', true],
-}
+import { TIER_NOTE, TIER_SHORT, terrainTag } from './tiers'
+import { DAY, WINDOW_DAYS, type SiteAnalysis } from './useSiteAnalysis'
 
 function Panorama({
   s,
@@ -129,9 +112,14 @@ function Panorama({
 interface Props {
   a: SiteAnalysis
   active: boolean
+  /** every pinned site with figures, for an export made from this card */
+  all?: SiteAnalysis[]
 }
 
-export function SiteCard({ a, active }: Props) {
+export function SiteCard({ a, active, all }: Props) {
+  const criteria = useStore((s) => s.criteria)
+  const assumptions = useAssumptions()
+  const playing = useStore((s) => s.playing)
   const removePin = useStore((s) => s.removePin)
   const setActivePin = useStore((s) => s.setActivePin)
   const { pin, hM, slope, horizon, series, summary, sky, eclipse, sunFrac, earthClear, sunNext, commNext, tier } = a
@@ -179,11 +167,12 @@ export function SiteCard({ a, active }: Props) {
       </header>
 
       <div className="now">
+        <p className={playing ? 'basis live' : 'basis'}>{playing ? 'Now · these two rows follow the clock' : 'At the selected time'}</p>
         <div>
           <i className={sunNext.now ? 'dot sun' : 'dot night'} />
           <b>{sunNext.now ? 'In sunlight' : 'Dark'}</b>
           <span>{until(sunNext.now ? 'Sunset' : 'Sunrise', sunNext.inHours)}</span>
-          <span className="aside" title="Height of the Sun's centre above the level horizon">
+          <span className="aside" title={`Height of the Sun's centre above the level horizon. Counted as sunlit when ${sunRuleText(criteria)}.`}>
             Sun {fmtAngle(sky.sun.el)}
             {partial ? ` · ${fmtShare(sunFrac)} of disc` : ''}
           </span>
@@ -192,8 +181,9 @@ export function SiteCard({ a, active }: Props) {
           <i className={commNext.now ? 'dot earth' : 'dot night'} />
           <b>{commNext.now ? 'Earth in view' : 'No Earth link'}</b>
           <span>{until(commNext.now ? 'Earthset' : 'Earthrise', commNext.inHours)}</span>
-          <span className="aside" title="Height of Earth above the terrain in its direction">
+          <span className="aside" title={`Height of Earth's centre above the terrain in its direction. Counted as in view when ${earthRuleText(criteria)}.`}>
             Earth {fmtAngle(earthClear)}
+            {criteria.earthMaskDeg > 0 ? ` · needs ${fmtDegrees(criteria.earthMaskDeg)}` : ''}
           </span>
         </div>
         {eclipse < 1 && <p className="caption">Earth is eclipsing the Sun.</p>}
@@ -204,28 +194,34 @@ export function SiteCard({ a, active }: Props) {
         <SiteTimeline sites={[a]} />
       </div>
 
-      <dl className="stats">
-        <div>
-          <dt>
-            <i className="sw sun" /> In sunlight
-          </dt>
-          <dd>{fmtShare(summary.sunShare)}</dd>
-        </div>
-        <div>
-          <dt>Longest night</dt>
-          <dd>{fmtDuration(summary.longestDarkH)}</dd>
-        </div>
-        <div>
-          <dt>
-            <i className="sw earth" /> Earth in view
-          </dt>
-          <dd>{fmtShare(summary.commShare)}</dd>
-        </div>
-        <div>
-          <dt>Longest gap</dt>
-          <dd>{fmtDuration(summary.longestNoCommH)}</dd>
-        </div>
-      </dl>
+      <div className="stats-block">
+        <p className="basis">
+          {fmtSpan(series.t0Ms, WINDOW_DAYS)} · {terrainTag(tier)}
+          {playing ? ' · fixed period' : ''}
+        </p>
+        <dl className="stats">
+          <div>
+            <dt>
+              <i className="sw sun" /> In sunlight
+            </dt>
+            <dd>{fmtShare(summary.sunShare)}</dd>
+          </div>
+          <div>
+            <dt>Longest night</dt>
+            <dd>{fmtDuration(summary.longestDarkH)}</dd>
+          </div>
+          <div>
+            <dt>
+              <i className="sw earth" /> Earth in view
+            </dt>
+            <dd>{fmtShare(summary.commShare)}</dd>
+          </div>
+          <div>
+            <dt>Longest gap</dt>
+            <dd>{fmtDuration(summary.longestNoCommH)}</dd>
+          </div>
+        </dl>
+      </div>
 
       <button
         type="button"
@@ -240,7 +236,7 @@ export function SiteCard({ a, active }: Props) {
         When to land
         <span>{land ? 'Hide' : 'Compare landing dates'}</span>
       </button>
-      {land && <WhenToLand a={a} />}
+      {land && <WhenToLand a={a} sites={all} />}
 
       <div className="discs">
         <button
@@ -310,7 +306,11 @@ export function SiteCard({ a, active }: Props) {
           </li>
           <li>
             <b>Observer {horizon.observerHeightM} m:</b> everything is worked out for a solar panel or antenna {horizon.observerHeightM} m above
-            the ground, about the top of a small lander. Taller sees over more hills.
+            the ground{horizon.observerHeightM === 2 ? ', about the top of a small lander' : ''}. Taller sees over more hills.
+          </li>
+          <li>
+            <b>What counts:</b> sunlit means {sunRuleText(criteria)}; Earth in view means {earthRuleText(criteria)}. Change these under Assumptions,
+            at the top of this panel.
           </li>
         </ul>
       )}
@@ -321,7 +321,7 @@ export function SiteCard({ a, active }: Props) {
           {tierShort} · figures for {fmtPeriod(series.t0Ms, WINDOW_DAYS)}, UTC · <u>more</u>
         </summary>
         <p>
-          {TIER_NOTE[tier]} Observer {horizon.observerHeightM} m above the surface. These figures are worked out for this point and this period; the
+          {TIER_NOTE[tier]} {assumptionsText(assumptions)} These figures are worked out for this point and this period; the
           site finder's shortlist shows 18.6-year averages on 300 m cells, so the two can differ by several points.
         </p>
       </details>

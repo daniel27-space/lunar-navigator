@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
 import { create } from 'zustand'
+import { DEFAULT_ASSUMPTIONS, type Assumptions } from './lib/assumptions'
 import { PRESETS, type FinderCriteria } from './lib/finder'
+import type { Criteria } from './lib/windows'
 
 export type LayerMode = 'natural' | 'elevation' | 'slope' | 'sunavg' | 'earthavg' | 'psr' | 'finder'
 
@@ -26,6 +29,10 @@ export const DETAIL: Record<Quality, Detail> = {
   high: { dpr: 2, steps: 120, growth: 1.08, grid: 768, globe: [1024, 512], halfFine: false },
 }
 
+/** True on touch-first devices (phones, tablets): chooses the starting detail level and the wording of gestures. */
+export const coarsePointer = () => typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
+const narrowScreen = () => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 760px)').matches
+
 const QUALITY_KEY = 'lunar-navigator.quality'
 function initialQuality(): Quality {
   try {
@@ -36,7 +43,7 @@ function initialQuality(): Quality {
   }
   if (typeof window === 'undefined' || typeof matchMedia === 'undefined') return 'high'
   // Phones and tablets start low; small laptops in the middle.
-  if (matchMedia('(pointer: coarse)').matches || window.innerWidth < 760) return 'low'
+  if (coarsePointer() || window.innerWidth < 760) return 'low'
   const cores = navigator.hardwareConcurrency ?? 8
   const memory = (navigator as { deviceMemory?: number }).deviceMemory ?? 8
   return cores <= 4 || memory <= 4 ? 'medium' : 'high'
@@ -156,15 +163,38 @@ interface State {
   /** start the sequence for a mission: 'flight' right after a pick (the camera is on its way), 'request' from a card */
   startShowcase: (missionId: string, phase: 'flight' | 'request') => void
   setShowcase: (p: Partial<Pick<State, 'showcase' | 'showcasePhase' | 'showcaseSeq' | 'showcaseHome'>>) => void
-  /** ask to close: the ground scene leaves with a short move; before it is up, the sequence just stops */
+  /** true once the ground-level scene has been shown in this opening (it then fades out when leaving) */
+  showcaseUp: boolean
+  /** ask to close: the scene dollies back and fades while the camera rises; during the flight in, the sequence just stops */
   closeShowcase: () => void
+  /**
+   * A pick made while a mission view is open or opening (another mission, a place, South Pole...):
+   * it waits here until the view has closed and the camera is back up, then runs. Only the latest is kept.
+   */
+  afterShowcase: (() => void) | null
+  /** run `go` now, or, if a mission view is open or opening, close the view first and run it afterwards */
+  whenShowcaseClosed: (go: () => void) => void
   pinMission: Record<number, string>
   linkMission: (pinId: number, missionId: string) => void
   /** interface only: the Sun at the showcased mission's pin, taken from its site analysis for the model's light */
   showcaseSky: ShowcaseSky | null
   setShowcaseSky: (s: ShowcaseSky | null) => void
+  /**
+   * The planner's assumptions (lib/assumptions.ts): what counts as sunlit and as Earth in view,
+   * and the height of the panel and antenna. Every card, comparison and landing-date figure
+   * follows them; the site finder does not.
+   */
+  criteria: Criteria
+  observerM: number
+  setAssumptions: (a: Partial<Criteria> & { observerM?: number }) => void
+  resetAssumptions: () => void
+  /** interface only: the Assumptions section of the sites panel is open */
+  assumeOpen: boolean
+  setAssumeOpen: (open: boolean) => void
   /** interface only: the first-use guide is showing */
   help: boolean
+  /** counts each opening of the guide, so opening it again starts it afresh */
+  helpSeq: number
   setHelp: (on: boolean) => void
 }
 
@@ -184,10 +214,22 @@ function firstVisit(): boolean {
   }
 }
 
+/** Remembers that the start card has been used, so it does not open by itself on the next visit. */
+export function rememberIntroSeen() {
+  try {
+    localStorage.setItem(HELP_KEY, '1')
+  } catch {
+    // not remembered; the card just shows again next visit
+  }
+}
+
+/** The current assumptions as one object (for captions and the export). */
+export const assumptionsOf = (s: { criteria: Criteria; observerM: number }): Assumptions => ({ criteria: s.criteria, observerM: s.observerM })
+
 const MAX_PINS = 3
 let nextId = 1
 
-export const useStore = create<State>((set) => ({
+export const useStore = create<State>((set, get) => ({
   tMs: Date.now(),
   playing: false,
   rate: 6 * 3600,
@@ -250,7 +292,8 @@ export const useStore = create<State>((set) => ({
       return { pins, activePin: s.activePin === id ? (pins.at(-1)?.id ?? null) : s.activePin, replaced: s.replaced?.added.includes(id) ? null : s.replaced }
     }),
   setActivePin: (activePin) => set({ activePin }),
-  sheet: 'peek',
+  // A first visit on a phone opens the sheet far enough to show the start card's actions.
+  sheet: firstVisit() && narrowScreen() ? 'half' : 'peek',
   setSheet: (sheet) => set({ sheet }),
   tab: 'sites',
   setTab: (tab) => set({ tab }),
@@ -281,21 +324,48 @@ export const useStore = create<State>((set) => ({
   showcaseSeq: 0,
   showcaseHome: null,
   startShowcase: (showcase, showcasePhase) => set((s) => ({ showcase, showcasePhase, showcaseSeq: s.view.seq, tab: 'sites' })),
-  setShowcase: (p) => set(p),
-  closeShowcase: () => set((s) => (s.showcasePhase === 'ground' ? { showcasePhase: 'leaving' } : s.showcasePhase === 'leaving' ? s : { showcase: null, showcasePhase: null })),
+  setShowcase: (p) => set(p.showcasePhase === 'ground' ? { ...p, showcaseUp: true } : p.showcasePhase === null ? { ...p, showcaseUp: false } : p),
+  showcaseUp: false,
+  // From the ground scene or the approach down to it, closing plays the way out; earlier, the camera
+  // is still on its normal flight and the sequence just stops.
+  closeShowcase: () =>
+    set((s) =>
+      s.showcasePhase === 'ground' || s.showcasePhase === 'approach'
+        ? { showcasePhase: 'leaving' }
+        : s.showcasePhase === 'leaving'
+          ? s
+          : { showcase: null, showcasePhase: null, showcaseUp: false },
+    ),
+  afterShowcase: null,
+  whenShowcaseClosed: (go) => {
+    const s = get()
+    const open = s.showcasePhase === 'approach' || s.showcasePhase === 'ground' || s.showcasePhase === 'leaving'
+    // Nothing to close and nothing already waiting: go at once.
+    if (!open && !s.afterShowcase) return go()
+    set({ afterShowcase: go })
+    if (open) get().closeShowcase()
+  },
   pinMission: {},
   linkMission: (pinId, missionId) => set((s) => ({ pinMission: { ...s.pinMission, [pinId]: missionId } })),
   showcaseSky: null,
   setShowcaseSky: (showcaseSky) => set({ showcaseSky }),
+  criteria: DEFAULT_ASSUMPTIONS.criteria,
+  observerM: DEFAULT_ASSUMPTIONS.observerM,
+  setAssumptions: ({ observerM, ...c }) => set((s) => ({ criteria: { ...s.criteria, ...c }, observerM: observerM ?? s.observerM })),
+  resetAssumptions: () => set({ criteria: DEFAULT_ASSUMPTIONS.criteria, observerM: DEFAULT_ASSUMPTIONS.observerM }),
+  assumeOpen: false,
+  setAssumeOpen: (assumeOpen) => set({ assumeOpen }),
   help: firstVisit(),
+  helpSeq: 0,
   setHelp: (help) => {
-    if (!help) {
-      try {
-        localStorage.setItem(HELP_KEY, '1')
-      } catch {
-        // not remembered; the guide just shows again next visit
-      }
-    }
-    set({ help })
+    if (!help) rememberIntroSeen()
+    set((s) => ({ help, helpSeq: help ? s.helpSeq + 1 : s.helpSeq }))
   },
 }))
+
+/** The current assumptions as one stable object (for captions and the export). */
+export function useAssumptions(): Assumptions {
+  const criteria = useStore((s) => s.criteria)
+  const observerM = useStore((s) => s.observerM)
+  return useMemo(() => ({ criteria, observerM }), [criteria, observerM])
+}

@@ -2,13 +2,17 @@
 // (once), a one-sentence verdict, one shared timeline, then one aligned row per measure. Raw
 // details stay folded away.
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { fmtAngle, fmtCoord, fmtElevation, fmtMeasure, fmtPeriod, MISSING } from '../lib/format'
+import { assumptionsText } from '../lib/assumptions'
+import { fmtAngle, fmtCoord, fmtElevation, fmtMeasure, fmtPeriod, fmtSpan } from '../lib/format'
 import { measures, type Measure, type SiteFacts } from '../lib/verdict'
-import { useStore } from '../store'
+import { useAssumptions, useStore } from '../store'
 import { Badge, Segmented, SITE_LETTERS } from './controls'
+import { CopyLink } from './CopyLink'
+import { exportScenario } from './exportCsv'
 import { isPhone } from './Sheet'
 import { SiteTimeline } from './Timeline'
-import { WINDOW_DAYS, type SiteAnalysis, type Tier } from './useSiteAnalysis'
+import { TERRAIN, terrainTag } from './tiers'
+import { WINDOW_DAYS, type SiteAnalysis } from './useSiteAnalysis'
 import { useWants } from './useWants'
 import { MISSION, verdictSentence } from './verdictSentence'
 import { WhenToLand } from './WhenToLand'
@@ -21,8 +25,6 @@ const LABEL: Record<Measure['id'], [string, string]> = {
   outage: ['Longest Earth gap', 'Earth gap'],
   slope: ['Slope', 'Slope'],
 }
-
-const TERRAIN: Record<Tier, string> = { crest: '20 m', fine: '80 m', patch: '80 m', coarse: '300 m', global: '2.7 km', none: MISSING }
 
 /** True when the known values are closer together than the smallest difference that counts. */
 function aboutEqual(m: Measure): boolean {
@@ -55,6 +57,12 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
   const removePin = useStore((s) => s.removePin)
   const goTo = useStore((s) => s.goTo)
   const [onlyDiff, setOnlyDiff] = useState(false)
+  const assumptions = useAssumptions()
+  const setAssumeOpen = useStore((s) => s.setAssumeOpen)
+  const playing = useStore((s) => s.playing)
+  // The terrain behind the figures: one name when every site uses the same, else one per site.
+  const sameTerrain = sites.every((a) => TERRAIN[a.tier] === TERRAIN[sites[0].tier])
+  const terrainUsed = sameTerrain ? terrainTag(sites[0].tier) : `terrain ${sites.map((a) => `${SITE_LETTERS[a.pin.slot]} ${TERRAIN[a.tier]}`).join(', ')}`
   const wants = useWants()
   // The date tool follows the newest pin, so it never shows a site the user did not just choose.
   const newest = useStore((s) => s.pins.at(-1)?.id ?? null)
@@ -159,6 +167,10 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             </span>
           ))}
         </div>
+        <p className="basis">
+          {fmtSpan(sites[0].series.t0Ms, WINDOW_DAYS)} · {terrainUsed}
+          {playing ? ' · fixed period' : ''}
+        </p>
         {shown.map((m) => {
           const equal = aboutEqual(m)
           const hint = m.higherIsBetter ? 'higher is better for this mission' : 'lower is better for this mission'
@@ -204,6 +216,7 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             ))}
           </ul>
           <div>
+            {playing && <p className="basis live">Rows marked “now” follow the clock; the measures above are for the fixed period.</p>}
             <div className="cmp-row cmp-fine">
               <span className="cmp-label">Elevation</span>
               {sites.map((a) => (
@@ -217,6 +230,14 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
               {sites.map((a) => (
                 <span key={a.pin.id} className="cmp-val">
                   {fmtAngle(a.sky.sun.el)}
+                </span>
+              ))}
+            </div>
+            <div className="cmp-row cmp-fine">
+              <span className="cmp-label">Earth over terrain now</span>
+              {sites.map((a) => (
+                <span key={a.pin.id} className="cmp-val">
+                  {fmtAngle(a.earthClear)}
                 </span>
               ))}
             </div>
@@ -236,9 +257,21 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             ))}
           </div>
           <p className="caption">
-            Figures cover {fmtPeriod(sites[0].series.t0Ms, WINDOW_DAYS)}, UTC, for an observer 2 m above the surface. Differences under 3 points, 0.5 d or 1° are
-            ignored.
+            Figures cover {fmtPeriod(sites[0].series.t0Ms, WINDOW_DAYS)}, UTC. Differences under 3 points, 0.5 d or 1° are ignored.
           </p>
+          <p className="caption">
+            Assumptions: {assumptionsText(assumptions)}{' '}
+            <button type="button" className="link" onClick={() => setAssumeOpen(true)}>
+              Change
+            </button>
+          </p>
+          <div className="export-row">
+            <button type="button" className="btn" title="Download these sites, their measures and every rise and set in the period as one CSV file" onClick={() => exportScenario(sites)}>
+              Export
+            </button>
+            <span className="caption">One CSV file: sites, measures, rise and set times, assumptions and data used.</span>
+          </div>
+          <CopyLink sites={sites} />
         </div>
       </details>
 
@@ -256,7 +289,7 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
               onChange={(i) => setLandPin(sites[i].pin.id)}
             />
           </div>
-          {landOpen && <WhenToLand key={sites[landIdx].pin.id} a={sites[landIdx]} />}
+          {landOpen && <WhenToLand key={sites[landIdx].pin.id} a={sites[landIdx]} sites={sites} />}
         </div>
       </details>
     </section>

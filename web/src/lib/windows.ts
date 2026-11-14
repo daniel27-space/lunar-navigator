@@ -146,6 +146,19 @@ export interface NextChange {
   inHours: number | null
 }
 
+/**
+ * From time tMs, with the state at that moment known exactly (`now`), how long until a later
+ * sample shows the other state. Used for the "now" rows, so the state named there always agrees
+ * with the Sun and Earth figures printed beside it.
+ */
+export function changeAfter(s: Series, tMs: number, now: boolean, test: (i: number) => boolean): NextChange {
+  const first = Math.max(Math.floor((tMs - s.t0Ms) / s.stepMs) + 1, 0)
+  for (let i = first; i < s.count; i++) {
+    if (test(i) !== now) return { now, inHours: (s.t0Ms + i * s.stepMs - tMs) / 3600000 }
+  }
+  return { now, inHours: null }
+}
+
 /** From time tMs, how long until `test` changes value. */
 export function nextChange(s: Series, tMs: number, test: (i: number) => boolean): NextChange {
   const i0 = Math.min(Math.max(Math.round((tMs - s.t0Ms) / s.stepMs), 0), s.count - 1)

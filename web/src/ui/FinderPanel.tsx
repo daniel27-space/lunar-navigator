@@ -162,6 +162,7 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
                 )}
               </div>
               {result.candidates.length === 0 && <p className="caption">Nothing on the map meets every limit.</p>}
+              {result.candidates.length > 0 && <p className="basis">18.6-year average · 300 m cells</p>}
               <ol className="shortlist">
                 {result.candidates.map((k) => (
                   <li key={k.rank}>

@@ -26,6 +26,8 @@ const LEAVE_MS = 550
 /** The cross-fade starts this long before the approach ends, ms, so the two moves read as one. */
 const OVERLAP_MS = 450
 const APPROACH_MS = 1400
+/** Longest a queued pick waits for the camera to finish rising after the view has closed, ms. */
+const RISE_LIMIT_MS = 3000
 
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -81,9 +83,27 @@ export function useShowcaseSequence() {
       st.goTo(st.showcaseHome)
       st.setShowcase({ showcaseSeq: useStore.getState().view.seq })
     }
-    const t = setTimeout(() => useStore.getState().setShowcase({ showcase: null, showcasePhase: null }), LEAVE_MS)
+    // Left during the approach, there is no scene to fade: the sequence ends at once (the camera still rises).
+    const t = setTimeout(() => useStore.getState().setShowcase({ showcase: null, showcasePhase: null }), st.showcaseUp ? LEAVE_MS : 0)
     return () => clearTimeout(t)
   }, [phase])
+
+  // A pick made while the view was open (store.whenShowcaseClosed) goes ahead once the view has
+  // closed and the camera has finished rising, so the new flight starts from the site pose.
+  const queued = useStore((s) => s.afterShowcase)
+  useEffect(() => {
+    if (!queued || phase !== null) return
+    const run = () => {
+      const go = useStore.getState().afterShowcase
+      if (!go) return
+      useStore.setState({ afterShowcase: null })
+      go()
+    }
+    if (arrived === viewSeq) return void run()
+    // The rise normally ends within its two seconds; if it was interrupted, go anyway.
+    const t = setTimeout(run, RISE_LIMIT_MS)
+    return () => clearTimeout(t)
+  }, [queued, phase, arrived, viewSeq])
 }
 
 /** Fetches a mission's model file while the camera is still on its way, so the craft does not pop in later. */

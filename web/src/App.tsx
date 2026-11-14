@@ -1,10 +1,12 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, invalidate } from '@react-three/fiber'
 import * as THREE from 'three'
-import { fmtDay, fmtDateTime } from './lib/format'
+import { fmtDateTime } from './lib/format'
 import { bodyVectors, clockRange, loadEphem, type Ephem } from './lib/ephem'
 import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
 import { latLonOf, sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
+import { SUN_RULES } from './lib/assumptions'
+import { decodeShare } from './lib/shareLink'
 import type { GlobalDem } from './lib/globalDem'
 import {
   frameDirection,
@@ -25,11 +27,14 @@ import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
 import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
 import { AddByCoords } from './ui/AddByCoords'
+import { AssumptionsHead, AssumptionsPanel } from './ui/Assumptions'
 import { Compare } from './ui/Compare'
+import { DateEditor } from './ui/DateEditor'
 import { INK, ON_ACCENT, Segmented, SITE_LETTERS } from './ui/controls'
 import { ErrorBoundary } from './ui/ErrorBoundary'
 import { FinderPanel } from './ui/FinderPanel'
-import { Intro } from './ui/Intro'
+import { PRESET_IDS } from './ui/CopyLink'
+import { CRATER_LABEL, Intro } from './ui/Intro'
 import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
 import { ShowcaseHero, ShowcasePanel, usePreloadModel, useShowcaseSequence } from './ui/Showcase'
@@ -49,7 +54,7 @@ function useData() {
     fetch(`${BASE}missions.json`)
       .then((r) => r.json())
       .then(setMissions, () => setMissions([]))
-    loadEphem(BASE).then(setEphem, (e) => setError(`Ephemeris failed to load: ${e.message}`))
+    loadEphem(BASE).then(setEphem, (e) => setError(`Sun and Earth positions failed to load: ${e.message}`))
     loadTerrain(BASE).then(setTerrain, (e) => setError(`Terrain failed to load: ${e.message}`))
     loadPatchIndex(BASE).then(setPatchIndex, () => setPatchIndex(null))
   }, [])
@@ -90,9 +95,9 @@ const LAYERS: { label: string; full?: string; value: LayerMode; hint: string; le
     hint: 'Rank the ground against what your mission needs',
     legend: 'Ground that meets every limit, brightest where it fits best. Slope from LOLA; long-term sunlight, Earth view and permanent shadow from NASA GSFC.',
   },
-  { label: 'Sun now', full: 'Sunlight now', value: 'natural', hint: 'Light and shadow at the selected time', legend: 'Sunlight and shadow at the selected time, from LOLA terrain and the JPL DE440 ephemeris.' },
+  { label: 'Sun now', full: 'Sunlight now', value: 'natural', hint: 'Light and shadow at the selected time', legend: 'Sunlight and shadow at the selected time, from LOLA terrain and Sun and Earth positions (JPL).' },
   {
-    label: 'Sun avg',
+    label: 'Avg sunlight',
     full: 'Average sunlight',
     value: 'sunavg',
     hint: 'Share of time the Sun is visible',
@@ -101,7 +106,7 @@ const LAYERS: { label: string; full?: string; value: LayerMode; hint: string; le
     ends: ['never', 'always'],
   },
   {
-    label: 'Earth avg',
+    label: 'Avg Earth view',
     full: 'Average Earth view',
     value: 'earthavg',
     hint: 'Share of time Earth is visible',
@@ -136,83 +141,58 @@ const LAYERS: { label: string; full?: string; value: LayerMode; hint: string; le
 ]
 const WINDOW_MS = 30 * 86400 * 1000
 
-const toInput = (ms: number) => new Date(ms).toISOString().slice(0, 16)
-
 function TimeBar({ ephem }: { ephem: Ephem }) {
   const { tMs, playing, rate, setTime, setPlaying, setRate } = useStore()
   // The slider scrubs a 60-day window centred where the user last jumped to.
   const [centre, setCentre] = useState(tMs)
   const [first, last] = clockRange(ephem)
-  // Set when a typed date was outside the supported range and had to be pulled back.
-  const [outOfRange, setOutOfRange] = useState(false)
   const lo = Math.max(centre - WINDOW_MS, first)
   const hi = Math.min(centre + WINDOW_MS, last)
   useEffect(() => {
     if (tMs < lo || tMs > hi) setCentre(tMs)
   }, [tMs, lo, hi])
+  // The date editor opens only when its button is pressed, and stays open while the clock runs:
+  // this flag does not depend on the clock, and the editor is not remounted on a tick.
   const [editing, setEditing] = useState(false)
-  const dateInput = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    if (!editing) return
-    dateInput.current?.focus()
-    try {
-      dateInput.current?.showPicker()
-    } catch {
-      // no picker to open (or not allowed here): the field can still be typed into
-    }
-  }, [editing])
+  const range = useMemo(() => [first, last] as const, [first, last])
+  const dateButton = useRef<HTMLButtonElement>(null)
+  const closeEditor = useCallback(() => {
+    setEditing(false)
+    dateButton.current?.focus()
+  }, [])
   return (
-    <div className="timebar panel-surface">
-      <button className="btn ghost icon play" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pause' : 'Play'}>
-        <svg viewBox="0 0 16 16" aria-hidden="true" className="solid">
-          <path d={playing ? 'M4 3h3v10H4zM9 3h3v10H9z' : 'M5 3l8 5-8 5z'} />
-        </svg>
-      </button>
-      <Segmented className="rates" label="Playback speed" options={RATES} value={rate} onChange={setRate} />
-      <input
-        className="slider scrub"
-        type="range"
-        min={lo}
-        max={hi}
-        step={600000}
-        value={tMs}
-        onChange={(e) => setTime(Number(e.target.value))}
-        aria-label="Time"
-        aria-valuetext={fmtDateTime(tMs)}
-      />
-      {editing ? (
+    <>
+      <div className="timebar panel-surface">
+        <button className="btn ghost icon play" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pause' : 'Play'}>
+          <svg viewBox="0 0 16 16" aria-hidden="true" className="solid">
+            <path d={playing ? 'M4 3h3v10H4zM9 3h3v10H9z' : 'M5 3l8 5-8 5z'} />
+          </svg>
+        </button>
+        <Segmented className="rates" label="Playback speed" options={RATES} value={rate} onChange={setRate} />
         <input
-          ref={dateInput}
-          className="date"
-          type="datetime-local"
-          value={toInput(tMs)}
-          min={toInput(first)}
-          max={toInput(last)}
-          onChange={(e) => {
-            const t = Date.parse(`${e.target.value}Z`)
-            if (!Number.isNaN(t)) {
-              const inRange = Math.min(Math.max(t, first), last)
-              setOutOfRange(inRange !== t)
-              setTime(inRange)
-              setCentre(inRange)
-            }
-          }}
-          onBlur={() => setEditing(false)}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
-          aria-label="Date and time (UTC)"
+          className="slider scrub"
+          type="range"
+          min={lo}
+          max={hi}
+          step={600000}
+          value={tMs}
+          onChange={(e) => setTime(Number(e.target.value))}
+          aria-label="Time"
+          aria-valuetext={fmtDateTime(tMs)}
         />
-      ) : (
-        <button className="btn date" onClick={() => setEditing(true)} aria-label={`Date and time: ${fmtDateTime(tMs)}. Change`}>
+        <button
+          ref={dateButton}
+          className="btn date"
+          aria-haspopup="dialog"
+          aria-expanded={editing}
+          aria-label={`Date and time: ${fmtDateTime(tMs)}. Change`}
+          onClick={() => setEditing((on) => !on)}
+        >
           {fmtDateTime(tMs)}
         </button>
-      )}
-      {editing && <span className="utc">UTC</span>}
-      {outOfRange && (
-        <p className="caption range-note" role="status">
-          <i className="dot warn" /> Sun and Earth positions are available from {fmtDay(first)} to {fmtDay(last)}; the date was set to the nearest end.
-        </p>
-      )}
-    </div>
+      </div>
+      {editing && <DateEditor range={range} onSet={setCentre} onClose={closeEditor} />}
+    </>
   )
 }
 
@@ -303,14 +283,14 @@ interface SitesPanelProps {
   pending: (lat: number, lon: number) => boolean
   global: GlobalDem | null
   onAddCoords: (lat: number, lon: number) => void
-  /** pins a ready-made example site (the first-use guide's "Show me an example") */
-  onExample?: () => void
+  /** the start card's actions (ui/Intro.tsx) */
+  intro: Parameters<typeof Intro>[0]
 }
 
 const NO_PATCHES: Terrain[] = []
 
 /** Right-hand panel: one card per pinned site, or the comparison once there are two or more. */
-function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global, onAddCoords, onExample }: SitesPanelProps) {
+function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global, onAddCoords, intro }: SitesPanelProps) {
   const [mode, setMode] = useState<'compare' | 'cards'>('compare')
   const setTab = useStore((s) => s.setTab)
   // Sites are listed in badge order (A, B, C), whatever order they were pinned in.
@@ -356,7 +336,9 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
   }, [shown, sun?.az, sun?.el, sun?.radius, earth?.az, earth?.el, earth?.radius, sunUp, skyline])
   return (
     <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
-      <Intro onExample={onExample} />
+      <Intro {...intro} />
+      <AssumptionsHead />
+      <AssumptionsPanel />
       {waiting.map((x) => (
         <p key={x.id} className="empty loading" role="status">
           <i className="dot pulse" /> Loading detailed terrain for {x.label}…
@@ -387,7 +369,7 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
         sites.length > 0 && (
           <div className="cards">
             {sites.map((a) => (
-              <SiteCard key={a.pin.id} a={a} active={a.pin.id === activePin} />
+              <SiteCard key={a.pin.id} a={a} active={a.pin.id === activePin} all={sites} />
             ))}
           </div>
         )
@@ -579,8 +561,11 @@ export default function App() {
     (lat: number, lon: number, label?: string) => addPin({ lat, lon, hM: elevation(lat, lon), label }),
     [addPin, elevation],
   )
+  // A pick made while a mission view is open first closes it (the same way out as its close
+  // button), and goes ahead when the camera is back up; see store.whenShowcaseClosed.
+  const later = useStore((s) => s.whenShowcaseClosed)
   const selectMission = useCallback(
-    (m: Mission) => {
+    (m: Mission) => later(() => {
       pick(m.lat, m.lon, m.name)
       if (terrain && (terrainTier(terrain, m.lat, m.lon) !== 'none' || patchIdFor(m.lat, m.lon))) {
         goTo({ kind: 'site', lat: m.lat, lon: m.lon, hM: elevation(m.lat, m.lon) })
@@ -592,23 +577,55 @@ export default function App() {
       if (st.activePin !== null) st.linkMission(st.activePin, m.id)
       // The mission view follows once this flight has ended (ui/Showcase.tsx drives the sequence).
       st.startShowcase(m.id, 'flight')
-    },
-    [pick, goTo, terrain, elevation, patchIdFor],
+    }),
+    [later, pick, goTo, terrain, elevation, patchIdFor],
   )
   // Typed coordinates: pinned like a map click, then flown to like a mission site.
   const addByCoords = useCallback(
-    (lat: number, lon: number) => {
-      pick(lat, lon)
+    (lat: number, lon: number, label?: string) => later(() => {
+      pick(lat, lon, label)
       if (terrain && (terrainTier(terrain, lat, lon) !== 'none' || patchIdFor(lat, lon))) {
         goTo({ kind: 'site', lat, lon, hM: elevation(lat, lon) })
       } else {
         goTo({ kind: 'globe', lat, lon })
       }
-    },
-    [pick, goTo, terrain, elevation, patchIdFor],
+    }),
+    [later, pick, goTo, terrain, elevation, patchIdFor],
   )
-  const pickCandidate = useCallback(
-    (k: Candidate, fly = true) => {
+  // A shared link (ui/CopyLink.tsx) is restored once, when the data the pins need has loaded.
+  // Everything in it has been checked by decodeShare; then the hash is removed from the address.
+  const restored = useRef(false)
+  useEffect(() => {
+    if (restored.current || !ephem || !terrain || !reliefSettled) return
+    restored.current = true
+    const shared = decodeShare(location.hash, PRESET_IDS)
+    if (!shared) return
+    const st = useStore.getState()
+    st.setAssumptions({
+      ...(shared.sun ? { minSunFrac: SUN_RULES.find((r) => r.id === shared.sun)!.minSunFrac } : {}),
+      ...(shared.earthMaskDeg !== undefined ? { earthMaskDeg: shared.earthMaskDeg } : {}),
+      ...(shared.observerM !== undefined ? { observerM: shared.observerM } : {}),
+    })
+    if (shared.preset) st.applyPreset(shared.preset)
+    if (shared.tMs !== undefined) {
+      const [first, last] = clockRange(ephem)
+      st.setTime(Math.min(Math.max(shared.tMs, first), last))
+    }
+    if (shared.layer) st.setLayer(shared.layer)
+    for (const s of shared.sites) pick(s.lat, s.lon, s.label)
+    const last = shared.sites.at(-1)
+    if (last) {
+      if (terrainTier(terrain, last.lat, last.lon) !== 'none' || patchIdFor(last.lat, last.lon)) goTo({ kind: 'site', lat: last.lat, lon: last.lon, hM: elevation(last.lat, last.lon) })
+      else goTo({ kind: 'globe', lat: last.lat, lon: last.lon })
+      // The sites are what was shared: show them rather than the start card (it is not marked as seen).
+      useStore.setState({ help: false })
+      if (isPhone()) st.setSheet('half')
+    } else if (shared.layer === 'finder') st.setTab('find')
+    history.replaceState(history.state, '', location.pathname + location.search)
+  }, [ephem, terrain, reliefSettled, pick, goTo, elevation, patchIdFor])
+
+  const pickCandidates = useCallback(
+    (ks: Candidate[], fly = true) => later(() => ks.forEach((k) => {
       const name = PRESETS.find((p) => p.id === preset)?.short ?? 'Custom'
       pick(k.lat, k.lon, `${name} #${k.rank}`)
       // Remember that this pin came from the finder: its card opens on "When to land".
@@ -617,18 +634,29 @@ export default function App() {
       // A single pick (not "Compare top 3") goes on to its landing dates.
       if (id !== null && fly) useStore.getState().focusLanding(id)
       if (fly) goTo({ kind: 'site', lat: k.lat, lon: k.lon, hM: elevation(k.lat, k.lon) })
-    },
-    [pick, goTo, elevation, preset],
+    })),
+    [later, pick, goTo, elevation, preset],
   )
   const missionHeights = useMemo(() => missions.map((m) => elevation(m.lat, m.lon)), [missions, elevation])
   const [hover, setHover] = useState<{ m: Mission; x: number; y: number } | null>(null)
   const onHover = useCallback((m: Mission | null, x: number, y: number) => setHover(m ? { m, x, y } : null), [])
   const current = LAYERS.find((l) => l.value === layer)!
 
+  // A place that is already pinned is flown to again rather than pinned twice.
+  const flyToPinned = (label: string) => {
+    const st = useStore.getState()
+    const had = st.pins.find((x) => x.label === label)
+    if (!had) return false
+    st.setActivePin(had.id)
+    goTo({ kind: 'site', lat: had.lat, lon: had.lon, hM: had.hM })
+    return true
+  }
   // A named crest is pinned at the highest ground within 300 m of its listed coordinates: the
   // listed point itself can sit in a small pit beside the crest.
-  const pinPlace = (place: PatchIndex['patches'][number]) => {
+  const pinPlace = (place: PatchIndex['patches'][number]) => later(() => pinPlaceNow(place))
+  const pinPlaceNow = (place: PatchIndex['patches'][number]) => {
     if (!patchIndex) return
+    if (flyToPinned(place.name ?? place.id)) return
     const pin = (t: Terrain | null) => {
       const at = t ? highestNear(t, 300) : { lat: place.lat, lon: place.lon }
       pick(at.lat, at.lon, place.name ?? place.id)
@@ -645,7 +673,7 @@ export default function App() {
         () => pin(null),
       )
   }
-  // The guide's example: a polar crest with long sunlight, opened on its card.
+  // The start card's examples: a polar crest with long sunlight, and a crater floor the Sun never reaches.
   const examplePlace = patchIndex?.patches.find((x) => x.id === 'connecting-ridge') ?? patchIndex?.patches.find((x) => x.kind === 'crest20')
   const openHelp = () => {
     useStore.getState().setHelp(true)
@@ -659,8 +687,15 @@ export default function App() {
   const showcasePhase = useStore((s) => s.showcasePhase)
   useShowcaseSequence()
   usePreloadModel(showcaseId ? (missions.find((m) => m.id === showcaseId) ?? null) : null, import.meta.env.BASE_URL)
-  const showcased = showcaseId && (showcasePhase === 'ground' || showcasePhase === 'leaving') ? (missions.find((m) => m.id === showcaseId) ?? null) : null
+  const showcaseUp = useStore((s) => s.showcaseUp)
+  const showcased = showcaseId && showcaseUp && (showcasePhase === 'ground' || showcasePhase === 'leaving') ? (missions.find((m) => m.id === showcaseId) ?? null) : null
 
+  const intro: Parameters<typeof Intro>[0] = {
+    onRidge: examplePlace ? () => pinPlace(examplePlace) : undefined,
+    ridgeLabel: examplePlace ? (examplePlace.name ?? examplePlace.id) : undefined,
+    onCrater: () => later(() => void (flyToPinned(CRATER_LABEL) || addByCoords(-89.67, 129.2, CRATER_LABEL))),
+    onPlan: () => chooseLayer('finder'),
+  }
   const chooseLayer = (l: LayerMode) => {
     setLayer(l)
     setMenu(null)
@@ -736,7 +771,7 @@ export default function App() {
               ]}
               value={viewKind === 'pole' || viewKind === 'globe' ? viewKind : null}
               onChange={(k) => {
-                goTo({ kind: k })
+                later(() => goTo({ kind: k }))
                 setMenu(null)
               }}
             />
@@ -823,7 +858,7 @@ export default function App() {
           <div className="dock dock-left" onClick={expandOnTap}>
             {finderOn ? (
               <ErrorBoundary what="The site finder">
-                <FinderPanel result={finderResult} onPick={pickCandidate} onCompareTop={(cs) => cs.forEach((k) => pickCandidate(k, false))} />
+                <FinderPanel result={finderResult} onPick={(k) => pickCandidates([k])} onCompareTop={(cs) => pickCandidates(cs, false)} />
               </ErrorBoundary>
             ) : (
               <div className="legend panel-surface">
@@ -843,7 +878,7 @@ export default function App() {
             {showcased && <ShowcasePanel mission={showcased} baseUrl={import.meta.env.BASE_URL} />}
             {ephem && terrain ? (
               <ErrorBoundary what="The sites panel">
-                <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} pending={terrainPending} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} onExample={examplePlace ? () => pinPlace(examplePlace) : undefined} />
+                <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} pending={terrainPending} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} intro={intro} />
               </ErrorBoundary>
             ) : null}
           </div>
@@ -865,7 +900,7 @@ export default function App() {
         </div>
       )}
 
-      {(!ephem || !terrain) && !error && <div className="status panel-surface">Loading NASA terrain and ephemeris…</div>}
+      {(!ephem || !terrain) && !error && <div className="status panel-surface">Loading NASA terrain and Sun and Earth positions…</div>}
       {error && (
         <div className="status panel-surface error" role="alert">
           <i className="dot danger" />

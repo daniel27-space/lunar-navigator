@@ -6,9 +6,11 @@ import { ephemEndMs } from '../lib/ephem'
 import { fmtAngle, fmtDateTime, fmtDay, fmtDuration, fmtShare, fmtTick, MISSING } from '../lib/format'
 import type { Horizon } from '../lib/horizon'
 import { leader, rankWindows, windowStats, type WindowStats } from '../lib/landing'
-import { computeSeries, DEFAULT_CRITERIA, type Series } from '../lib/windows'
-import { useStore } from '../store'
-import { Badge, Segmented } from './controls'
+import { assumptionsText } from '../lib/assumptions'
+import { computeSeries, isSunlit, type Criteria, type Series } from '../lib/windows'
+import { useAssumptions, useStore } from '../store'
+import { Badge, Segmented, SITE_LETTERS } from './controls'
+import { exportScenario } from './exportCsv'
 import { landingSentence, slipSentence } from './landingSentence'
 import { YearStrip } from './Timeline'
 import { DAY, type SiteAnalysis } from './useSiteAnalysis'
@@ -17,6 +19,8 @@ import { MISSION } from './verdictSentence'
 
 const HOUR = 3600000
 const YEAR_DAYS = 365
+/** Quick schedule slips from the baseline, in days. */
+const SLIPS = [7, 14, 21, 30]
 const STAYS: readonly (readonly [number, string])[] = [
   [7, '7 days'],
   [14, '14 days'],
@@ -41,11 +45,11 @@ function yearSeries(a: SiteAnalysis, startMs: number): Series {
 }
 
 /** Figures for one stay, computed for exactly that period (independent of the year strip). */
-function stayAt(a: SiteAnalysis, startMs: number, days: number): WindowStats | null {
+function stayAt(a: SiteAnalysis, startMs: number, days: number, criteria: Criteria): WindowStats | null {
   const t0 = Math.round(startMs / HOUR) * HOUR
   const t1 = t0 + days * DAY
   if (t1 > ephemEndMs(a.ephem)) return null
-  return windowStats(computeSeries(a.ephem, a.horizon, a.hM, t0, t1 - HOUR, HOUR), t0, days)
+  return windowStats(computeSeries(a.ephem, a.horizon, a.hM, t0, t1 - HOUR, HOUR), t0, days, criteria)
 }
 
 interface Row {
@@ -57,8 +61,10 @@ interface Row {
   show: (v: number) => string
 }
 
-export function WhenToLand({ a }: { a: SiteAnalysis }) {
+export function WhenToLand({ a, sites }: { a: SiteAnalysis; /** every pinned site with figures, for the export */ sites?: SiteAnalysis[] }) {
   const tMs = useStore((s) => s.tMs)
+  const criteria = useStore((s) => s.criteria)
+  const assumptions = useAssumptions()
   const setTime = useStore((s) => s.setTime)
   const windowStart = useStore((s) => s.windowStart)
   const fromFinder = useStore((s) => !!s.fromFinder[a.pin.id])
@@ -77,17 +83,18 @@ export function WhenToLand({ a }: { a: SiteAnalysis }) {
   if (tMs < anchor || tMs > anchor + YEAR_DAYS * DAY) setAnchor(Math.floor(tMs / HOUR) * HOUR - 2 * DAY)
   const series = useMemo(() => yearSeries(a, anchor), [a.horizon, a.hM, a.ephem, anchor]) // eslint-disable-line react-hooks/exhaustive-deps
   const latestStartMs = useStore((s) => (s.timeRange ? s.timeRange[1] : Infinity))
-  const ranked = useMemo(() => rankWindows(series, stay, wants, { latestStartMs }), [series, stay, wants, latestStartMs])
-  const everLit = useMemo(() => series.sunFrac.some((f) => f >= DEFAULT_CRITERIA.minSunFrac), [series])
+  const earliestMs = useStore((s) => (s.timeRange ? s.timeRange[0] : -Infinity))
+  const ranked = useMemo(() => rankWindows(series, stay, wants, { latestStartMs, criteria }), [series, stay, wants, latestStartMs, criteria])
+  const everLit = useMemo(() => series.sunFrac.some((_, i) => isSunlit(series, i, criteria)), [series, criteria])
   const hasBaseline = baselineMs !== undefined
   // With a baseline kept the grid is Baseline | Selected | best 1 | best 2, so it still fits the card.
   const top = ranked.slice(0, hasBaseline ? 2 : 3).map((r) => r.stats)
-  const selected = windowStats(series, tMs, stay)
+  const selected = windowStats(series, tMs, stay, criteria)
   // The baseline keeps its figures wherever the year strip has moved to: they are worked out
   // from the baseline date itself, not read off the strip.
   const baseline = useMemo(
-    () => (baselineMs === undefined ? null : stayAt(a, baselineMs, stay)),
-    [a.horizon, a.hM, a.ephem, baselineMs, stay], // eslint-disable-line react-hooks/exhaustive-deps
+    () => (baselineMs === undefined ? null : stayAt(a, baselineMs, stay, criteria)),
+    [a.horizon, a.hM, a.ephem, baselineMs, stay, criteria], // eslint-disable-line react-hooks/exhaustive-deps
   )
   const cols: (WindowStats | null)[] = hasBaseline ? [baseline, selected, ...top] : [selected, ...top]
   const val = (f: (w: WindowStats) => number) => cols.map((w) => (w ? f(w) : NaN))
@@ -102,6 +109,9 @@ export function WhenToLand({ a }: { a: SiteAnalysis }) {
   const live = cols.map((w, i) => (w ? i : -1)).filter((i) => i >= 0)
   const end = series.t0Ms + series.count * series.stepMs
   const mission = (MISSION[preset] ?? MISSION.custom)[1]
+  const rule = `${stay}-day stays starting every 6 h, from 1-hour steps over the period shown; ranked 60% on ${wants.sunHigh ? 'sunlight' : 'darkness'}, 40% on ${
+    wants.earthHigh ? 'Earth in view' : 'being hidden from Earth'
+  }.`
   const best = landingSentence(top[0] ?? null, selected, stay, wants, everLit)
 
   return (
@@ -129,9 +139,28 @@ export function WhenToLand({ a }: { a: SiteAnalysis }) {
             <span className="caption">
               <i className="sw base" /> Baseline {fmtDateTime(baselineMs)}
             </span>
-            <button type="button" className="btn" onClick={() => setBaseline(a.pin.id, null)}>
-              Clear baseline
+            <button type="button" className="btn" title="Forget the baseline date" aria-label="Clear baseline" onClick={() => setBaseline(a.pin.id, null)}>
+              Clear
             </button>
+            <div className="wtl-slip" role="group" aria-label="Slip the landing from the baseline by">
+              <span className="caption">Slip by:</span>
+              {SLIPS.map((d) => {
+                const t = baselineMs + d * DAY
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    className="btn"
+                    disabled={t > latestStartMs || t < earliestMs}
+                    aria-pressed={Math.abs(tMs - t) < HOUR / 2}
+                    title={t > latestStartMs ? 'Past the dates the Sun and Earth positions cover' : `Set the clock to the baseline plus ${d} days: ${fmtDateTime(t)}`}
+                    onClick={() => setTime(t)}
+                  >
+                    {d} d
+                  </button>
+                )
+              })}
+            </div>
           </>
         ) : (
           <>
@@ -158,6 +187,9 @@ export function WhenToLand({ a }: { a: SiteAnalysis }) {
 
       {top.length > 0 && (
         <div className="cmp-block" style={{ '--n': cols.length } as CSSProperties}>
+          <p className="basis">
+            {stay}-day stay · 1 h steps
+          </p>
           <div className="cmp-row cmp-mhead wtl-head">
             <h3 className="section">Landing</h3>
             {hasBaseline && (
@@ -211,10 +243,29 @@ export function WhenToLand({ a }: { a: SiteAnalysis }) {
       )}
 
       <p className="caption">
-        {stay}-day stays starting every 6 h, from 1-hour steps over the period shown; ranked 60% on {wants.sunHigh ? 'sunlight' : 'darkness'}, 40% on{' '}
-        {wants.earthHigh ? 'Earth in view' : 'being hidden from Earth'}. Observer {a.horizon.observerHeightM} m above the surface. Sunlit means at least half the
-        Sun's disc is above the terrain; Earth in view means Earth's centre is above the terrain.
+        {rule} {assumptionsText(assumptions)}
       </p>
+      <div className="export-row">
+        <button
+          type="button"
+          className="btn"
+          title="Download the pinned sites, their measures, rise and set times and these stays as one CSV file"
+          onClick={() =>
+            exportScenario(sites?.length ? sites : [a], {
+              siteLetter: SITE_LETTERS[a.pin.slot],
+              rule,
+              rows: [
+                ...(hasBaseline ? [{ label: 'baseline', stats: baseline }] : []),
+                { label: 'selected', stats: selected },
+                ...top.map((w, i) => ({ label: `rank ${i + 1}`, stats: w })),
+              ],
+            })
+          }
+        >
+          Export
+        </button>
+        <span className="caption">One CSV file: sites, measures, rise and set times, and these stays.</span>
+      </div>
     </div>
   )
 }

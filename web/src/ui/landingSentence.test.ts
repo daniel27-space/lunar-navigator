@@ -95,31 +95,36 @@ describe('slipSentence', () => {
 
   it('states what a slip keeps and what it costs', () => {
     expect(slipSentence(base, stay({ startMs: slip, commShare: 0.41, longestNoCommH: 8.3 * 24 }), solar)).toBe(
-      'Slipping from 14 Nov to 5 Dec keeps sunlight at 100% but cuts Earth view from 85% to 41% and lengthens the longest Earth gap from 2.1 days to 8.3 days.',
+      'Slipping 21 days, from 14 Nov to 5 Dec, keeps sunlight at 100% but cuts Earth view from 85% to 41% and lengthens the longest Earth gap from 2.1 days to 8.3 days.',
     )
   })
 
   it('lists gains with what is kept, and says so when there are only losses', () => {
     expect(slipSentence(base, stay({ startMs: slip, commShare: 1, longestNoCommH: 0 }), solar)).toBe(
-      'Slipping from 14 Nov to 5 Dec keeps sunlight at 100%, raises Earth view from 85% to 100% and shortens the longest Earth gap from 2.1 days to none.',
+      'Slipping 21 days, from 14 Nov to 5 Dec, keeps sunlight at 100%, raises Earth view from 85% to 100% and shortens the longest Earth gap from 2.1 days to none.',
     )
     expect(slipSentence(base, stay({ startMs: slip, sunShare: 0.5, longestDarkH: 168, commShare: 0.2, longestNoCommH: 240 }), solar)).toBe(
-      'Slipping from 14 Nov to 5 Dec cuts sunlight from 100% to 50%, lengthens the longest night from none to 7.0 days, cuts Earth view from 85% to 20% and lengthens the longest Earth gap from 2.1 days to 10.0 days.',
+      'Slipping 21 days, from 14 Nov to 5 Dec, cuts sunlight from 100% to 50%, lengthens the longest night from none to 7.0 days, cuts Earth view from 85% to 20% and lengthens the longest Earth gap from 2.1 days to 10.0 days.',
     )
   })
 
   it('judges gains and losses by the mission: less sunlight is a gain for ice prospecting', () => {
     expect(slipSentence(stay({ startMs: Date.UTC(2026, 10, 14), sunShare: 0.5, longestDarkH: 168 }), stay({ startMs: slip, sunShare: 0, longestDarkH: 336, commShare: 0.5, longestNoCommH: 100 }), ice)).toBe(
-      'Slipping from 14 Nov to 5 Dec cuts sunlight from 50% to 0% and lengthens the longest night from 7.0 days to 14.0 days but cuts Earth view from 100% to 50% and lengthens the longest Earth gap from none to 4.2 days.',
+      'Slipping 21 days, from 14 Nov to 5 Dec, cuts sunlight from 50% to 0% and lengthens the longest night from 7.0 days to 14.0 days but cuts Earth view from 100% to 50% and lengthens the longest Earth gap from none to 4.2 days.',
     )
   })
 
   it('handles an earlier date, another year, the baseline itself and dates that cannot be checked', () => {
     expect(slipSentence(base, stay({ startMs: Date.UTC(2027, 0, 9), commShare: 0.85, longestNoCommH: 2.1 * 24 }), solar)).toBe(
-      'Slipping from 14 Nov 2026 to 9 Jan 2027 keeps sunlight at 100% and keeps Earth view at 85%.',
+      'Slipping 56 days, from 14 Nov 2026 to 9 Jan 2027, keeps sunlight at 100% and keeps Earth view at 85%.',
     )
     expect(slipSentence(base, stay({ startMs: Date.UTC(2026, 10, 1), commShare: 0.85, longestNoCommH: 2.1 * 24 }), solar)).toMatch(/^Moving earlier, from 14 Nov to 1 Nov keeps/)
     expect(slipSentence(base, base, solar)).toMatch(/^The selected time is the baseline: sunlight 100%, Earth view 85%\./)
+    // A slip that is not a whole number of days keeps the plain wording; one day is singular.
+    expect(slipSentence(base, stay({ startMs: slip + 6 * 3600000, commShare: 0.85, longestNoCommH: 2.1 * 24 }), solar)).toBe(
+      'Slipping from 14 Nov to 5 Dec keeps sunlight at 100% and keeps Earth view at 85%.',
+    )
+    expect(slipSentence(base, stay({ startMs: Date.UTC(2026, 10, 15), commShare: 0.85, longestNoCommH: 2.1 * 24 }), solar)).toMatch(/^Slipping 1 day, from 14 Nov to 15 Nov, keeps/)
     expect(slipSentence(base, null, solar)).toMatch(/outside the period/)
     expect(slipSentence(null, base, solar)).toMatch(/baseline date is outside/)
   })
