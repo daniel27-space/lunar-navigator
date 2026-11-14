@@ -8,7 +8,7 @@ import { useStore } from '../store'
 import { RangeSlider, Segmented, Slider } from './controls'
 
 /** Preset names short enough for a 2 x 2 switch. */
-const PRESET_LABEL: Record<string, string> = { solar: 'Solar lander', ice: 'Ice prospecting', base: 'Base near ice', quiet: 'Radio-quiet' }
+const PRESET_LABEL: Record<string, string> = { solar: 'Solar lander', ice: 'Ice prospecting', base: 'Base near ice' }
 
 const PREFER: readonly (readonly [Prefer, string])[] = [
   ['high', 'Prefer more'],
@@ -62,11 +62,15 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
           <Segmented
             className="grid2"
             label="Mission preset"
-            options={PRESETS.map((p) => [p.id, PRESET_LABEL[p.id] ?? p.label, p.label] as const)}
+            options={[
+              ...PRESETS.map((p) => [p.id, PRESET_LABEL[p.id] ?? p.label, p.label] as const),
+              ['custom', 'Custom', 'Your own limits'] as const,
+            ]}
             value={preset}
-            onChange={applyPreset}
+            // Custom keeps the limits as they are and stops them being tied to a preset.
+            onChange={(id) => (id === 'custom' ? set({}) : applyPreset(id))}
           />
-          <p className="caption">{preset === 'custom' ? 'Custom: your own limits.' : blurb}</p>
+          <p className="caption">{preset === 'custom' ? 'Your own limits: set them below.' : blurb}</p>
         </div>
 
         <div className="group">
@@ -176,9 +180,10 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
             <details className="disclosure">
               <summary>About these numbers</summary>
               <p className="caption">
-                The bars show the share of the mapped ground that passes each limit on its own. Each cell is about 300 m across and uses
-                NASA's 18.6-year averages, so narrow ridge tops are blurred. Inside about 84.6°S the slope is the steepest 80 m slope in the
-                cell; outside it is the cell average. Pin a spot for exact figures.
+                The search covers the ground within 160 km of the pole (south of about 84.7°S), where the terrain is mapped at 80 m.
+                The bars show the share of that ground that passes each limit on its own. Each cell is about 300 m across and uses
+                NASA's 18.6-year averages, so narrow ridge tops are blurred; its slope is the steepest 80 m slope inside it. Pin a
+                spot for exact figures.
               </p>
             </details>
           </>

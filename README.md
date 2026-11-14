@@ -90,9 +90,10 @@ property search, product-comparison sites, sun-planning tools); see
   still use 80 m. Off crests (floors,
   slopes, plains, the two polar landing points tested) 20 m terrain changes almost nothing.
 - When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
-- The site finder works on cells about 300 m across and NASA's 18.6-year averages, so narrow
-  ridge tops are blurred and its figures are a first cut; pin a spot for exact numbers. Inside
-  about 84.6°S a cell's slope is the steepest 80 m slope in it; outside it is the cell average.
+- The site finder searches within 160 km of the pole (south of about 84.7°S), the area mapped at
+  80 m. It works on cells about 300 m across and NASA's 18.6-year averages, so narrow ridge
+  tops are blurred and its figures are a first cut; pin a spot for exact numbers. A cell's
+  slope is the steepest 80 m slope inside it.
 - Planned missions are placed at the centre of their announced target feature, not at a landing
   point.
 - In the 3D view the outer 50 km of the detailed terrain (roughly 80°S to 81.7°S) fades into

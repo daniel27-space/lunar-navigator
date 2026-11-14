@@ -15,7 +15,7 @@ export interface FinderGrid {
   xMin: number
   yMax: number
   radiusM: number
-  /** degrees; inside the 80 m tile the steepest 80 m slope in the cell, outside it the cell average */
+  /** degrees: the steepest 80 m slope in the cell; NaN outside the search area */
   slope: Float32Array
   /** long-term share of time the Sun is visible, 0..1; NaN where NASA's map has no value */
   sun: Float32Array
@@ -26,6 +26,13 @@ export interface FinderGrid {
   /** km to the nearest permanently shadowed cell (0 inside one) */
   psrKm: Float32Array
 }
+
+/**
+ * The finder searches within this distance of the south pole (about 84.7 S and poleward): the
+ * area covered by the 80 m terrain tile, where slopes are measured at 80 m everywhere and every
+ * suggested spot can be analysed and drawn in full detail.
+ */
+export const SEARCH_RADIUS_KM = 160
 
 export type Prefer = 'high' | 'low' | 'none'
 
@@ -77,13 +84,6 @@ export const PRESETS: Preset[] = [
     short: 'Base',
     blurb: 'Sunlit, flat ground within a short drive of permanent shadow.',
     criteria: { maxSlopeDeg: 8, sunMin: 0.35, sunMax: 1, sunPrefer: 'high', earthMin: 0.5, earthMax: 1, earthPrefer: 'high', psr: 'outside', maxPsrKm: 5 },
-  },
-  {
-    id: 'quiet',
-    label: 'Radio-quiet site',
-    short: 'Quiet',
-    blurb: 'Hidden from Earth (and its radio noise) with sunlight for power.',
-    criteria: { maxSlopeDeg: 8, sunMin: 0.35, sunMax: 1, sunPrefer: 'high', earthMin: 0, earthMax: 0.05, earthPrefer: 'low', psr: 'outside', maxPsrKm: null },
   },
 ]
 
@@ -335,6 +335,7 @@ export function buildGrid(
   sun: Uint8ClampedArray,
   earth: Uint8ClampedArray,
   psr: Uint8ClampedArray,
+  searchRadiusKm = SEARCH_RADIUS_KM,
 ): FinderGrid {
   const n = l0.size * l0.size
   const first = (rgba: Uint8ClampedArray, count: number, f: (v: number) => number) => {
@@ -348,24 +349,32 @@ export function buildGrid(
   const cells = distanceToMask(psrMask, l0.size)
   const psrKm = new Float32Array(n)
   for (let i = 0; i < n; i++) psrKm[i] = (cells[i] * l0.pixel_m) / 1000
+  const slope = mergeSlope(
+    first(slope0, n, (v) => v * 0.25),
+    l0.size,
+    l0.x_min_m,
+    l0.y_max_m,
+    l0.pixel_m,
+    first(slope1, l1.size * l1.size, (v) => v * 0.25),
+    l1.size,
+    l1.x_min_m,
+    l1.y_max_m,
+    l1.pixel_m,
+  )
+  // Cells outside the search area are left out altogether (not eliminated: not considered).
+  const limit = searchRadiusKm * 1000
+  for (let i = 0; i < n; i++) {
+    const x = l0.x_min_m + ((i % l0.size) + 0.5) * l0.pixel_m
+    const y = l0.y_max_m - (Math.floor(i / l0.size) + 0.5) * l0.pixel_m
+    if (x * x + y * y > limit * limit) slope[i] = NaN
+  }
   return {
     size: l0.size,
     pixelM: l0.pixel_m,
     xMin: l0.x_min_m,
     yMax: l0.y_max_m,
     radiusM,
-    slope: mergeSlope(
-      first(slope0, n, (v) => v * 0.25),
-      l0.size,
-      l0.x_min_m,
-      l0.y_max_m,
-      l0.pixel_m,
-      first(slope1, l1.size * l1.size, (v) => v * 0.25),
-      l1.size,
-      l1.x_min_m,
-      l1.y_max_m,
-      l1.pixel_m,
-    ),
+    slope,
     sun: first(sun, n, frac),
     earth: first(earth, n, frac),
     psr: psrMask,

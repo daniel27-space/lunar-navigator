@@ -3,7 +3,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { R_KM } from '../lib/geo'
-import { POLE_POSE, poseFor, slerpUnit, upAt } from './Rig'
+import { POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
 
 const cameraAt = (pos: number[], up: number[]) => {
   const c = new THREE.PerspectiveCamera()
@@ -74,5 +74,48 @@ describe('camera moves', () => {
     expect(pose.up.dot(pose.target.clone().normalize())).toBeCloseTo(1, 9)
     // The camera is above the site's local horizon.
     expect(pose.pos.clone().sub(pose.target).dot(pose.up)).toBeGreaterThan(0)
+  })
+
+  it('wheel-hold drag keeps the height above the surface and moves the ground with the pointer', () => {
+    const cam = cameraAt(POLE_POSE.pos, POLE_POSE.up)
+    cam.fov = 40
+    const target = new THREE.Vector3(0, 0, -R_KM)
+    cam.lookAt(target)
+    cam.updateMatrixWorld()
+    const height = cam.position.length()
+    const distance = cam.position.distanceTo(target)
+    const right = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0)
+    // Many small drags to the right, 100 px in all, on an 800 px high view.
+    let moved = new THREE.Vector3()
+    const start = cam.position.clone()
+    for (let i = 0; i < 100; i++) {
+      const q = surfaceSlide(cam, target, 1, 0, 800)
+      cam.position.applyQuaternion(q)
+      target.applyQuaternion(q)
+      cam.up.applyQuaternion(q)
+      cam.lookAt(target)
+      cam.updateMatrixWorld()
+    }
+    moved = cam.position.clone().sub(start)
+    // Same distance from the Moon's centre, same distance to the ground looked at.
+    expect(cam.position.length()).toBeCloseTo(height, 6)
+    expect(target.length()).toBeCloseTo(R_KM, 6)
+    expect(cam.position.distanceTo(target)).toBeCloseTo(distance, 6)
+    // The camera went left (the ground followed the pointer to the right) by about 100 px of ground.
+    const kmPerPx = (2 * distance * Math.tan((40 * Math.PI) / 360)) / 800
+    expect(moved.dot(right)).toBeLessThan(0)
+    expect(target.distanceTo(new THREE.Vector3(0, 0, -R_KM))).toBeCloseTo(100 * kmPerPx, 0)
+  })
+
+  it('over the whole Moon the slide is an orbit at constant distance', () => {
+    const cam = cameraAt([0, -5000, 1000], [0, 0, 1])
+    const target = new THREE.Vector3()
+    cam.lookAt(target)
+    cam.updateMatrixWorld()
+    const d = cam.position.length()
+    const q = surfaceSlide(cam, target, 40, -25, 800)
+    cam.position.applyQuaternion(q)
+    expect(cam.position.length()).toBeCloseTo(d, 6)
+    expect(target.length()).toBe(0)
   })
 })

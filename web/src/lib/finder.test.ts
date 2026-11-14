@@ -139,7 +139,8 @@ describe('site finder on the published layers', () => {
         expect(c.sun).toBeLessThanOrEqual(p.criteria.sunMax)
         expect(c.earth).toBeGreaterThanOrEqual(p.criteria.earthMin)
         expect(c.earth).toBeLessThanOrEqual(p.criteria.earthMax)
-        expect(c.lat).toBeLessThan(-75)
+        // Every suggestion is inside the search area: within 160 km of the pole.
+        expect(c.lat).toBeLessThan(-84.7)
         if (p.criteria.maxPsrKm !== null) expect(c.psrKm).toBeLessThanOrEqual(p.criteria.maxPsrKm)
         if (p.criteria.psr === 'outside') expect(c.inPsr).toBe(false)
       }

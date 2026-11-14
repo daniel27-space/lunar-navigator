@@ -91,6 +91,37 @@ export function poseFor(goal: ViewGoal, camera: THREE.Camera, target: THREE.Vect
   return { pos, target: site, up: new THREE.Vector3(...f.u), minDistance: 4, via: horizontal(pos) }
 }
 
+const NO_ACTION = -1 as unknown as THREE.MOUSE
+
+/**
+ * The turn about the Moon's centre that slides the view by (dx, dy) screen pixels, so that the
+ * ground under the pointer follows the pointer. Distance from the centre is unchanged by a
+ * rotation, so the camera keeps its height above the surface.
+ */
+export function surfaceSlide(
+  camera: THREE.PerspectiveCamera,
+  target: THREE.Vector3,
+  dx: number,
+  dy: number,
+  viewportHeightPx: number,
+): THREE.Quaternion {
+  const wholeMoon = target.length() < 1
+  // Direction from the centre to the ground in view, and how far away that ground is.
+  const ground = (wholeMoon ? camera.position : target).clone().normalize()
+  const distance = wholeMoon ? Math.max(camera.position.length() - R_KM, 1) : camera.position.distanceTo(target)
+  const radius = wholeMoon ? R_KM : Math.max(target.length(), 1)
+  const kmPerPx = (2 * distance * Math.tan((camera.fov * Math.PI) / 360)) / viewportHeightPx
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0)
+  const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1)
+  // Dragging right moves the camera left over the ground; dragging down moves it up.
+  const axisH = right.clone().cross(ground)
+  const axisV = ground.clone().cross(up)
+  const q = new THREE.Quaternion()
+  if (axisH.lengthSq() > 1e-12) q.setFromAxisAngle(axisH.normalize(), (dx * kmPerPx) / radius)
+  if (axisV.lengthSq() > 1e-12) q.multiply(new THREE.Quaternion().setFromAxisAngle(axisV.normalize(), (dy * kmPerPx) / radius))
+  return q
+}
+
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
 interface Move {
@@ -103,6 +134,7 @@ interface Move {
 
 export function Rig() {
   const camera = useThree((s) => s.camera)
+  const gl = useThree((s) => s.gl)
   const controls = useRef<OrbitControlsImpl>(null)
   const goal = useStore((s) => s.view)
   const move = useRef<Move | null>(null)
@@ -123,6 +155,58 @@ export function Rig() {
     invalidate() // the view only redraws on demand; start the move
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal, camera])
+
+  // Holding the wheel (or the right button) and dragging slides the view over the Moon: the
+  // camera and the point it looks at both turn about the Moon's centre, so the height above
+  // the surface stays the same however far you go.
+  useEffect(() => {
+    const el = gl.domElement
+    let last: { x: number; y: number } | null = null
+    const down = (e: PointerEvent) => {
+      if ((e.button !== 1 && e.button !== 2) || move.current || !controls.current) return
+      e.preventDefault()
+      last = { x: e.clientX, y: e.clientY }
+      el.setPointerCapture(e.pointerId)
+      controls.current.enabled = false
+    }
+    const drag = (e: PointerEvent) => {
+      const c = controls.current
+      if (!last || !c) return
+      const dx = e.clientX - last.x
+      const dy = e.clientY - last.y
+      last = { x: e.clientX, y: e.clientY }
+      const q = surfaceSlide(camera as THREE.PerspectiveCamera, c.target, dx, dy, el.clientHeight)
+      const wholeMoon = c.target.length() < 1
+      camera.position.applyQuaternion(q)
+      c.target.applyQuaternion(q)
+      // Looking at the whole Moon, north stays up; over the surface, up turns with the ground.
+      if (!wholeMoon) camera.up.applyQuaternion(q).normalize()
+      camera.lookAt(c.target)
+      invalidate()
+    }
+    const up = (e: PointerEvent) => {
+      const c = controls.current
+      if (!last || !c) return
+      last = null
+      if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId)
+      const target = c.target.toArray()
+      // New controls, so they orbit about the up direction the slide ended with.
+      setCtl((k) => ({ key: k.key + 1, target, minDistance: k.minDistance }))
+    }
+    const noMenu = (e: Event) => e.preventDefault()
+    el.addEventListener('pointerdown', down)
+    el.addEventListener('pointermove', drag)
+    el.addEventListener('pointerup', up)
+    el.addEventListener('pointercancel', up)
+    el.addEventListener('contextmenu', noMenu)
+    return () => {
+      el.removeEventListener('pointerdown', down)
+      el.removeEventListener('pointermove', drag)
+      el.removeEventListener('pointerup', up)
+      el.removeEventListener('pointercancel', up)
+      el.removeEventListener('contextmenu', noMenu)
+    }
+  }, [gl, camera])
 
   useFrame((_, dt) => {
     const m = move.current
@@ -159,8 +243,9 @@ export function Rig() {
       enableDamping
       dampingFactor={0.08}
       rotateSpeed={0.5}
-      // Left drag orbits, wheel zooms, holding the wheel (or right button) and dragging slides the view.
-      mouseButtons={{ LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.PAN }}
+      // Left drag orbits and the wheel zooms. Holding the wheel or the right button is handled
+      // above (it slides over the surface), so the controls ignore those buttons.
+      mouseButtons={{ LEFT: THREE.MOUSE.ROTATE, MIDDLE: NO_ACTION, RIGHT: NO_ACTION }}
     />
   )
 }

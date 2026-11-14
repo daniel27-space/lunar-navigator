@@ -7,7 +7,6 @@ export const MISSION: Record<string, [string, string]> = {
   solar: ['a solar lander', 'Solar lander'],
   ice: ['ice prospecting', 'Ice prospecting'],
   base: ['a base near ice', 'Base near ice'],
-  quiet: ['a radio-quiet site', 'Radio-quiet site'],
   custom: ['your limits', 'Custom limits'],
 }
 
