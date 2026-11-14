@@ -1,7 +1,10 @@
-// The mission showcase's own small 3D view: one craft standing on a disc of regolith, lit by a
-// single light from the real Sun direction at its site, with a slow turn of the camera.
-// It is a separate view (not part of the Moon scene) because a 3-7 m lander is invisible at
-// true scale next to 80 m terrain cells.
+// The mission view's ground-level scene: a camera standing a little way back from the craft, as
+// if a person had walked off to photograph it. It is a separate view (not part of the Moon
+// scene) because a 3-7 m lander is invisible at true scale next to 80 m terrain cells.
+//
+// Real: the skyline (the site's terrain horizon), and where the Sun and Earth are for the site
+// and time. Illustrative: the ground near the craft (scene/landers/ground.ts), because the app
+// has no data that fine.
 //
 // A craft is either a real model file (glTF binary) or a simplified stand-in built here from
 // primitives, one per "archetype" in docs/DATA_CONTRACT.md. Stand-ins are drawn 1 unit tall and
@@ -9,6 +12,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
+import { makeGround, skylineShade, startViewAz, type Ground, type GroundStyle } from './landers/ground'
 
 export const ARCHETYPES = ['apollo-lm', 'surveyor', 'luna-lander', 'lunokhod', 'change-lander', 'small-lander', 'nova-c', 'impactor'] as const
 export type Archetype = (typeof ARCHETYPES)[number]
@@ -59,7 +63,7 @@ const METAL = { color: '#b9bdc4', metalness: 0.35, roughness: 0.45 }
 const PAINT = { color: '#d8d8d4', metalness: 0.1, roughness: 0.7 }
 const DARK = { color: '#3a3d44', metalness: 0.2, roughness: 0.6 }
 const CELLS = { color: '#232c40', metalness: 0.3, roughness: 0.4 }
-const REGOLITH = '#77746f'
+const ROCK = { color: '#7a7773', metalness: 0, roughness: 1 }
 
 type V3 = [number, number, number]
 
@@ -346,7 +350,23 @@ function ArchetypeModel({ archetype, heightM }: { archetype: Archetype; heightM:
   )
 }
 
-/** A loaded model file, centred on the disc and scaled so it stands `heightM` tall. */
+const modelFiles = new Map<string, Promise<THREE.Object3D>>()
+/**
+ * A mission's model file, fetched once. Called ahead of the scene (while the camera is still
+ * flying in) so the craft is there when the view opens.
+ */
+export function fetchModel(baseUrl: string, file: string): Promise<THREE.Object3D> {
+  const url = `${baseUrl}data/${file}`
+  let p = modelFiles.get(url)
+  if (!p) {
+    p = import('./landers/loadGlb').then(({ loadGlb }) => loadGlb(url))
+    modelFiles.set(url, p)
+    p.catch(() => modelFiles.delete(url))
+  }
+  return p
+}
+
+/** A loaded model file, centred on the ground and scaled so it stands `heightM` tall. */
 function fitToHeight(scene: THREE.Object3D, heightM: number): THREE.Object3D {
   const box = new THREE.Box3().setFromObject(scene)
   const size = box.getSize(new THREE.Vector3())
@@ -365,38 +385,215 @@ function fitToHeight(scene: THREE.Object3D, heightM: number): THREE.Object3D {
 
 export type ModelState = 'loading' | 'file' | 'simplified'
 
-/** Where the Sun is at the site, in degrees; `up` is false when it is below the terrain horizon. */
-export interface SunAt {
-  az: number
-  el: number
-  up: boolean
+/** What the scene takes from the site's analysis. Angles in degrees; azimuth clockwise from north. */
+export interface SceneSky {
+  /** `up` is the app's own sunlit test (at least half the disc above the terrain) */
+  sun: { az: number; el: number; radius: number; up: boolean }
+  earth: { az: number; el: number; radius: number }
+  /** terrain skyline, degrees above level, one value per `azStepDeg`; null until it is known (flat skyline) */
+  horizon: Float32Array | null
+  azStepDeg: number
 }
 
-function Rig({ heightM, angle, turning }: { heightM: number; angle: React.RefObject<number>; turning: boolean }) {
+export type SceneDetail = 'low' | 'medium' | 'high'
+const DETAIL: Record<SceneDetail, { rings: number; around: number; shadow: number }> = {
+  low: { rings: 44, around: 64, shadow: 512 },
+  medium: { rings: 70, around: 96, shadow: 1024 },
+  high: { rings: 96, around: 144, shadow: 2048 },
+}
+
+/** The Sun and Earth are drawn this many times their real angular size, so they can be seen. */
+export const DISC_SCALE = 2
+
+const D2R = Math.PI / 180
+/** Unit vector towards a compass direction and elevation: north is -z, east is +x, up is +y. */
+const toward = (azDeg: number, elDeg: number): V3 => [Math.cos(elDeg * D2R) * Math.sin(azDeg * D2R), Math.sin(elDeg * D2R), -Math.cos(elDeg * D2R) * Math.cos(azDeg * D2R)]
+
+const SKYLINE_R = 1500
+const BODY_R = 3000
+
+/** The ground mesh: rings that widen with distance, so detail is spent near the craft. */
+function groundGeometry(g: Ground, rings: number, around: number): THREE.BufferGeometry {
+  const pos: number[] = []
+  const uv: number[] = []
+  const idx: number[] = []
+  for (let i = 0; i <= rings; i++) {
+    const r = g.edgeM * Math.pow(i / rings, 2.4)
+    for (let j = 0; j <= around; j++) {
+      const a = (j / around) * Math.PI * 2
+      const x = Math.cos(a) * r
+      const z = Math.sin(a) * r
+      pos.push(x, g.height(x, z), z)
+      uv.push(x / 5, z / 5)
+    }
+  }
+  const row = around + 1
+  for (let i = 0; i < rings; i++)
+    for (let j = 0; j < around; j++) {
+      const a = i * row + j
+      const b = a + row
+      idx.push(a, a + 1, b, b, a + 1, b + 1)
+    }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  geo.setIndex(idx)
+  geo.computeVertexNormals()
+  return geo
+}
+
+/** Fine grain for the regolith: one small tiling grey-noise texture, used for colour and as a bump. */
+function grainTexture(): THREE.DataTexture {
+  const n = 128
+  const data = new Uint8Array(n * n * 4)
+  let a = 12345
+  for (let i = 0; i < n * n; i++) {
+    a = (Math.imul(a, 1664525) + 1013904223) >>> 0
+    const v = 205 + (a >>> 24) * 0.19
+    data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = v
+    data[i * 4 + 3] = 255
+  }
+  const t = new THREE.DataTexture(data, n, n)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.magFilter = THREE.LinearFilter
+  t.minFilter = THREE.LinearMipmapLinearFilter
+  t.generateMipmaps = true
+  t.needsUpdate = true
+  return t
+}
+
+/** The distant terrain: a ring round the camera whose top edge is the site's real skyline. */
+function skylineGeometry(sky: SceneSky, albedo: string): THREE.BufferGeometry {
+  const base = new THREE.Color(albedo)
+  // The foot of the distant terrain takes the tone of the ground plain it rises from.
+  const plain = sky.sun.up ? Math.min(0.1 + 0.9 * Math.sin(Math.max(sky.sun.el, 0) * D2R), 0.6) : 0.04
+  const n = sky.horizon ? sky.horizon.length : 72
+  const step = sky.horizon ? sky.azStepDeg : 360 / n
+  const pos: number[] = []
+  const col: number[] = []
+  const idx: number[] = []
+  const low = -SKYLINE_R * Math.tan(16 * D2R)
+  for (let i = 0; i <= n; i++) {
+    const az = i * step
+    const el = sky.horizon ? sky.horizon[i % n] : 0
+    const x = Math.sin(az * D2R) * SKYLINE_R
+    const z = -Math.cos(az * D2R) * SKYLINE_R
+    const shade = skylineShade(az, sky.sun)
+    pos.push(x, SKYLINE_R * Math.tan(Math.min(Math.max(el, -15), 60) * D2R), z, x, low, z)
+    const foot = shade * 0.4 + plain * 0.6
+    col.push(shade * base.r * 1.25, shade * base.g * 1.25, shade * base.b * 1.25, foot * base.r, foot * base.g, foot * base.b)
+    if (i < n) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 2, i * 2 + 1, i * 2 + 3)
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
+  geo.setIndex(idx)
+  return geo
+}
+
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)
+
+/** Where the standing camera is: all of it can be changed by dragging and scrolling. */
+interface Stand {
+  /** compass direction the camera looks in, degrees */
+  viewAz: number
+  /** eye height above the ground under the camera, m */
+  eye: number
+  /** distance from the craft, m */
+  dist: number
+}
+
+/** How far the user may move the camera: never under the ground, never losing the craft. */
+function limits(h: number) {
+  return { eye: [1, Math.max(4, h * 1.3)] as const, dist: [Math.max(6, h * 2.2), Math.max(18, h * 6)] as const }
+}
+
+interface CameraProps {
+  heightM: number
+  ground: Ground
+  stand: React.RefObject<Stand>
+  /** craft left of centre by this share of the view (0 on a narrow screen) */
+  shift: number
+  /** false: no dolly, the camera is simply there */
+  motion: boolean
+  leaving: boolean
+  sky: THREE.Group | null
+}
+
+/**
+ * The standing camera. It arrives with a two-second dolly-in from further back and a little
+ * higher, then stops: after that a frame is drawn only when the user moves it or the light
+ * changes. Leaving is a half-second dolly back.
+ */
+function StandingCamera({ heightM, ground, stand, shift, motion, leaving, sky }: CameraProps) {
   const camera = useThree((s) => s.camera)
-  const aspect = useThree((s) => s.size.width / Math.max(s.size.height, 1))
+  const gl = useThree((s) => s.gl)
+  const invalidate = useThree((s) => s.invalidate)
+  const arrive = useRef(motion ? 0 : 1)
+  const leave = useRef(0)
+  const frames = useRef(0)
+  useEffect(() => invalidate(), [leaving, invalidate])
   useFrame((_, dt) => {
-    if (turning) angle.current += Math.min(dt, 0.1) * 0.14
-    // Far enough to show the whole craft and its legs, also in a tall, narrow view.
-    const r = heightM * Math.max(3.1, 3.0 / aspect)
-    camera.position.set(Math.sin(angle.current) * r, heightM * 0.85, Math.cos(angle.current) * r)
-    camera.lookAt(0, heightM * 0.42, 0)
+    const step = Math.min(dt, 0.05)
+    let moving = false
+    if (arrive.current < 1) {
+      arrive.current = Math.min(1, arrive.current + step / 2)
+      moving = true
+    }
+    if (leaving && motion && leave.current < 1) {
+      leave.current = Math.min(1, leave.current + step / 0.5)
+      moving = true
+    }
+    const s = stand.current
+    const back = 1 - easeOut(arrive.current)
+    const dist = s.dist * (1 + 0.6 * back) * (1 + 0.35 * easeInOut(leave.current))
+    const az = (s.viewAz + 180) * D2R
+    const x = Math.sin(az) * dist
+    const z = -Math.cos(az) * dist
+    camera.position.set(x, Math.max(ground.height(x, z), 0) + s.eye + heightM * 0.3 * back, z)
+    // Look at the craft's middle, a little to its right so it sits left of centre.
+    const v = s.viewAz * D2R
+    const side = dist * shift
+    camera.lookAt(Math.cos(v) * side, heightM * 0.45, Math.sin(v) * side)
+    // The skyline, Sun and Earth are far away: they stay centred on the camera.
+    sky?.position.copy(camera.position)
+    frames.current++
+    gl.domElement.dataset.frames = String(frames.current)
+    if (moving) invalidate()
   })
   return null
 }
 
-function Stage({ model, fallback, baseUrl, sun, onState }: { model: MissionModel; fallback: Archetype; baseUrl: string; sun: SunAt; onState: (s: ModelState) => void }) {
+interface SceneProps {
+  model: MissionModel
+  fallback: Archetype
+  baseUrl: string
+  seed: string
+  style: GroundStyle
+  sky: SceneSky
+  detail: SceneDetail
+  stand: React.RefObject<Stand>
+  shift: number
+  motion: boolean
+  leaving: boolean
+  onState: (s: ModelState) => void
+}
+
+function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shift, motion, leaving, onState }: SceneProps) {
   const invalidate = useThree((s) => s.invalidate)
+  const h = model.height_m
+  const d = DETAIL[detail]
+
+  // The craft: a model file when there is one and it loads, otherwise the simplified stand-in.
   const file = model.kind === 'glb' ? model.file : null
   const [loaded, setLoaded] = useState<{ file: string; object: THREE.Object3D | null } | null>(null)
   useEffect(() => {
     if (!file) return
     let live = true
-    // The loader is fetched only when a model file is actually shown.
-    import('./landers/loadGlb')
-      .then(({ loadGlb }) => loadGlb(`${baseUrl}data/${file}`))
-      .then(
-        (scene) => live && setLoaded({ file, object: fitToHeight(scene, model.height_m) }),
+    fetchModel(baseUrl, file).then(
+        // A copy, so the same file can be shown again (and by another mission) untouched.
+        (scene) => live && setLoaded({ file, object: fitToHeight(scene.clone(true), model.height_m) }),
         (e) => {
           // Could not be loaded: say why in the console and draw the stand-in instead.
           console.warn(`Model file ${file} could not be loaded; showing the simplified model.`, e)
@@ -413,37 +610,85 @@ function Stage({ model, fallback, baseUrl, sun, onState }: { model: MissionModel
     onState(state)
     invalidate()
   }, [state, onState, invalidate])
-
-  const h = model.height_m
   const archetype = model.kind === 'archetype' && isArchetype(model.archetype) ? model.archetype : fallback
-  // North is -z and east is +x on the disc.
-  const el = (sun.el * Math.PI) / 180
-  const az = (sun.az * Math.PI) / 180
-  const light: V3 = [Math.cos(el) * Math.sin(az) * h * 6, Math.max(Math.sin(el), 0.02) * h * 6, -Math.cos(el) * Math.cos(az) * h * 6]
-  useEffect(() => invalidate(), [sun.az, sun.el, sun.up, invalidate])
+
+  const ground = useMemo(() => makeGround(seed, h, style), [seed, h, style])
+  const groundGeo = useMemo(() => groundGeometry(ground, d.rings, d.around), [ground, d.rings, d.around])
+  const grain = useMemo(grainTexture, [])
+  const skyline = useMemo(() => skylineGeometry(sky, ground.albedo), [sky, ground.albedo])
+  useEffect(() => () => groundGeo.dispose(), [groundGeo])
+  useEffect(() => () => skyline.dispose(), [skyline])
+  useEffect(() => () => grain.dispose(), [grain])
+  // A new light, skyline or body position is one new frame, not a running loop.
+  useEffect(() => invalidate(), [sky, invalidate])
+  const [skyGroup, setSkyGroup] = useState<THREE.Group | null>(null)
+
+  const sunDir = toward(sky.sun.az, Math.max(sky.sun.el, 0.5))
+  const reach = Math.max(14, h * 5)
+  const body = (b: { az: number; el: number; radius: number }): { p: V3; r: number } => {
+    const t = toward(b.az, b.el)
+    return { p: [t[0] * BODY_R, t[1] * BODY_R, t[2] * BODY_R], r: BODY_R * Math.tan(b.radius * D2R) * DISC_SCALE }
+  }
+  const sunDisc = body(sky.sun)
+  const earthDisc = body(sky.earth)
+  const earthDir = toward(sky.earth.az, Math.max(sky.earth.el, 5))
+
   return (
     <>
-      <hemisphereLight args={['#aab4c8', '#3a3835', sun.up ? 0.4 : 1.6]} />
-      {!sun.up && <ambientLight intensity={0.5} />}
-      {sun.up && (
-        <directionalLight
-          position={light}
-          intensity={3.2}
-          castShadow
-          shadow-mapSize={[1024, 1024]}
-          shadow-camera-left={-h * 2.5}
-          shadow-camera-right={h * 2.5}
-          shadow-camera-top={h * 2.5}
-          shadow-camera-bottom={-h * 2.5}
-          shadow-camera-near={0.1}
-          shadow-camera-far={h * 14}
-          shadow-bias={-0.0005}
-        />
+      <color attach="background" args={['#000000']} />
+      <StandingCamera heightM={h} ground={ground} stand={stand} shift={shift} motion={motion} leaving={leaving} sky={skyGroup} />
+      {sky.sun.up ? (
+        <>
+          <directionalLight
+            position={[sunDir[0] * 80, sunDir[1] * 80, sunDir[2] * 80]}
+            intensity={3.4}
+            castShadow
+            shadow-mapSize={[d.shadow, d.shadow]}
+            shadow-camera-left={-reach}
+            shadow-camera-right={reach}
+            shadow-camera-top={reach}
+            shadow-camera-bottom={-reach}
+            shadow-camera-near={1}
+            shadow-camera-far={200}
+            shadow-bias={-0.0008}
+            shadow-normalBias={0.03}
+          />
+          {/* sunlight bounced back up from the ground */}
+          <hemisphereLight args={['#101216', ground.albedo, 0.55]} />
+        </>
+      ) : (
+        <>
+          {/* night: soft fill so the craft can be seen, from Earth's side when Earth is up */}
+          <directionalLight position={[earthDir[0] * 80, earthDir[1] * 80, earthDir[2] * 80]} intensity={sky.earth.el > 0 ? 0.9 : 0.5} color="#b4c4dc" />
+          <hemisphereLight args={['#6f7a8c', '#3a3835', 1.3]} />
+        </>
       )}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <circleGeometry args={[h * 1.7, 64]} />
-        <meshStandardMaterial color={REGOLITH} roughness={1} metalness={0} />
+
+      <mesh geometry={groundGeo} receiveShadow>
+        <meshStandardMaterial color={ground.albedo} roughness={1} metalness={0} map={grain} bumpMap={grain} bumpScale={ground.grain} />
       </mesh>
+      {ground.rocks.map((k, i) => (
+        <mesh key={i} position={[k.x, ground.height(k.x, k.z) + k.size[1] * 0.55, k.z]} rotation={[0, k.turn, 0]} scale={k.size} castShadow receiveShadow>
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial {...ROCK} flatShading />
+        </mesh>
+      ))}
+
+      <group ref={setSkyGroup}>
+        <mesh geometry={skyline}>
+          <meshBasicMaterial vertexColors side={THREE.DoubleSide} fog={false} />
+        </mesh>
+        {/* beyond the skyline, so terrain hides whatever part of a disc is below it */}
+        <mesh position={sunDisc.p} onUpdate={(m) => m.lookAt(0, 0, 0)}>
+          <circleGeometry args={[sunDisc.r, 40]} />
+          <meshBasicMaterial color="#fff8e0" side={THREE.DoubleSide} toneMapped={false} />
+        </mesh>
+        <mesh position={earthDisc.p} onUpdate={(m) => m.lookAt(0, 0, 0)}>
+          <circleGeometry args={[earthDisc.r, 40]} />
+          <meshBasicMaterial color="#a9c8f4" side={THREE.DoubleSide} toneMapped={false} />
+        </mesh>
+      </group>
+
       {state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} /> : null}
     </>
   )
@@ -455,64 +700,69 @@ interface Props {
   fallback: Archetype
   /** the app's base URL; model files are under `${baseUrl}data/` */
   baseUrl: string
-  sun: SunAt
+  /** fixes the illustrative ground, so a site looks the same on every visit (the mission id) */
+  seed: string
+  /** which of the three illustrative grounds: mare, highland or polar */
+  style: GroundStyle
+  sky: SceneSky
+  detail: SceneDetail
+  /** craft left of centre by this share of the view */
+  shift: number
+  /** how far back the camera stands, in craft heights (3 to 4; less in a small view) */
+  back: number
+  /** false when the user asked for reduced motion: no dolly in or out */
+  motion: boolean
+  /** the view is closing: dolly back */
+  leaving: boolean
   onState: (s: ModelState) => void
 }
 
 /**
- * The hero view. The camera turns slowly round the craft while the page is visible and the user
- * has not asked for reduced motion; dragging turns it by hand. This is the only view in the app
- * that draws continuously, and only while it is on screen.
+ * The ground-level view. Nothing turns by itself: after the dolly-in the picture is still, and
+ * a frame is drawn only when the user drags (look round the craft, raise or lower the camera)
+ * or scrolls (closer or further), or when the light changes with the clock.
  */
-export function LanderView({ model, fallback, baseUrl, sun, onState }: Props) {
-  const angle = useRef(0.6)
-  const drag = useRef<{ x: number; a: number } | null>(null)
-  const [held, setHeld] = useState(false)
-  const [hidden, setHidden] = useState(() => typeof document !== 'undefined' && document.hidden)
-  const [still] = useState(() => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches)
+export function LanderView({ model, fallback, baseUrl, seed, style, sky, detail, shift, back, motion, leaving, onState }: Props) {
+  const h = model.height_m
+  const lim = limits(h)
+  const stand = useRef<Stand>({ viewAz: startViewAz(sky.sun, sky.earth, seed), eye: 2, dist: Math.min(Math.max(h * back, lim.dist[0]), lim.dist[1]) })
+  const drag = useRef<{ x: number; y: number; az: number; eye: number } | null>(null)
   const redraw = useRef<() => void>(() => {})
-  useEffect(() => {
-    const on = () => setHidden(document.hidden)
-    document.addEventListener('visibilitychange', on)
-    return () => document.removeEventListener('visibilitychange', on)
-  }, [])
-  const turning = !still && !hidden && !held
+  const clamp = (v: number, [lo, hi]: readonly [number, number]) => Math.min(Math.max(v, lo), hi)
   return (
     <div
       className="lander-view"
       role="img"
-      aria-label="3D model of the craft; drag to turn it"
+      aria-label="The craft seen from the ground. Drag to look around it, scroll to move closer or further."
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId)
-        drag.current = { x: e.clientX, a: angle.current }
-        setHeld(true)
+        drag.current = { x: e.clientX, y: e.clientY, az: stand.current.viewAz, eye: stand.current.eye }
       }}
       onPointerMove={(e) => {
-        if (!drag.current) return
-        angle.current = drag.current.a - (e.clientX - drag.current.x) * 0.01
+        const d = drag.current
+        if (!d) return
+        stand.current.viewAz = d.az - (e.clientX - d.x) * 0.35
+        stand.current.eye = clamp(d.eye + (e.clientY - d.y) * 0.03, lim.eye)
         redraw.current()
       }}
-      onPointerUp={() => {
-        drag.current = null
-        setHeld(false)
-      }}
-      onPointerCancel={() => {
-        drag.current = null
-        setHeld(false)
+      onPointerUp={() => (drag.current = null)}
+      onPointerCancel={() => (drag.current = null)}
+      onWheel={(e) => {
+        stand.current.dist = clamp(stand.current.dist * Math.exp(e.deltaY * 0.001), lim.dist)
+        redraw.current()
       }}
     >
       <Canvas
-        frameloop={turning ? 'always' : 'demand'}
-        shadows
-        dpr={[1, 2]}
-        gl={{ alpha: true, antialias: true }}
-        camera={{ fov: 30, near: 0.1, far: 500 }}
+        frameloop="demand"
+        shadows="percentage"
+        dpr={[1, detail === 'low' ? 1 : detail === 'medium' ? 1.5 : 2]}
+        gl={{ antialias: detail !== 'low' }}
+        camera={{ fov: 40, near: 0.2, far: 8000 }}
         onCreated={(s) => {
           redraw.current = s.invalidate
         }}
       >
-        <Rig heightM={model.height_m} angle={angle} turning={turning} />
-        <Stage model={model} fallback={fallback} baseUrl={baseUrl} sun={sun} onState={onState} />
+        <Scene model={model} fallback={fallback} baseUrl={baseUrl} seed={seed} style={style} sky={sky} detail={detail} stand={stand} shift={shift} motion={motion} leaving={leaving} onState={onState} />
       </Canvas>
     </div>
   )

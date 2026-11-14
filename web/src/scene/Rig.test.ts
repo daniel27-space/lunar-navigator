@@ -3,7 +3,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { R_KM } from '../lib/geo'
-import { POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
+import { APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
 
 const cameraAt = (pos: number[], up: number[]) => {
   const c = new THREE.PerspectiveCamera()
@@ -74,6 +74,69 @@ describe('camera moves', () => {
     expect(pose.up.dot(pose.target.clone().normalize())).toBeCloseTo(1, 9)
     // The camera is above the site's local horizon.
     expect(pose.pos.clone().sub(pose.target).dot(pose.up)).toBeGreaterThan(0)
+  })
+
+  it('the site pose is unchanged: 26 km up and 48 km out, a two-second move with the usual arc', () => {
+    const cam = cameraAt(POLE_POSE.pos, POLE_POSE.up)
+    const pose = poseFor({ kind: 'site', lat: 26.13, lon: 3.63, hM: -1900, seq: 1 }, cam, new THREE.Vector3(0, 0, -R_KM))
+    const off = pose.pos.clone().sub(pose.target)
+    expect(off.dot(pose.up)).toBeCloseTo(26, 6)
+    expect(off.length()).toBeCloseTo(Math.hypot(26, 48), 6)
+    expect(pose.minDistance).toBe(4)
+    expect(pose.seconds).toBeUndefined()
+    expect(pose.lift).toBeUndefined()
+  })
+
+  it('the approach ends a few km out and low, on the same side as the site pose, looking at the site', () => {
+    for (const [lat, lon, hM] of [
+      [26.13, 3.63, -1900],
+      [-89.45, -137.2, 1200],
+      [-43.3, -11.4, 0],
+    ]) {
+      const cam = cameraAt(POLE_POSE.pos, POLE_POSE.up)
+      const site = poseFor({ kind: 'site', lat, lon, hM, seq: 1 }, cam, new THREE.Vector3(0, 0, -R_KM))
+      const near = poseFor({ kind: 'approach', lat, lon, hM, seq: 2 }, cam, new THREE.Vector3(0, 0, -R_KM))
+      // Same target and the same up as the site pose.
+      expect(near.target.distanceTo(site.target)).toBeLessThan(1e-9)
+      expect(near.up.distanceTo(site.up)).toBeLessThan(1e-9)
+      const off = near.pos.clone().sub(near.target)
+      const siteOff = site.pos.clone().sub(site.target)
+      // A few km away, above the local horizon but lower in the sky than the site pose.
+      expect(off.length()).toBeCloseTo(Math.hypot(APPROACH_KM.out, APPROACH_KM.up), 6)
+      expect(off.length()).toBeLessThan(6)
+      const height = off.dot(near.up)
+      expect(height).toBeCloseTo(APPROACH_KM.up, 6)
+      expect(height / off.length()).toBeLessThan(siteOff.dot(site.up) / siteOff.length())
+      // Same compass side of the site: the level parts of the two offsets point the same way.
+      const level = (v: THREE.Vector3) => v.clone().addScaledVector(near.up, -v.dot(near.up)).normalize()
+      expect(level(off).dot(level(siteOff))).toBeCloseTo(1, 9)
+      expect(near.minDistance).toBeLessThan(site.minDistance)
+    }
+  })
+
+  it('the approach is a short straight descent from the site pose, and a longer arc from far away', () => {
+    const goal = { kind: 'approach', lat: 26.13, lon: 3.63, hM: -1900, seq: 2 } as const
+    const far = cameraAt(POLE_POSE.pos, POLE_POSE.up)
+    const site = poseFor({ kind: 'site', lat: 26.13, lon: 3.63, hM: -1900, seq: 1 }, far, new THREE.Vector3(0, 0, -R_KM))
+    const fromSite = poseFor(goal, cameraAt(site.pos.toArray(), site.up.toArray()), site.target)
+    expect(fromSite.seconds).toBeLessThan(2)
+    expect(fromSite.lift).toBe(0)
+    // Every point of that descent is closer to the site than the one before, and stays above the ground.
+    let last = Infinity
+    for (let i = 0; i <= 50; i++) {
+      const k = i / 50
+      const dir = slerpUnit(site.pos.clone().normalize(), fromSite.pos.clone().normalize(), k)
+      const p = dir.multiplyScalar(THREE.MathUtils.lerp(site.pos.length(), fromSite.pos.length(), k))
+      const d = p.distanceTo(site.target)
+      expect(d).toBeLessThanOrEqual(last + 1e-9)
+      expect(p.length()).toBeGreaterThan(site.target.length())
+      last = d
+    }
+    const fromFar = poseFor(goal, far, new THREE.Vector3(0, 0, -R_KM))
+    expect(fromFar.seconds).toBeGreaterThan(2)
+    expect(fromFar.lift).toBeGreaterThan(0)
+    expect(fromFar.pos.distanceTo(fromSite.pos)).toBeLessThan(1e-9)
+    expect(horizontal(fromFar.via).length()).toBeCloseTo(1, 9)
   })
 
   it('wheel-hold drag keeps the height above the surface and moves the ground with the pointer', () => {

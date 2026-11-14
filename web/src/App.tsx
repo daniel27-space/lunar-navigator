@@ -32,7 +32,7 @@ import { FinderPanel } from './ui/FinderPanel'
 import { Intro } from './ui/Intro'
 import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
-import { ShowcaseHero, ShowcasePanel } from './ui/Showcase'
+import { ShowcaseHero, ShowcasePanel, usePreloadModel, useShowcaseSequence } from './ui/Showcase'
 import { SiteCard } from './ui/SiteCard'
 import { useSiteAnalysis, type SiteAnalysis } from './ui/useSiteAnalysis'
 import './App.css'
@@ -336,12 +336,24 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
   // The mission showcase lights its model from the Sun as this panel works it out for that site.
   const shown = useStore((s) => (s.showcase ? (s.pins.find((x) => s.pinMission[x.id] === s.showcase)?.id ?? null) : null))
   const shownSite = shown === null ? undefined : sites.find((a) => a.pin.id === shown)
-  const sunAz = shownSite?.sky.sun.az
-  const sunEl = shownSite?.sky.sun.el
+  const sun = shownSite?.sky.sun
+  const earth = shownSite?.sky.earth
   const sunUp = shownSite?.sunNext.now
+  const skyline = shownSite?.horizon
   useEffect(() => {
-    useStore.getState().setShowcaseSun(shown !== null && sunAz !== undefined && sunEl !== undefined ? { pinId: shown, az: sunAz, el: sunEl, up: !!sunUp } : null)
-  }, [shown, sunAz, sunEl, sunUp])
+    useStore.getState().setShowcaseSky(
+      shown !== null && sun && earth && skyline
+        ? {
+            pinId: shown,
+            sun: { az: sun.az, el: sun.el, radius: sun.radius, up: !!sunUp },
+            earth: { az: earth.az, el: earth.el, radius: earth.radius },
+            horizon: skyline.elevDeg,
+            azStepDeg: skyline.azStepDeg,
+          }
+        : null,
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, sun?.az, sun?.el, sun?.radius, earth?.az, earth?.el, earth?.radius, sunUp, skyline])
   return (
     <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
       <Intro onExample={onExample} />
@@ -578,8 +590,8 @@ export default function App() {
       // The showcase opens over the site; the pin underneath remembers which mission it is.
       const st = useStore.getState()
       if (st.activePin !== null) st.linkMission(st.activePin, m.id)
-      st.openShowcase(m.id)
-      if (isPhone() && st.sheet !== 'half') st.setSheet('half')
+      // The mission view follows once this flight has ended (ui/Showcase.tsx drives the sequence).
+      st.startShowcase(m.id, 'flight')
     },
     [pick, goTo, terrain, elevation, patchIdFor],
   )
@@ -643,7 +655,11 @@ export default function App() {
   }
 
   const showcaseId = useStore((s) => s.showcase)
-  const showcased = showcaseId ? (missions.find((m) => m.id === showcaseId) ?? null) : null
+  // The mission view is on screen only in its ground-level steps; before that the camera is still travelling.
+  const showcasePhase = useStore((s) => s.showcasePhase)
+  useShowcaseSequence()
+  usePreloadModel(showcaseId ? (missions.find((m) => m.id === showcaseId) ?? null) : null, import.meta.env.BASE_URL)
+  const showcased = showcaseId && (showcasePhase === 'ground' || showcasePhase === 'leaving') ? (missions.find((m) => m.id === showcaseId) ?? null) : null
 
   const chooseLayer = (l: LayerMode) => {
     setLayer(l)
@@ -718,7 +734,7 @@ export default function App() {
                 ['pole', 'South Pole'],
                 ['globe', 'Whole Moon'],
               ]}
-              value={viewKind === 'site' ? null : viewKind}
+              value={viewKind === 'pole' || viewKind === 'globe' ? viewKind : null}
               onChange={(k) => {
                 goTo({ kind: k })
                 setMenu(null)

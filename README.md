@@ -26,8 +26,10 @@ Pick any point near the Moon's south pole and any date from 2024 to 2036, and se
   one shared timeline, and one row per measure with the winner marked;
 - 41 past, failed and planned landing sites across the whole Moon, each with detailed terrain
   around it, so the same analysis works at Apollo 15 or Chang'e 4 as at the pole;
-- **a mission view** for each of them: the craft in 3D lit by the real Sun at its site, a
-  picture where a freely licensed one exists, key facts and what the mission did.
+- **a mission view** for each of them: the camera flies to the site and down to a ground-level
+  view of the craft, with the real skyline from the terrain data around it and the Sun and
+  Earth where they are in the sky, beside a picture (where a freely licensed one exists), key
+  facts and what the mission did.
 
 Map layers: sunlight now, average sunlight, average Earth visibility, permanently shadowed
 regions, elevation and slope.
@@ -87,6 +89,9 @@ property search, product-comparison sites, sun-planning tools); see
 - At a mission site the horizon uses 80 m terrain out to about 30 km, 160 m to about 60 km and
   the whole-Moon map beyond, so a peak further away than that can be underestimated. The four
   polar landers also have 20 m terrain within 5 km; the 20 m product does not exist elsewhere.
+- In the mission view the skyline, the Sun and the Earth are real for that site and time (the
+  discs are drawn at twice their size). The ground near the craft is generated, in three
+  styles (mare, highland, polar), because no terrain data exists at that scale.
 - In the mission view only the Apollo Lunar Module is a real 3D model (NASA). The other craft
   are simplified stand-ins for their class and are labelled so. 6 missions have no picture
   because none could be found under a free licence, and for most non-NASA craft the picture

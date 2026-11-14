@@ -54,6 +54,31 @@ export type ViewGoal =
   | { kind: 'pole'; seq: number }
   | { kind: 'globe'; seq: number; lat?: number; lon?: number }
   | { kind: 'site'; seq: number; lat: number; lon: number; hM: number }
+  /** closer and lower than 'site': the last leg down to a mission's ground-level view */
+  | { kind: 'approach'; seq: number; lat: number; lon: number; hM: number }
+
+/** A camera request without its sequence number. */
+export type ViewRequest =
+  | { kind: 'pole' }
+  | { kind: 'globe'; lat?: number; lon?: number }
+  | { kind: 'site'; lat: number; lon: number; hM: number }
+  | { kind: 'approach'; lat: number; lon: number; hM: number }
+
+/**
+ * Steps of the mission view: the normal flight to the site, the approach down to it, the
+ * ground-level scene, and leaving it again. 'request' asks for it from a site card.
+ */
+export type ShowcasePhase = 'flight' | 'request' | 'approach' | 'ground' | 'leaving'
+
+/** What the ground-level scene needs from the site's analysis: the sky bodies and the terrain skyline. */
+export interface ShowcaseSky {
+  pinId: number
+  sun: { az: number; el: number; radius: number; up: boolean }
+  earth: { az: number; el: number; radius: number }
+  /** terrain skyline in degrees above level, one value per `azStepDeg` clockwise from north */
+  horizon: Float32Array
+  azStepDeg: number
+}
 
 export interface Pin {
   id: number
@@ -85,7 +110,10 @@ interface State {
   pins: Pin[]
   activePin: number | null
   view: ViewGoal
-  goTo: (v: { kind: 'pole' } | { kind: 'globe'; lat?: number; lon?: number } | { kind: 'site'; lat: number; lon: number; hM: number }) => void
+  goTo: (v: ViewRequest) => void
+  /** set by the camera rig: the `seq` of the last camera move that finished */
+  arrivedSeq: number
+  setArrived: (seq: number) => void
   /** dates the clock may take: the ephemeris, less room for the 60-day analysis window; null until loaded */
   timeRange: [number, number] | null
   setTimeRange: (r: [number, number]) => void
@@ -119,13 +147,22 @@ interface State {
   setBaseline: (pinId: number, tMs: number | null) => void
   /** interface only: the mission whose showcase is open (its id), and which pin stands for which mission */
   showcase: string | null
-  openShowcase: (missionId: string) => void
+  /** where the mission view is in its sequence; null when it is not in use */
+  showcasePhase: ShowcasePhase | null
+  /** the camera request the sequence is waiting on or last made (any other request cancels the sequence) */
+  showcaseSeq: number
+  /** where the camera returns to when the mission view closes */
+  showcaseHome: ViewRequest | null
+  /** start the sequence for a mission: 'flight' right after a pick (the camera is on its way), 'request' from a card */
+  startShowcase: (missionId: string, phase: 'flight' | 'request') => void
+  setShowcase: (p: Partial<Pick<State, 'showcase' | 'showcasePhase' | 'showcaseSeq' | 'showcaseHome'>>) => void
+  /** ask to close: the ground scene leaves with a short move; before it is up, the sequence just stops */
   closeShowcase: () => void
   pinMission: Record<number, string>
   linkMission: (pinId: number, missionId: string) => void
   /** interface only: the Sun at the showcased mission's pin, taken from its site analysis for the model's light */
-  showcaseSun: { pinId: number; az: number; el: number; up: boolean } | null
-  setShowcaseSun: (s: { pinId: number; az: number; el: number; up: boolean } | null) => void
+  showcaseSky: ShowcaseSky | null
+  setShowcaseSky: (s: ShowcaseSky | null) => void
   /** interface only: the first-use guide is showing */
   help: boolean
   setHelp: (on: boolean) => void
@@ -178,6 +215,8 @@ export const useStore = create<State>((set) => ({
   activePin: null,
   view: { kind: 'pole', seq: 0 },
   goTo: (v) => set((s) => ({ view: { ...v, seq: s.view.seq + 1 } as ViewGoal })),
+  arrivedSeq: 0,
+  setArrived: (arrivedSeq) => set({ arrivedSeq }),
   timeRange: null,
   setTimeRange: (timeRange) => set((s) => ({ timeRange, tMs: Math.min(Math.max(s.tMs, timeRange[0]), timeRange[1]) })),
   // A date outside the supported range is pulled back to its nearest end, never used as is:
@@ -238,12 +277,16 @@ export const useStore = create<State>((set) => ({
       return { baselines }
     }),
   showcase: null,
-  openShowcase: (showcase) => set({ showcase, tab: 'sites' }),
-  closeShowcase: () => set({ showcase: null }),
+  showcasePhase: null,
+  showcaseSeq: 0,
+  showcaseHome: null,
+  startShowcase: (showcase, showcasePhase) => set((s) => ({ showcase, showcasePhase, showcaseSeq: s.view.seq, tab: 'sites' })),
+  setShowcase: (p) => set(p),
+  closeShowcase: () => set((s) => (s.showcasePhase === 'ground' ? { showcasePhase: 'leaving' } : s.showcasePhase === 'leaving' ? s : { showcase: null, showcasePhase: null })),
   pinMission: {},
   linkMission: (pinId, missionId) => set((s) => ({ pinMission: { ...s.pinMission, [pinId]: missionId } })),
-  showcaseSun: null,
-  setShowcaseSun: (showcaseSun) => set({ showcaseSun }),
+  showcaseSky: null,
+  setShowcaseSky: (showcaseSky) => set({ showcaseSky }),
   help: firstVisit(),
   setHelp: (help) => {
     if (!help) {

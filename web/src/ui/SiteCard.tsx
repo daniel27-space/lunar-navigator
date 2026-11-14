@@ -150,7 +150,7 @@ export function SiteCard({ a, active }: Props) {
     focusLanding(null)
   }, [landingFocus, pin.id, focusLanding])
   const missionId = useStore((s) => s.pinMission[pin.id])
-  const openShowcase = useStore((s) => s.openShowcase)
+  const startShowcase = useStore((s) => s.startShowcase)
   const pano = panoChoice ?? active
   const [tierShort, rough] = TIER_SHORT[tier]
   const until = (event: string, h: number | null) => (h === null ? `${event} ${fmtDuration(null, WINDOW_DAYS)}` : `${event} in ${fmtDuration(h)}`)
@@ -272,7 +272,7 @@ export function SiteCard({ a, active }: Props) {
             className="link"
             onClick={(e) => {
               e.stopPropagation()
-              openShowcase(missionId)
+              startShowcase(missionId, 'request')
             }}
           >
             Mission details

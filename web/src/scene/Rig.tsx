@@ -18,7 +18,14 @@ interface Pose {
   minDistance: number
   /** direction the up vector swings through when it has to turn right over */
   via: THREE.Vector3
+  /** how long the move to this pose takes, seconds (default 2) */
+  seconds?: number
+  /** how far the path rises above the straight line mid-way, as a share of its length (default 0.25) */
+  lift?: number
 }
+
+/** The approach to a site: how far out and how high the camera ends, km. */
+export const APPROACH_KM = { out: 4, up: 1.2 }
 
 export const POLE_POSE = {
   pos: [260, -180, -(R_KM + 330)] as [number, number, number],
@@ -83,6 +90,16 @@ export function poseFor(goal: ViewGoal, camera: THREE.Camera, target: THREE.Vect
       via: horizontal(dir),
     }
   }
+  if (goal.kind === 'approach') {
+    // The last leg down to a mission's ground-level view: a few km out and low, on the same
+    // side as the site pose so the camera only sinks and closes in, without swinging round.
+    const site = new THREE.Vector3(...sitePosKm(goal.lat, goal.lon, goal.hM))
+    const f = localFrame(goal.lat, goal.lon)
+    const pos = site.clone().addScaledVector(new THREE.Vector3(...f.u), APPROACH_KM.up).addScaledVector(new THREE.Vector3(...f.n), APPROACH_KM.out)
+    // From close by it is a short descent; from far away (no detailed terrain, whole-Moon view) allow longer.
+    const near = camera.position.distanceTo(site) < 200
+    return { pos, target: site, up: new THREE.Vector3(...f.u), minDistance: 1, via: horizontal(pos), seconds: near ? 1.4 : 2.4, lift: near ? 0 : 0.25 }
+  }
   // Fly-in: stop a few tens of km out, looking at the site from the equator side, with the
   // site's own vertical as up.
   const site = new THREE.Vector3(...sitePosKm(goal.lat, goal.lon, goal.hM))
@@ -125,6 +142,8 @@ export function surfaceSlide(
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
 interface Move {
+  /** the request this move answers, reported to the store when it ends */
+  seq: number
   t: number
   fromPos: THREE.Vector3
   fromTarget: THREE.Vector3
@@ -145,6 +164,7 @@ export function Rig() {
     const c = controls.current
     if (!c || goal.seq === 0) return
     move.current = {
+      seq: goal.seq,
       t: 0,
       fromPos: camera.position.clone(),
       fromTarget: c.target.clone(),
@@ -211,14 +231,14 @@ export function Rig() {
   useFrame((_, dt) => {
     const m = move.current
     if (!m) return
-    m.t = Math.min(1, m.t + Math.min(dt, 0.05) / 2.0)
+    m.t = Math.min(1, m.t + Math.min(dt, 0.05) / (m.to.seconds ?? 2.0))
     const k = ease(m.t)
     // Direction and distance are interpolated separately, so the path arcs around the Moon
     // instead of cutting through it.
     const fromLen = m.fromPos.length()
     const toLen = m.to.pos.length()
     const dir = slerpUnit(m.fromPos.clone().normalize(), m.to.pos.clone().normalize(), k)
-    const lift = Math.sin(Math.PI * k) * 0.25 * m.fromPos.distanceTo(m.to.pos)
+    const lift = Math.sin(Math.PI * k) * (m.to.lift ?? 0.25) * m.fromPos.distanceTo(m.to.pos)
     camera.position.copy(dir.multiplyScalar(THREE.MathUtils.lerp(fromLen, toLen, k) + lift))
     const target = m.fromTarget.clone().lerp(m.to.target, k)
     camera.up.copy(upAt(m.fromUp, m.to.up, m.to.via, k))
@@ -230,6 +250,8 @@ export function Rig() {
       camera.lookAt(m.to.target)
       move.current = null
       setCtl((c) => ({ key: c.key + 1, target: m.to.target.toArray(), minDistance: m.to.minDistance }))
+      // Tell the interface this move is over (the mission view continues from here).
+      useStore.getState().setArrived(m.seq)
     }
   })
 

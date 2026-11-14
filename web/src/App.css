@@ -93,7 +93,7 @@
   --cmp-row: 32px;
   --wtl-col: 56px;
   --cmp-head-h: 56px;
-  --scrim-hero: radial-gradient(ellipse farthest-side at 50% 55%, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0.45) 60%, transparent); /* keeps the craft readable over sunlit ground */
+  --fade: 0.55s ease; /* the mission view's cross-fade in and out */
   --showcase-img: 220px;
   --phone-timebar: 112px; /* time bar plus its margins on a phone */ /* the comparison's sticky identity row, for scroll offsets */ /* value column of the landing-date grid (four columns in a card) */
   --tabs-h: 40px;
@@ -1761,16 +1761,48 @@ h2.panel-head {
   vertical-align: middle;
 }
 
-/* ---------- mission showcase: the craft in its own view (hero) and a panel of facts ---------- */
+/* ---------- mission view: a ground-level scene of the craft (hero) and a panel of facts ---------- */
 .mission-hero {
   position: relative;
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  border: var(--hairline) solid var(--border);
   border-radius: var(--r-lg);
-  background: var(--scrim-hero);
+  background: var(--scene);
+  box-shadow: var(--shadow-1);
   pointer-events: auto;
+  animation: fade-in var(--fade) both;
+}
+.mission-hero.leaving,
+.showcase.leaving {
+  animation: fade-out var(--fade) both;
+}
+.showcase {
+  animation: slide-in var(--fade) both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--sp-5));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .showcase {
+    animation-name: fade-in;
+  }
 }
 .app[data-showcase='on'] .dock-left,
 .app[data-showcase='on'] .sites {
@@ -1795,25 +1827,23 @@ h2.panel-head {
   color: var(--text-2);
 }
 .hero-notes {
-  position: absolute;
-  left: var(--sp-4);
-  right: var(--sp-4);
-  bottom: var(--sp-4);
+  flex: none;
   display: grid;
   gap: var(--sp-0);
-  pointer-events: none;
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  background: var(--surface-1-solid);
+  border-top: var(--hairline) solid var(--border);
 }
 .hero-notes a,
 .showcase a {
   color: var(--text-1);
   text-underline-offset: var(--sp-0);
-  pointer-events: auto;
 }
 .lander-view {
   flex: 1;
   min-height: 0;
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: none;
 }
 .showcase {
   width: var(--w-compare);
@@ -2185,10 +2215,17 @@ h2.panel-head {
   .hero-title {
     display: none;
   }
+  .mission-hero {
+    border-width: var(--hairline) 0;
+    box-shadow: none;
+  }
+  .hero-notes p.phone-only {
+    display: block !important;
+  }
   .hero-notes {
-    left: var(--sp-3);
-    right: var(--sp-3);
-    bottom: var(--sp-1);
+    padding: var(--sp-1) var(--sp-3) var(--sp-2);
+    font-size: var(--fs-cap);
+    line-height: var(--lh-cap);
   }
   .showcase-head {
     position: static;

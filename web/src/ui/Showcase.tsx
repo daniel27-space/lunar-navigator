@@ -1,29 +1,183 @@
-// Mission showcase: the craft in its own small 3D view (hero) and a panel with its picture, key
-// facts and what it did. It opens after a mission is chosen; the site stays pinned underneath,
-// so closing it leaves the user on the site with its card.
+// The mission view: after a mission is picked the camera flies to its site, goes on down towards
+// it, and the view cross-fades into a ground-level scene of the craft (hero) with a panel of its
+// picture, key facts and what it did. Closing reverses it and leaves the site card.
+//
+// The sequence is a small state machine kept in the store (`showcasePhase`):
+//   flight   -> the normal fly-in is under way; nothing of the mission view shows
+//   request  -> asked for from a site card; the camera is wherever the user left it
+//   approach -> the camera's second, shorter move down to a few km from the site
+//   ground   -> the ground-level scene and the panel are up
+//   leaving  -> the scene dollies back and fades while the camera flies back up
+// `useShowcaseSequence` moves it on. The camera rig reports the end of each move through
+// `arrivedSeq`; any camera request that is not part of the sequence cancels it.
 import { useCallback, useEffect, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { fmtMissionDate } from '../lib/format'
-import { defaultModel, LanderView, type Archetype, type ModelState } from '../scene/LanderModel'
+import { defaultModel, DISC_SCALE, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
+import { groundStyle } from '../scene/landers/ground'
 import { STATUS_COLOR, type Mission } from '../scene/Missions'
-import { useStore } from '../store'
+import { useStore, type ViewRequest } from '../store'
+import { isPhone } from './Sheet'
 
 const STATUS_WORD: Record<Mission['status'], string> = { landed: 'Landed', crashed: 'Lost on landing', planned: 'Planned', candidate: 'Candidate site' }
 
+/** How long the scene and panel take to fade out, ms (the same figure as the CSS animation). */
+const LEAVE_MS = 550
+/** The cross-fade starts this long before the approach ends, ms, so the two moves read as one. */
+const OVERLAP_MS = 450
+const APPROACH_MS = 1400
+
+const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
 /** The pin that stands for this mission, if it is still pinned. */
-function useMissionPin(missionId: string) {
-  return useStore((s) => s.pins.find((p) => s.pinMission[p.id] === missionId) ?? null)
+function useMissionPin(missionId: string | null) {
+  return useStore((s) => (missionId ? (s.pins.find((p) => s.pinMission[p.id] === missionId) ?? null) : null))
 }
 
-/** Sun direction at the site: from the site's analysis when it has one, else straight from the ephemeris. */
-function useSun(m: Mission, ephem: Ephem | null) {
+/** Drives the mission view through its steps. Mounted once, in App. */
+export function useShowcaseSequence() {
+  const phase = useStore((s) => s.showcasePhase)
+  const missionId = useStore((s) => s.showcase)
+  const seq = useStore((s) => s.showcaseSeq)
+  const viewSeq = useStore((s) => s.view.seq)
+  const arrived = useStore((s) => s.arrivedSeq)
+  const pin = useMissionPin(missionId)
+
+  // The camera was sent somewhere else (South Pole, another site...): the mission view gives way.
+  useEffect(() => {
+    if (phase && phase !== 'request' && viewSeq !== seq) useStore.getState().setShowcase({ showcase: null, showcasePhase: null })
+  }, [phase, viewSeq, seq])
+
+  // The flight has ended (or the view was asked for from a card): go on down to the site.
+  const ready = phase === 'request' || (phase === 'flight' && arrived === seq)
+  useEffect(() => {
+    if (!ready) return
+    const st = useStore.getState()
+    const home: ViewRequest = st.view.kind === 'approach' ? (st.showcaseHome ?? { kind: 'pole' }) : (({ seq: _, ...v }) => v as ViewRequest)(st.view)
+    if (isPhone() && st.sheet !== 'half') st.setSheet('half')
+    if (!pin || reducedMotion()) {
+      // No approach: the scene simply fades in over the site view.
+      st.setShowcase({ showcasePhase: 'ground', showcaseHome: home, showcaseSeq: st.view.seq })
+      return
+    }
+    st.goTo({ kind: 'approach', lat: pin.lat, lon: pin.lon, hM: pin.hM })
+    st.setShowcase({ showcasePhase: 'approach', showcaseHome: home, showcaseSeq: useStore.getState().view.seq })
+  }, [ready, pin])
+
+  // Near the end of the approach the view cross-fades into the ground-level scene.
+  useEffect(() => {
+    if (phase !== 'approach') return
+    const up = () => useStore.getState().showcasePhase === 'approach' && useStore.getState().setShowcase({ showcasePhase: 'ground' })
+    if (arrived === seq) return void up()
+    const t = setTimeout(up, APPROACH_MS - OVERLAP_MS)
+    return () => clearTimeout(t)
+  }, [phase, arrived, seq])
+
+  // Leaving: the camera flies back up to where a mission pick ends, while the scene fades out.
+  useEffect(() => {
+    if (phase !== 'leaving') return
+    const st = useStore.getState()
+    if (!reducedMotion() && st.showcaseHome && st.view.kind === 'approach') {
+      st.goTo(st.showcaseHome)
+      st.setShowcase({ showcaseSeq: useStore.getState().view.seq })
+    }
+    const t = setTimeout(() => useStore.getState().setShowcase({ showcase: null, showcasePhase: null }), LEAVE_MS)
+    return () => clearTimeout(t)
+  }, [phase])
+}
+
+/** Fetches a mission's model file while the camera is still on its way, so the craft does not pop in later. */
+export function usePreloadModel(m: Mission | null, baseUrl: string) {
+  const file = m?.model?.kind === 'glb' ? m.model.file : null
+  useEffect(() => {
+    if (file) fetchModel(baseUrl, file).catch(() => {}) // a failure is reported when the scene tries to show it
+  }, [file, baseUrl])
+}
+
+/** The sky for the scene: from the site's analysis when it has one, else straight from the ephemeris with a flat skyline. */
+function useSky(m: Mission, ephem: Ephem | null): SceneSky {
   const pin = useMissionPin(m.id)
-  const fromSite = useStore((s) => (pin && s.showcaseSun && s.showcaseSun.pinId === pin.id ? s.showcaseSun : null))
+  const fromSite = useStore((s) => (pin && s.showcaseSky && s.showcaseSky.pinId === pin.id ? s.showcaseSky : null))
   const tMs = useStore((s) => s.tMs)
-  if (fromSite) return { az: fromSite.az, el: fromSite.el, up: fromSite.up }
-  if (!ephem) return { az: 90, el: 30, up: true }
-  const sun = skyAt(ephem, tMs, m.lat, m.lon, pin?.hM ?? 0).sun
-  return { az: sun.az, el: sun.el, up: sun.el > 0 }
+  if (fromSite) return fromSite
+  if (!ephem) return FLAT_SKY
+  const sky = skyAt(ephem, tMs, m.lat, m.lon, (pin?.hM ?? 0) + 2)
+  return { sun: { az: sky.sun.az, el: sky.sun.el, radius: sky.sun.radius, up: sky.sun.el > 0 }, earth: { az: sky.earth.az, el: sky.earth.el, radius: sky.earth.radius }, horizon: null, azStepDeg: 0.5 }
+}
+const FLAT_SKY: SceneSky = { sun: { az: 90, el: 30, radius: 0.27, up: true }, earth: { az: 0, el: -10, radius: 0.95 }, horizon: null, azStepDeg: 0.5 }
+
+/** A long licence statement cut to its first clause; the full text goes in the tooltip. */
+function shortLicence(text: string): string {
+  const first = text.split(/[;(]/)[0].trim()
+  return first.length > 48 ? `${first.slice(0, 46).trimEnd()}…` : first
+}
+
+export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission; ephem: Ephem | null; baseUrl: string }) {
+  const sky = useSky(m, ephem)
+  const pin = useMissionPin(m.id)
+  const leaving = useStore((s) => s.showcasePhase === 'leaving')
+  const quality = useStore((s) => s.quality)
+  const fallback = defaultModel(m)
+  const model = m.model ?? fallback
+  const [state, setState] = useState<ModelState>(model.kind === 'glb' ? 'loading' : 'simplified')
+  const onState = useCallback((s: ModelState) => setState(s), [])
+  // Decided once per opening, so the ground does not change under the viewer if the pin's height is refined.
+  const [style] = useState(() => groundStyle(m.id, m.lat, pin?.hM ?? 0))
+  const [motion] = useState(() => !reducedMotion())
+  const [narrow] = useState(isPhone)
+  return (
+    <div className={leaving ? 'mission-hero leaving' : 'mission-hero'} data-ground={style}>
+      <div className="hero-title">
+        <h2>{m.name}</h2>
+        <p>
+          {m.agency} · {fmtMissionDate(m.date_utc)}
+        </p>
+      </div>
+      <LanderView
+        key={m.id}
+        model={model}
+        fallback={fallback.archetype as Archetype}
+        baseUrl={baseUrl}
+        seed={m.id}
+        style={style}
+        sky={sky}
+        detail={quality}
+        shift={narrow ? 0 : 0.12}
+        back={narrow ? 2.6 : 3.5}
+        motion={motion}
+        leaving={leaving}
+        onState={onState}
+      />
+      <div className="hero-notes">
+        <p className="not-phone">
+          {sky.sun.up
+            ? `Skyline, Sun and Earth: real directions for this site and time (discs drawn ${DISC_SCALE}× size). Ground near the craft is illustrative.`
+            : `The Sun is below the skyline here now: soft fill light shows the craft. Skyline and Earth are real (Earth drawn ${DISC_SCALE}× size); the ground is illustrative.`}
+        </p>
+        <p className="phone-only">
+          {sky.sun.up ? `Skyline, Sun and Earth are real (${DISC_SCALE}× size); ground is illustrative.` : `Sun is down: fill light. Skyline and Earth are real; ground is illustrative.`}
+        </p>
+        <p>
+          {state === 'loading' && <span role="status">Loading the 3D model…</span>}
+          {state === 'simplified' && 'Simplified model, not to scale in detail.'}
+          {state === 'file' && model.kind === 'glb' && (
+            <span title={model.license}>
+              3D model:{' '}
+              {model.source_url ? (
+                <a href={model.source_url} target="_blank" rel="noreferrer">
+                  {model.credit ?? 'source'}
+                </a>
+              ) : (
+                (model.credit ?? 'credit not recorded')
+              )}
+              <span className="not-phone">{model.license ? ` · ${shortLicence(model.license)}` : ''}</span>
+            </span>
+          )}
+          <span className="not-phone"> Drag to look around, scroll to move closer.</span>
+        </p>
+      </div>
+    </div>
+  )
 }
 
 function useClose() {
@@ -36,48 +190,12 @@ function useClose() {
   return close
 }
 
-export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission; ephem: Ephem | null; baseUrl: string }) {
-  const sun = useSun(m, ephem)
-  const fallback = defaultModel(m)
-  const model = m.model ?? fallback
-  const [state, setState] = useState<ModelState>(model.kind === 'glb' ? 'loading' : 'simplified')
-  const onState = useCallback((s: ModelState) => setState(s), [])
-  return (
-    <div className="mission-hero">
-      <div className="hero-title">
-        <h2>{m.name}</h2>
-        <p>
-          {m.agency} · {fmtMissionDate(m.date_utc)}
-        </p>
-      </div>
-      <LanderView key={m.id} model={model} fallback={fallback.archetype as Archetype} baseUrl={baseUrl} sun={sun} onState={onState} />
-      <div className="hero-notes">
-        {state === 'loading' && <p role="status">Loading the 3D model…</p>}
-        {state === 'simplified' && <p>Simplified model, not to scale in detail</p>}
-        {state === 'file' && model.kind === 'glb' && (
-          <p>
-            3D model:{' '}
-            {model.source_url ? (
-              <a href={model.source_url} target="_blank" rel="noreferrer">
-                {model.credit ?? 'source'}
-              </a>
-            ) : (
-              (model.credit ?? 'credit not recorded')
-            )}
-            {model.license ? ` · ${model.license}` : ''}
-          </p>
-        )}
-        <p>{sun.up ? 'Lit from the real Sun direction at this site and the selected time' : 'The Sun is below the horizon here now'}</p>
-      </div>
-    </div>
-  )
-}
-
 export function ShowcasePanel({ mission: m, baseUrl }: { mission: Mission; baseUrl: string }) {
   const close = useClose()
   const pin = useMissionPin(m.id)
   const setActivePin = useStore((s) => s.setActivePin)
   const focusLanding = useStore((s) => s.focusLanding)
+  const leaving = useStore((s) => s.showcasePhase === 'leaving')
   const [badImage, setBadImage] = useState<string | null>(null)
   const image = m.image && m.image.file !== badImage ? m.image : null
   const toSite = (landing: boolean) => {
@@ -88,7 +206,7 @@ export function ShowcasePanel({ mission: m, baseUrl }: { mission: Mission; baseU
     close()
   }
   return (
-    <aside className="panel showcase" aria-label={`${m.name}: mission details`}>
+    <aside className={leaving ? 'panel showcase leaving' : 'panel showcase'} aria-label={`${m.name}: mission details`}>
       <header className="panel-head showcase-head">
         <h2>{m.name}</h2>
         <span className="chip">
