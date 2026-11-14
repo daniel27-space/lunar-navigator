@@ -1,5 +1,5 @@
 // One pinned point: what the Sun and Earth are doing there now, and over the next two months.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fmtAngle, fmtCoord, fmtDegrees, fmtDuration, fmtPeriod, fmtElevation, fmtShare, fmtSlope } from '../lib/format'
 import type { Series } from '../lib/windows'
 import { useStore } from '../store'
@@ -10,7 +10,7 @@ import { DAY, WINDOW_DAYS, type SiteAnalysis, type Tier } from './useSiteAnalysi
 
 const TIER_NOTE: Record<Tier, string> = {
   crest: 'Horizon from LOLA 20 m terrain within about 5 km of this point, and 80 m terrain beyond.',
-  patch: 'Horizon from 80 m terrain within about 30 km of this site, and the whole-Moon map (2.7 km pixels) beyond.',
+  patch: 'Horizon from 80 m terrain within about 30 km of this site, 160 m terrain out to about 60 km, and the whole-Moon map (2.7 km pixels) beyond.',
   fine: 'Horizon from LOLA 80 m terrain.',
   coarse: 'Horizon from LOLA terrain at about 300 m: rise and set times are less certain here.',
   global:
@@ -141,6 +141,16 @@ export function SiteCard({ a, active }: Props) {
   // A spot pinned from the finder's shortlist opens straight on the next question: when to land.
   const fromFinder = useStore((s) => !!s.fromFinder[pin.id])
   const [land, setLand] = useState(fromFinder)
+  // "When to land here" from the mission showcase (or anywhere else) opens it on this card.
+  const landingFocus = useStore((s) => s.landingFocus)
+  const focusLanding = useStore((s) => s.focusLanding)
+  useEffect(() => {
+    if (landingFocus !== pin.id) return
+    setLand(true)
+    focusLanding(null)
+  }, [landingFocus, pin.id, focusLanding])
+  const missionId = useStore((s) => s.pinMission[pin.id])
+  const openShowcase = useStore((s) => s.openShowcase)
   const pano = panoChoice ?? active
   const [tierShort, rough] = TIER_SHORT[tier]
   const until = (event: string, h: number | null) => (h === null ? `${event} ${fmtDuration(null, WINDOW_DAYS)}` : `${event} in ${fmtDuration(h)}`)
@@ -256,6 +266,18 @@ export function SiteCard({ a, active }: Props) {
         >
           How to read this
         </button>
+        {missionId && (
+          <button
+            type="button"
+            className="link"
+            onClick={(e) => {
+              e.stopPropagation()
+              openShowcase(missionId)
+            }}
+          >
+            Mission details
+          </button>
+        )}
       </div>
 
       {pano && (

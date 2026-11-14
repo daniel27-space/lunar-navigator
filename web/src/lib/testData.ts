@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { PNG } from 'pngjs'
 import type { Ephem } from './ephem'
 import type { GlobalDem } from './globalDem'
-import { decodeHeights, decodePatch, patchTerrain, POLAR_FRAME, type PatchIndex, type Terrain } from './terrain'
+import { decodeHeights, decodePatch, decodePatchOuter, patchTerrain, POLAR_FRAME, type PatchIndex, type Terrain } from './terrain'
 
 const data = new URL('../../public/data/', import.meta.url)
 
@@ -44,9 +44,12 @@ export function readPatchIndex(): PatchIndex | null {
 export function readPatch(index: PatchIndex, id: string): Terrain {
   const entry = index.patches.find((p) => p.id === id)
   if (!entry) throw new Error(`no patch ${id}`)
-  const png = PNG.sync.read(readFileSync(new URL(`patches/${entry.file}`, data)))
-  const rgba = new Uint8ClampedArray(png.data.buffer, png.data.byteOffset, png.data.length)
-  return patchTerrain(index, entry, decodePatch(index, entry, rgba))
+  const rgba = (file: string) => {
+    const png = PNG.sync.read(readFileSync(new URL(`patches/${file}`, data)))
+    return new Uint8ClampedArray(png.data.buffer, png.data.byteOffset, png.data.length)
+  }
+  const outer = entry.outer ? decodePatchOuter(entry, rgba(entry.outer.file)) : undefined
+  return patchTerrain(index, entry, decodePatch(index, entry, rgba(entry.file)), outer)
 }
 
 export interface HorizonVector {

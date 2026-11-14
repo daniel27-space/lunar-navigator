@@ -35,7 +35,13 @@ def _site_patches():
 
 
 def _crest_patches():
-    return [p for p in _meta()["patches"] if p.get("kind") == bc.KIND]
+    """The 20 m crest patches (kind crest20, not tied to a mission)."""
+    return [p for p in _meta()["patches"] if p.get("kind") == bc.KIND and not p["sites"]]
+
+
+def _lander_patches():
+    """The 20 m patches centred on polar landers (kind crest20 with a mission in "sites")."""
+    return [p for p in _meta()["patches"] if p.get("kind") == bc.KIND and p["sites"]]
 
 
 def _patch_ids():
@@ -420,8 +426,9 @@ def test_patch_testvectors_reproduce():
     vec = json.loads((bp.OUT / "patch_testvectors.json").read_text())
     assert [v["patch"] for v in vec][:6] == ["apollo-17", "apollo-15", "im-1-odysseus", "chandrayaan-3",
                                              "apollo-11", None]
-    assert [v["patch"] for v in vec][6:] == ["connecting-ridge", "shackleton-rim", "de-gerlache-rim",
-                                             "malapert-massif", "connecting-ridge"]
+    assert [v["patch"] for v in vec][6:11] == ["connecting-ridge", "shackleton-rim", "de-gerlache-rim",
+                                               "malapert-massif", "connecting-ridge"]
+    assert [v["patch"] for v in vec][11:] == LANDER_IDS
     for v in vec:
         assert {"name", "lat", "lon", "observer_height_m", "az_step_deg", "elev_deg", "patch"} <= set(v)
         assert v["observer_height_m"] == 2.0 and v["az_step_deg"] == 0.5 and len(v["elev_deg"]) == 720
@@ -458,6 +465,7 @@ def test_apollo_15_horizon_shows_hadley_delta_to_the_south():
 # --------------------------------------------------------------------------
 needs_tif20 = pytest.mark.skipif(not bc.TIF_20M.exists(), reason="20 m south-pole GeoTIFF not downloaded")
 CREST_IDS = ["connecting-ridge", "shackleton-rim", "de-gerlache-rim", "malapert-massif"]
+LANDER_IDS = ["im-2-athena-20m", "lcross-centaur-20m", "griffin-1-20m", "im-1-odysseus-20m"]
 
 
 def _crest(pid):
@@ -535,7 +543,7 @@ def test_crest_entries_match_contract():
     meta = _meta()
     assert (meta["radius_m"], meta["size"], meta["pixel_m"]) == (1737400, 768, 80)   # file level unchanged
     crest = _crest_patches()
-    assert [p["id"] for p in crest] == CREST_IDS and meta["patches"][34:] == crest
+    assert [p["id"] for p in crest] == CREST_IDS and meta["patches"][34:38] == crest
     names = ["Shackleton-de Gerlache connecting ridge", "Shackleton rim", "de Gerlache rim", "Malapert massif"]
     for p, c, name in zip(crest, bc.crest_list(), names):
         assert list(p) == ["id", "name", "kind", "render", "lat", "lon", "file", "sites", "size", "pixel_m",
@@ -686,7 +694,7 @@ def test_existing_site_patches_still_load():
 @needs_patches
 @pytest.mark.skipif(not (bp.OUT / "patch_testvectors.json").exists(), reason="vectors not built")
 def test_crest_testvectors():
-    vec = json.loads((bp.OUT / "patch_testvectors.json").read_text())[6:]
+    vec = json.loads((bp.OUT / "patch_testvectors.json").read_text())[6:11]
     assert len(vec) == 5
     entries = {p["id"]: p for p in _crest_patches()}
     for v, pid in zip(vec[:4], CREST_IDS):                                # the patch centres
@@ -728,3 +736,363 @@ def test_crest_reference_reproduces(capsys):
     bc.reference()
     capsys.readouterr()
     assert (bp.OUT / "crest_reference.json").read_bytes() == before
+
+
+# --------------------------------------------------------------------------
+# 20 m patches at the polar landers (same format as the crest patches)
+# --------------------------------------------------------------------------
+def _source20_at(lat, lon):
+    """Bilinear 20 m source heights at lat/lon, located with PROJ from the file's own CRS (an
+    independent route from the builder's formulas). NaN outside the file or where it has no data."""
+    import rasterio
+    from rasterio.crs import CRS
+    from rasterio.warp import transform
+    from rasterio.windows import Window
+
+    with rasterio.open(bc.TIF_20M) as ds:
+        xs, ys = transform(CRS.from_proj4(f"+proj=longlat +R={R} +no_defs"), ds.crs, list(lon), list(lat))
+        xs, ys = np.array(xs), np.array(ys)
+        t = ds.transform
+        c0, r0 = int((xs.min() - t.c) / 20.0) - 2, int((t.f - ys.max()) / 20.0) - 2
+        c1, r1 = int((xs.max() - t.c) / 20.0) + 3, int((t.f - ys.min()) / 20.0) + 3
+        win = ds.read(1, window=Window(c0, r0, c1 - c0, r1 - r0), boundless=True, fill_value=np.nan)
+        x_min, y_max = t.c + c0 * 20.0, t.f - r0 * 20.0
+    return bp.bilinear(win, (xs - x_min) / 20.0 - 0.5, (y_max - ys) / 20.0 - 0.5)
+
+
+def test_lander_list_matches_missions():
+    missions = {m["id"]: m for m in json.loads(bp.MISSIONS.read_text())}
+    ll = bc.lander_list()
+    assert [c["id"] for c in ll] == LANDER_IDS
+    for c in ll:
+        (mid,) = c["sites"]
+        assert c["id"] == mid + "-20m"
+        m = missions[mid]
+        assert c["name"] == m["name"]                                     # the mission's display name
+        # centred on the mission site (20 m of slack for a later refinement of the coordinates)
+        assert bp.great_circle_km(c["lat"], c["lon"], m["lat"], m["lon"]) < 0.02
+        assert c["lat"] <= -80.0                                          # inside the 20 m product's cap
+
+
+@needs_patches
+def test_lander_entries_match_contract():
+    meta = _meta()
+    landers = _lander_patches()
+    assert [p["id"] for p in landers] == LANDER_IDS and meta["patches"][38:] == landers
+    for p, c in zip(landers, bc.lander_list()):
+        assert list(p) == ["id", "name", "kind", "render", "lat", "lon", "file", "sites", "size", "pixel_m",
+                           "height_scale_m", "height_offset_m", "source", "nodata_fraction", "min_m", "max_m"]
+        assert p["name"] == c["name"] and p["kind"] == "crest20" and p["render"] is False
+        assert p["sites"] == c["sites"] and len(p["sites"]) == 1
+        assert (p["lat"], p["lon"]) == (c["lat"], c["lon"]) and p["file"] == p["id"] + ".png"
+        assert (p["size"], p["pixel_m"], p["height_scale_m"]) == (512, 20, 0.1)
+        assert p["height_offset_m"] == int(p["height_offset_m"])
+        assert 1.0 <= p["min_m"] - p["height_offset_m"] < 2.0 + 1e-9
+        assert "LDEM_80S_20MPP_ADJ.TIF" in p["source"] and "http" in p["source"]
+
+
+@needs_patches
+@pytest.mark.parametrize("pid", LANDER_IDS)
+def test_lander_file_is_plain_png_matching_meta(pid):
+    from PIL import Image
+
+    entry, h = _crest(pid)
+    path = bp.OUT / entry["file"]
+    chunks, ihdr = bt.png_chunks(path)
+    assert ihdr == {"width": 512, "height": 512, "bit_depth": 8, "color_type": 2, "interlace": 0}
+    assert {c for c, _ in chunks} <= {"IHDR", "IDAT", "IEND"}
+    rgb = np.asarray(Image.open(path))
+    assert not rgb[..., 2].any()
+    raw = rgb[..., 0].astype(int) * 256 + rgb[..., 1]
+    assert np.array_equal(np.isnan(h), raw == 0)
+    assert entry["nodata_fraction"] == pytest.approx(float((raw == 0).mean()), abs=1e-6)
+    if pid == "im-1-odysseus-20m":
+        # at the edge of the 20 m product (80S): the strip north of it is nodata, never invented.
+        # The site itself and everything south of it has data.
+        assert 0.05 < entry["nodata_fraction"] < 0.5
+        assert np.all(np.isfinite(h[256:, :])) and np.all(np.isfinite(h[254:258, 254:258]))
+        rows = np.where(np.isnan(h).any(axis=1))[0]
+        assert rows.max() < 200                                           # all nodata is in the north
+    else:
+        assert entry["nodata_fraction"] == 0.0
+    assert entry["min_m"] == pytest.approx(float(np.nanmin(h)), abs=1e-3)
+    assert entry["max_m"] == pytest.approx(float(np.nanmax(h)), abs=1e-3)
+    assert bc.encode_height(h, entry["height_offset_m"]).tobytes() == rgb.tobytes()
+    p = hz.load_patch(pid)
+    assert p.data.shape == (512, 512) and p.pixel_m == 20.0 and p.half_m == 5120.0 and p.outer is None
+    assert (p.lat0, p.lon0) == (entry["lat"], entry["lon"])
+    assert np.array_equal(p.data, h.astype(np.float32), equal_nan=True)
+
+
+@needs_patches
+@needs_tif20
+@pytest.mark.parametrize("pid", LANDER_IDS)
+def test_lander_patch_agrees_with_20m_source(pid):
+    # same check as for the crest patches, with nodata allowed (IM-1)
+    entry, h = _crest(pid)
+    fr = bp.frame(entry["lat"], entry["lon"])
+    rng = np.random.default_rng(100 + LANDER_IDS.index(pid))
+    rows, cols = rng.integers(0, 512, 400), rng.integers(0, 512, 400)
+    x, y = bc.pixel_centres()
+    lat, lon = bp.unit_to_latlon(bp.site_inverse(x[rows, cols], y[rows, cols], fr))
+    src = _source20_at(lat, lon)
+    got = h[rows, cols]
+    # the patch has data exactly where the source has it
+    assert np.array_equal(np.isfinite(got), np.isfinite(src))
+    ok = np.isfinite(got)
+    assert ok.sum() >= 300 and np.max(np.abs(got[ok] - src[ok])) <= 0.06
+    if pid != "im-1-odysseus-20m":
+        assert ok.all()
+
+    px = rng.uniform(-5100.0, 5100.0, 400)
+    py = rng.uniform(-5100.0, 5100.0, 400)
+    lat, lon = bp.unit_to_latlon(bp.site_inverse(px, py, fr))
+    d = bp.bilinear(h, *bc.pixel_of(px, py)) - _source20_at(lat, lon)
+    ok = np.isfinite(d)
+    assert ok.sum() >= 300
+    d = d[ok]
+    assert np.median(np.abs(d)) <= 0.06 + 0.06
+    assert np.percentile(np.abs(d), 99) <= 0.06 + 1.0
+    assert np.max(np.abs(d)) <= 0.06 + 2.5
+    assert abs(float(d.mean())) < 0.03
+
+
+def _check_against_80m(hb, t):
+    """hb: 4 x 4 block means of a 20 m patch (128 x 128); t: 80 m heights at the same cells."""
+    ok = np.isfinite(hb) & np.isfinite(t)
+    assert ok.mean() > 0.8
+    d = (hb - t)[ok]
+    assert abs(float(d.mean())) < 2.0
+    assert float(np.sqrt(np.mean(d ** 2))) < 6.0
+    r = _corr(hb, t)
+    assert r > 0.99, r
+    for name, alt in [("north-south flip", hb[::-1]), ("east-west flip", hb[:, ::-1]),
+                      ("transpose", hb.T), ("rotate 180", hb[::-1, ::-1]),
+                      ("rotate 90", np.rot90(hb)), ("rotate 270", np.rot90(hb, 3))]:
+        assert _corr(alt, t) < r - 0.05, name
+    inner = (slice(1, -1), slice(1, -1))
+    both = ok[inner]
+    rms0 = float(np.sqrt(np.mean((hb[inner] - t[inner])[both] ** 2)))
+    for di, dj in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+        sh = np.roll(hb, (di, dj), axis=(0, 1))[inner]
+        m = both & np.isfinite(sh)
+        assert float(np.sqrt(np.mean((sh - t[inner])[m] ** 2))) > rms0, (di, dj)
+
+
+@needs_patches
+@pytest.mark.parametrize("pid", LANDER_IDS[:3])
+def test_lander_patch_agrees_with_80m_tile(pid):
+    if not (hz.DEFAULT_TILE_DIR / "sp_meta.json").exists():
+        pytest.skip("tiles not built")
+    entry, h = _crest(pid)
+    _l0, l1 = hz.load_tile_grids()
+    x, y = bc.pixel_centres()
+    sl = slice(2, None, 4)
+    lat, lon = bp.unit_to_latlon(bp.site_inverse(x[sl, sl], y[sl, sl], bp.frame(entry["lat"], entry["lon"])))
+    tx, ty = hz.latlon_to_xy(lat, lon)
+    t = bp.bilinear(l1.data, (tx - l1.x_min) / l1.pixel_m - 0.5, (l1.y_max - ty) / l1.pixel_m - 0.5)
+    assert np.all(np.isfinite(t))
+    _check_against_80m(h.reshape(128, 4, 128, 4).mean(axis=(1, 3)), t)
+
+
+@needs_patches
+def test_im1_lander_patch_agrees_with_existing_80m_patch():
+    # IM-1 is outside tile L1; its 80 m site patch has the same centre, so each 4 x 4 block of
+    # 20 m pixels is exactly one 80 m pixel of that patch (central 128 x 128 pixels).
+    entry, h = _crest("im-1-odysseus-20m")
+    site = next(p for p in _site_patches() if p["id"] == "im-1-odysseus")
+    assert (site["lat"], site["lon"]) == (entry["lat"], entry["lon"])
+    t = _load(site)[384 - 64:384 + 64, 384 - 64:384 + 64]
+    assert np.all(np.isfinite(t))
+    _check_against_80m(h.reshape(128, 4, 128, 4).mean(axis=(1, 3)), t)
+
+
+@needs_patches
+@needs_tif20
+def test_lander_rebuild_is_identical():
+    from PIL import Image
+
+    for c in bc.lander_list():
+        entry, rgb = bc.entry_for(c, bc.build_crest(c["lat"], c["lon"]))
+        assert entry == next(p for p in _meta()["patches"] if p["id"] == c["id"])
+        assert rgb.tobytes() == np.asarray(Image.open(bp.OUT / entry["file"])).tobytes()
+
+
+@needs_patches
+@pytest.mark.skipif(not (bp.OUT / "patch_testvectors.json").exists(), reason="vectors not built")
+def test_lander_testvectors():
+    vec = json.loads((bp.OUT / "patch_testvectors.json").read_text())[11:]
+    assert len(vec) == 4
+    missions = {m["id"]: m for m in json.loads(bp.MISSIONS.read_text())}
+    for v, entry in zip(vec, _lander_patches()):
+        assert v["patch"] == entry["id"] and (v["lat"], v["lon"]) == (entry["lat"], entry["lon"])
+        m = missions[entry["sites"][0]]
+        assert bp.great_circle_km(v["lat"], v["lon"], m["lat"], m["lon"]) < 0.02   # observer at the mission site
+        assert v["observer_height_m"] == 2.0 and v["az_step_deg"] == 0.5
+        patch = hz.load_patch(v["patch"])
+        e, d, h0, lev = hz.horizon_chain(v["lat"], v["lon"], 2.0, 0.5, patch=patch, return_details=True)
+        assert np.allclose(e, v["elev_deg"], atol=1e-6)
+        # the observer stands on 20 m ground; nothing beyond the patch corner comes from the patch
+        assert hz.height_chain(v["lat"], v["lon"], patch, return_level=True)[1] == 0
+        assert np.all(lev[d > 7300.0] != 0) and (lev == 0).sum() > 0
+        if entry["nodata_fraction"] == 0.0:
+            assert np.all(lev[d <= 5000.0] == 0)
+
+
+# --------------------------------------------------------------------------
+# outer level of the 80 m site patches (docs/DATA_CONTRACT.md, "Two-level site patches")
+# --------------------------------------------------------------------------
+def _outer_ids():
+    return [p["id"] for p in _site_patches() if "outer" in p] if META.exists() else []
+
+
+def _load_outer(entry):
+    return bp.load_patch_png(bp.OUT / entry["outer"]["file"]).astype(np.float64)
+
+
+def test_outer_grid_registration():
+    x, y = bp.outer_pixel_centres()
+    assert x.shape == (768, 768)
+    assert x[0, 0] == -61360.0 and y[0, 0] == 61360.0                     # row 0 north, column 0 west
+    assert x[0, -1] == 61360.0 and y[-1, 0] == -61360.0
+    assert (bp.OUTER_SIZE, bp.OUTER_PIXEL_M, bp.OUTER_HALF_M) == (768, 160.0, 61440.0)
+
+
+def test_outer_is_an_area_average_of_the_source(monkeypatch):
+    # a source that alternates +1 / -1 every 40 m in x averages to 0 in every 160 m pixel (a
+    # point sample would give +1 or -1); a tilted plane is reproduced at the pixel centres
+    def stripes(lat0, lon0, x, y):
+        return np.where(np.floor(x / 40.0) % 2 == 0, 1.0, -1.0) + 0.001 * x - 0.002 * y, ["test"]
+
+    monkeypatch.setattr(bp, "build_heights", stripes)
+    h, src = bp.build_outer(10.0, 20.0)
+    x, y = bp.outer_pixel_centres()
+    assert h.shape == (768, 768) and src == ["test"]
+    assert np.max(np.abs(h - (0.001 * x - 0.002 * y))) < 1e-9
+
+    def hole(lat0, lon0, x, y):                                           # one 40 m sample without data
+        h = np.zeros(x.shape)
+        h[5, 9] = np.nan
+        return h, []
+
+    monkeypatch.setattr(bp, "build_heights", hole)
+    h, _ = bp.build_outer(10.0, 20.0)
+    assert np.isnan(h[1, 2]) and np.isnan(h).sum() == 1                   # that pixel is nodata, no other
+
+
+@needs_patches
+def test_every_site_patch_has_an_outer_level():
+    site = _site_patches()
+    assert len(site) == 34 and _outer_ids() == [p["id"] for p in site]
+    for p in site:
+        o = p["outer"]
+        assert (o["file"], o["size"], o["pixel_m"]) == (p["id"] + ".outer.png", 768, 160)
+        assert set(o) == {"file", "size", "pixel_m", "source", "nodata_fraction"}
+    for p in _meta()["patches"]:
+        if p.get("kind") == bc.KIND:
+            assert "outer" not in p                                       # 20 m patches have one level
+
+
+@needs_patches
+@pytest.mark.parametrize("pid", _outer_ids())
+def test_outer_file_is_plain_png_and_loads(pid):
+    from PIL import Image
+
+    entry = next(p for p in _meta()["patches"] if p["id"] == pid)
+    path = bp.OUT / entry["outer"]["file"]
+    chunks, ihdr = bt.png_chunks(path)
+    assert ihdr == {"width": 768, "height": 768, "bit_depth": 8, "color_type": 2, "interlace": 0}
+    assert {c for c, _ in chunks} <= {"IHDR", "IDAT", "IEND"}
+    rgb = np.asarray(Image.open(path))
+    assert not rgb[..., 2].any()
+    raw = rgb[..., 0].astype(int) * 256 + rgb[..., 1]
+    assert entry["outer"]["nodata_fraction"] == pytest.approx(float((raw == 0).mean()), abs=1e-6)
+    h = _load_outer(entry)
+    assert np.array_equal(np.isnan(h), raw == 0)
+    # the Python reference loads both levels, the fine one exactly as before
+    p = hz.load_patch(pid)
+    assert p.data.shape == (768, 768) and p.pixel_m == 80.0 and p.half_m == 30720.0
+    assert p.outer.shape == (768, 768) and p.outer_pixel_m == 160.0 and p.outer_half_m == 61440.0
+    assert np.array_equal(p.outer, h.astype(np.float32), equal_nan=True)
+    assert np.array_equal(p.data, bp.load_patch_png(bp.OUT / entry["file"]), equal_nan=True)
+
+
+@needs_patches
+@pytest.mark.parametrize("pid", _outer_ids())
+def test_outer_agrees_with_fine_level(pid):
+    # same centre and registration: each outer pixel of the central 384 x 384 is exactly a
+    # 2 x 2 block of fine (80 m) pixels
+    entry = next(p for p in _meta()["patches"] if p["id"] == pid)
+    fine = _load(entry).reshape(384, 2, 384, 2).mean(axis=(1, 3))
+    o = _load_outer(entry)
+    mid = o[192:576, 192:576]
+    ok = np.isfinite(fine) & np.isfinite(mid)
+    assert ok.mean() > 0.95 * np.isfinite(fine).mean()
+    d = (mid - fine)[ok]
+    assert abs(float(d.mean())) < 0.5
+    assert float(np.sqrt(np.mean(d ** 2))) < 5.0
+    r = _corr(mid, fine)
+    assert r > 0.99, r
+    # a misplaced outer level fits worse: flips, rotations and a one-pixel (160 m) shift
+    for name, alt in [("north-south flip", mid[::-1]), ("east-west flip", mid[:, ::-1]),
+                      ("transpose", mid.T), ("rotate 180", mid[::-1, ::-1])]:
+        assert _corr(alt, fine) < r, name
+    rms0 = float(np.sqrt(np.mean(d ** 2)))
+    for di, dj in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+        sh = o[192 + di:576 + di, 192 + dj:576 + dj]
+        m = ok & np.isfinite(sh)
+        assert float(np.sqrt(np.mean((sh - fine)[m] ** 2))) > rms0, (di, dj)
+
+
+@needs_patches
+@pytest.mark.parametrize("pid", _outer_ids())
+def test_outer_agrees_with_whole_moon_map(pid, globe):
+    entry = next(p for p in _meta()["patches"] if p["id"] == pid)
+    x, y = bp.outer_pixel_centres()
+    sl = slice(4, None, 8)
+    lat, lon = bp.unit_to_latlon(bp.site_inverse(x[sl, sl], y[sl, sl], bp.frame(entry["lat"], entry["lon"])))
+    g = np.array([globe(a, b) for a, b in zip(lat.ravel(), lon.ravel())]).reshape(lat.shape)
+    hp = _load_outer(entry)[sl, sl]
+    ok = np.isfinite(hp)
+    assert ok.mean() > 0.9
+    r = _corr(hp, g)
+    assert r > 0.9, r
+    for name, alt in [("north-south flip", hp[::-1]), ("east-west flip", hp[:, ::-1]),
+                      ("transpose", hp.T), ("rotate 180", hp[::-1, ::-1]),
+                      ("rotate 90", np.rot90(hp)), ("rotate 270", np.rot90(hp, 3))]:
+        assert _corr(alt, g) < r - 0.05, name
+    assert abs(float(np.mean(hp[ok] - g[ok]))) < 60.0
+
+
+@needs_patches
+def test_outer_rebuild_from_cache_is_identical(monkeypatch):
+    from PIL import Image
+
+    def no_network(url, ranges):
+        raise AssertionError("network access during a rebuild from the cache")
+
+    monkeypatch.setattr(bp, "_http_ranges", no_network)
+    for pid in ["apollo-11", "chandrayaan-3", "im-1-odysseus"]:
+        entry = next(p for p in _meta()["patches"] if p["id"] == pid)
+        h, src = bp.build_outer(entry["lat"], entry["lon"])
+        assert "; ".join(src) == entry["outer"]["source"]
+        assert bt.encode_height(h).tobytes() == np.asarray(Image.open(bp.OUT / entry["outer"]["file"])).tobytes()
+
+
+@needs_patches
+@pytest.mark.skipif(not (bp.OUT / "patch_testvectors.json").exists(), reason="vectors not built")
+def test_outer_level_sets_skyline_between_30_and_61_km():
+    # lookup order fine -> outer -> tiles -> whole-Moon map: no skyline sample between the fine
+    # edge and the outer edge comes from the whole-Moon map, none beyond the outer corner from the patch
+    patch = hz.load_patch("apollo-15")
+    e, d, h0, lev = hz.horizon_chain(26.13239, 3.6333, 2.0, 0.5, patch=patch, return_details=True)
+    assert np.all(lev[d < 30000.0] == 0)
+    assert np.all(lev[(d > 30720.0 * 1.4143) & (d < 61000.0)] == 4)
+    assert np.all((lev[d > 61440.0 * 1.4143] != 0) & (lev[d > 61440.0 * 1.4143] != 4))
+    before = Path(__file__).parent / "patch_testvectors_before_outer.json"
+    old = {v["name"]: v for v in json.loads(before.read_text())}
+    new = {v["name"]: v for v in json.loads((bp.OUT / "patch_testvectors.json").read_text())}
+    # vectors of patches without an outer level (the 20 m crest patches, no patch) are unchanged
+    for name, v in old.items():
+        if v["patch"] is None or v["patch"] in CREST_IDS:
+            assert new[name] == v, name

@@ -54,7 +54,8 @@ export function useSiteAnalysis(
   pin: Pin | null,
   ephem: Ephem,
   terrain: Terrain,
-  patch: Terrain | null,
+  /** the site's detailed patches, finest first (none for most free points) */
+  patches: Terrain[],
   global: GlobalDem | null,
 ): SiteAnalysis | null {
   const tMs = useStore((s) => s.tMs)
@@ -63,13 +64,17 @@ export function useSiteAnalysis(
   const lon = pin?.lon ?? 0
   const has = pin !== null
 
-  // Height lookup order: site patch, south-pole tiles, whole-Moon map.
-  const source: HeightSource = useMemo(() => ({ terrains: patch ? [patch, terrain] : [terrain], global }), [patch, terrain, global])
+  // Height lookup order: site patches (finest first), south-pole tiles, whole-Moon map.
+  // The list is rebuilt by the caller on every render, so it is compared by the patches' ids.
+  const patchKey = patches.map((p) => p.id ?? '?').join('+')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const source: HeightSource = useMemo(() => ({ terrains: [...patches, terrain], global }), [patchKey, terrain, global])
   const fixed = useMemo(() => {
     if (!has) return null
     const u = upVector(lat, lon)
     const h = sourceHeight(source, u[0], u[1], u[2])
-    const key = `${lat},${lon},${patch?.id ?? '-'},${global ? 1 : 0}`
+    const patch = source.terrains.length > 1 ? source.terrains[0] : null
+    const key = `${lat},${lon},${patchKey || '-'},${global ? 1 : 0}`
     let horizon = horizons.get(key)
     if (!horizon) {
       horizon = computeHorizon(source, lat, lon)
@@ -80,7 +85,7 @@ export function useSiteAnalysis(
     const polarTier = terrainTier(terrain, lat, lon)
     const tier: Tier = patch?.kind === 'crest20' ? 'crest' : patch ? 'patch' : polarTier !== 'none' ? polarTier : global ? 'global' : 'none'
     return { hM: Number.isNaN(h) ? 0 : h, horizon, slope: Number.isNaN(s) ? slopeAt(terrain, lat, lon) : s, tier }
-  }, [has, lat, lon, source, patch, terrain, global])
+  }, [has, lat, lon, source, patchKey, terrain, global])
 
   const series = useMemo(
     () => (fixed ? computeSeries(ephem, fixed.horizon, fixed.hM, windowStart, windowStart + WINDOW_DAYS * DAY, STEP_MS) : null),

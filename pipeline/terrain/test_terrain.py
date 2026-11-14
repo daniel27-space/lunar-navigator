@@ -521,3 +521,62 @@ def test_chain_with_20m_patch_matches_two_level_kernel():
                                            grids=(l0, l1, g), return_details=True)
         assert np.allclose(a, b, atol=1e-9)
         assert (lev == 0).any()
+
+
+# --------------------------------------------------------------------------
+# two-level site patches: patch fine -> patch outer -> L1 -> L0 -> whole-Moon map
+# --------------------------------------------------------------------------
+def test_chain_patch_outer_level_order():
+    grids = _flat_grids()
+    for lat0, lon0 in [(26.0, 3.6), (-80.13, 1.44)]:
+        fine = np.full((768, 768), 1000.0, dtype=np.float32)
+        fine[:, 384:] = np.nan                              # eastern half of the fine level: no data
+        outer = np.full((768, 768), 2000.0, dtype=np.float32)
+        outer[:384, :] = np.nan                             # northern half of the outer level: no data
+        patch = hz.Patch(fine, lat0, lon0, outer=outer, outer_pixel_m=160.0)
+        assert (patch.half_m, patch.outer_half_m) == (30720.0, 61440.0)
+
+        def at(x, y):
+            lat, lon = bp_latlon(x, y, lat0, lon0)
+            return hz.height_chain(lat, lon, patch=patch, grids=grids, return_level=True)
+
+        below = hz.height_chain(*bp_latlon(-10000.0, 5000.0, lat0, lon0), grids=grids, return_level=True)[1]
+        assert at(-10000.0, -5000.0) == (1000.0, 0)         # fine level wins where it has data
+        assert at(-10000.0, 5000.0) == (1000.0, 0)          # ... also where the outer level has none
+        assert at(10000.0, -5000.0) == (2000.0, 4)          # hole in the fine level: outer level
+        assert at(-45000.0, -50000.0) == (2000.0, 4)        # beyond the fine level: outer level
+        assert at(10000.0, 5000.0)[1] == below              # neither has data: the tiles / the map
+        assert at(-45000.0, 50000.0)[1] not in (0, 4)
+        assert at(0.0, -70000.0)[1] not in (0, 4)           # beyond the outer level
+        # the same patch without the outer level behaves as before
+        plain = hz.Patch(fine, lat0, lon0)
+        assert plain.outer is None
+        lat, lon = bp_latlon(-45000.0, -50000.0, lat0, lon0)
+        assert hz.height_chain(lat, lon, patch=plain, grids=grids, return_level=True)[1] not in (0, 4)
+        lat, lon = bp_latlon(-10000.0, -5000.0, lat0, lon0)
+        assert hz.height_chain(lat, lon, patch=plain, grids=grids, return_level=True) == (1000.0, 0)
+
+
+def bp_latlon(x, y, lat0, lon0):
+    """lat, lon of site-stereographic (x, y) metres around (lat0, lon0): the contract's inverse."""
+    p = hz.Patch(np.zeros((2, 2), dtype=np.float32), lat0, lon0)
+    e, n, u = p.frame
+    rho2 = (x * x + y * y) / (4.0 * hz.R_MOON_M ** 2)
+    k = 1.0 / (1.0 + rho2)
+    d = e * (x / hz.R_MOON_M) * k + n * (y / hz.R_MOON_M) * k + u * (1.0 - rho2) * k
+    return float(np.degrees(np.arcsin(d[2]))), float(np.degrees(np.arctan2(d[1], d[0])))
+
+
+def test_chain_horizon_uses_outer_level():
+    # a 1 km wall in the outer level 40 to 60 km north: seen to the north only, set by level 4
+    fine = np.zeros((768, 768), dtype=np.float32)
+    outer = np.zeros((768, 768), dtype=np.float32)
+    outer[8:134, :] = 1000.0                                # y from 40000 to 60160 m
+    patch = hz.Patch(fine, 26.0, 3.6, outer=outer)
+    elev, dist, h0, lev = hz.horizon_chain(26.0, 3.6, 2.0, 90.0, patch=patch, grids=_flat_grids(),
+                                           return_details=True)
+    assert h0 == 0.0
+    assert lev[0] == 4 and 39000.0 < dist[0] < 42000.0 and 0.5 < elev[0] < 1.5
+    assert elev[2] < 0.01 and elev[1] < 0.01 and elev[3] < 0.01
+    no_outer = hz.horizon_chain(26.0, 3.6, 2.0, 90.0, patch=hz.Patch(fine, 26.0, 3.6), grids=_flat_grids())
+    assert no_outer[0] < 0.01

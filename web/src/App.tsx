@@ -12,7 +12,7 @@ import {
   loadPatch,
   loadPatchIndex,
   loadTerrain,
-  patchCovering,
+  patchesCovering,
   terrainTier,
   type PatchIndex,
   type Terrain,
@@ -32,6 +32,7 @@ import { FinderPanel } from './ui/FinderPanel'
 import { Intro } from './ui/Intro'
 import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
+import { ShowcaseHero, ShowcasePanel } from './ui/Showcase'
 import { SiteCard } from './ui/SiteCard'
 import { useSiteAnalysis, type SiteAnalysis } from './ui/useSiteAnalysis'
 import './App.css'
@@ -296,7 +297,8 @@ interface SitesPanelProps {
   activePin: number | null
   ephem: Ephem
   terrain: Terrain
-  patchOf: (lat: number, lon: number) => Terrain | null
+  /** the loaded patches a point uses, finest first */
+  patchOf: (lat: number, lon: number) => Terrain[]
   /** true while the terrain a point's figures depend on is still downloading */
   pending: (lat: number, lon: number) => boolean
   global: GlobalDem | null
@@ -304,6 +306,8 @@ interface SitesPanelProps {
   /** pins a ready-made example site (the first-use guide's "Show me an example") */
   onExample?: () => void
 }
+
+const NO_PATCHES: Terrain[] = []
 
 /** Right-hand panel: one card per pinned site, or the comparison once there are two or more. */
 function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global, onAddCoords, onExample }: SitesPanelProps) {
@@ -318,9 +322,9 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
   // A point whose terrain is still downloading is not analysed yet (it shows as loading).
   const ready = p.map((x) => (x && !pending(x.lat, x.lon) ? x : null))
   const waiting = p.filter((x, i): x is Pin => x !== null && ready[i] === null)
-  const a0 = useSiteAnalysis(ready[0], ephem, terrain, ready[0] ? patchOf(ready[0].lat, ready[0].lon) : null, global)
-  const a1 = useSiteAnalysis(ready[1], ephem, terrain, ready[1] ? patchOf(ready[1].lat, ready[1].lon) : null, global)
-  const a2 = useSiteAnalysis(ready[2], ephem, terrain, ready[2] ? patchOf(ready[2].lat, ready[2].lon) : null, global)
+  const a0 = useSiteAnalysis(ready[0], ephem, terrain, ready[0] ? patchOf(ready[0].lat, ready[0].lon) : NO_PATCHES, global)
+  const a1 = useSiteAnalysis(ready[1], ephem, terrain, ready[1] ? patchOf(ready[1].lat, ready[1].lon) : NO_PATCHES, global)
+  const a2 = useSiteAnalysis(ready[2], ephem, terrain, ready[2] ? patchOf(ready[2].lat, ready[2].lon) : NO_PATCHES, global)
   const sites = [a0, a1, a2].filter((a): a is SiteAnalysis => a !== null)
   // The comparison waits until every pinned site has its figures, so a verdict never changes under the user.
   const comparing = sites.length >= 2 && waiting.length === 0 && mode === 'compare'
@@ -329,6 +333,15 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
   useEffect(() => {
     if (newest !== null) setTab('sites')
   }, [newest, setTab])
+  // The mission showcase lights its model from the Sun as this panel works it out for that site.
+  const shown = useStore((s) => (s.showcase ? (s.pins.find((x) => s.pinMission[x.id] === s.showcase)?.id ?? null) : null))
+  const shownSite = shown === null ? undefined : sites.find((a) => a.pin.id === shown)
+  const sunAz = shownSite?.sky.sun.az
+  const sunEl = shownSite?.sky.sun.el
+  const sunUp = shownSite?.sunNext.now
+  useEffect(() => {
+    useStore.getState().setShowcaseSun(shown !== null && sunAz !== undefined && sunEl !== undefined ? { pinId: shown, az: sunAz, el: sunEl, up: !!sunUp } : null)
+  }, [shown, sunAz, sunEl, sunUp])
   return (
     <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
       <Intro onExample={onExample} />
@@ -474,54 +487,59 @@ export default function App() {
   // 80 m patches around mission sites, fetched when a pinned point needs one.
   // null marks a patch that failed to load: the point then keeps the coarser data.
   const [patches, setPatches] = useState<Record<string, Terrain | null>>({})
-  const patchIdFor = useCallback(
-    (lat: number, lon: number) => {
-      if (!patchIndex || !terrain) return null
-      const entry = patchCovering(patchIndex, lat, lon)
-      // Inside the 80 m south-pole tile only a finer (20 m crest) patch adds anything.
-      if (!entry || (entry.kind !== 'crest20' && terrainTier(terrain, lat, lon) === 'fine')) return null
-      return entry.id
+  // The patches a point uses, finest first: a polar lander has a 20 m patch (to 5 km) and an
+  // 80 m one (to 61 km); most sites have just the 80 m one.
+  const patchIdsFor = useCallback(
+    (lat: number, lon: number): string[] => {
+      if (!patchIndex || !terrain) return []
+      const fine = terrainTier(terrain, lat, lon) === 'fine'
+      // Inside the 80 m south-pole tile only a finer (20 m) patch adds anything.
+      return patchesCovering(patchIndex, lat, lon)
+        .filter((e) => e.kind === 'crest20' || !fine)
+        .map((e) => e.id)
     },
     [patchIndex, terrain],
   )
+  const patchIdFor = useCallback((lat: number, lon: number) => patchIdsFor(lat, lon)[0] ?? null, [patchIdsFor])
   useEffect(() => {
     if (!patchIndex) return
     for (const p of pins) {
-      const id = patchIdFor(p.lat, p.lon)
-      const entry = id && !(id in patches) ? patchIndex.patches.find((e) => e.id === id) : null
-      if (!entry) continue
-      loadPatch(BASE, patchIndex, entry).then(
-        (t) => setPatches((m) => (entry.id in m ? m : { ...m, [entry.id]: t })),
-        () => setPatches((m) => (entry.id in m ? m : { ...m, [entry.id]: null })),
-      )
+      for (const id of patchIdsFor(p.lat, p.lon)) {
+        const entry = !(id in patches) ? patchIndex.patches.find((e) => e.id === id) : null
+        if (!entry) continue
+        loadPatch(BASE, patchIndex, entry).then(
+          (t) => setPatches((m) => (entry.id in m ? m : { ...m, [entry.id]: t })),
+          () => setPatches((m) => (entry.id in m ? m : { ...m, [entry.id]: null })),
+        )
+      }
     }
-  }, [pins, patchIndex, patchIdFor, patches])
+  }, [pins, patchIndex, patchIdsFor, patches])
   const patchOf = useCallback(
-    (lat: number, lon: number) => {
-      const id = patchIdFor(lat, lon)
-      return id ? (patches[id] ?? null) : null
-    },
-    [patchIdFor, patches],
+    (lat: number, lon: number): Terrain[] =>
+      patchIdsFor(lat, lon)
+        .map((id) => patches[id])
+        .filter((t): t is Terrain => !!t),
+    [patchIdsFor, patches],
   )
   // A point's figures are held back until the terrain they depend on has arrived (its detailed
   // patch and the whole-Moon map), so numbers never appear from coarse data and then change.
   const terrainPending = useCallback(
     (lat: number, lon: number) => {
       if (!reliefSettled) return true
-      const id = patchIdFor(lat, lon)
-      return id !== null && !(id in patches)
+      return patchIdsFor(lat, lon).some((id) => !(id in patches))
     },
-    [reliefSettled, patchIdFor, patches],
+    [reliefSettled, patchIdsFor, patches],
   )
   // Patches on screen: those under the pinned points.
   const shownPatches = useMemo(() => {
     const ids = new Set<string>()
     for (const p of pins) {
-      const id = patchIdFor(p.lat, p.lon)
-      if (id && patches[id] && patches[id].render !== false) ids.add(id)
+      for (const id of patchIdsFor(p.lat, p.lon)) {
+        if (patches[id] && patches[id].render !== false) ids.add(id)
+      }
     }
     return [...ids].map((id) => patches[id] as Terrain)
-  }, [pins, patchIdFor, patches])
+  }, [pins, patchIdsFor, patches])
   const patchCuts: Cut[] = useMemo(
     () => shownPatches.map((t) => ({ frame: t.frame, halfKm: t.levels[0].xMax / 1000 })),
     [shownPatches],
@@ -533,8 +551,11 @@ export default function App() {
 
   const elevation = useCallback(
     (lat: number, lon: number) => {
-      const patch = patchOf(lat, lon)
-      let h = patch ? heightAt(patch, lat, lon) : NaN
+      let h = NaN
+      for (const patch of patchOf(lat, lon)) {
+        h = heightAt(patch, lat, lon)
+        if (!Number.isNaN(h)) break
+      }
       if (Number.isNaN(h)) h = terrain ? heightAt(terrain, lat, lon) : NaN
       if (!Number.isNaN(h)) return h
       // Outside the south-pole tiles: the whole-Moon map (about 2.7 km per pixel).
@@ -554,6 +575,11 @@ export default function App() {
       } else {
         goTo({ kind: 'globe', lat: m.lat, lon: m.lon })
       }
+      // The showcase opens over the site; the pin underneath remembers which mission it is.
+      const st = useStore.getState()
+      if (st.activePin !== null) st.linkMission(st.activePin, m.id)
+      st.openShowcase(m.id)
+      if (isPhone() && st.sheet !== 'half') st.setSheet('half')
     },
     [pick, goTo, terrain, elevation, patchIdFor],
   )
@@ -616,6 +642,9 @@ export default function App() {
     if (isPhone()) setSheet('full')
   }
 
+  const showcaseId = useStore((s) => s.showcase)
+  const showcased = showcaseId ? (missions.find((m) => m.id === showcaseId) ?? null) : null
+
   const chooseLayer = (l: LayerMode) => {
     setLayer(l)
     setMenu(null)
@@ -626,7 +655,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'}>
+    <div className="app" data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'} data-showcase={showcased ? 'on' : 'off'}>
       <div className="viewport">
         <Canvas
           frameloop="demand"
@@ -793,7 +822,9 @@ export default function App() {
               </div>
             )}
           </div>
+          {showcased && <ShowcaseHero mission={showcased} ephem={ephem} baseUrl={import.meta.env.BASE_URL} />}
           <div className="dock dock-right" onClick={expandOnTap}>
+            {showcased && <ShowcasePanel mission={showcased} baseUrl={import.meta.env.BASE_URL} />}
             {ephem && terrain ? (
               <ErrorBoundary what="The sites panel">
                 <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} pending={terrainPending} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} onExample={examplePlace ? () => pinPlace(examplePlace) : undefined} />

@@ -21,6 +21,8 @@ Each output pixel is resampled bilinearly from the source at the pixel centre: p
 (x, y) -> body-fixed direction (inverse formula) -> lat/lon -> source.
 
 Run:  .venv/bin/python pipeline/patches/build_patches.py [id ...]
+      .venv/bin/python pipeline/patches/build_patches.py --outer [id ...]   add the 160 m outer
+          level ("Two-level site patches") to the patches already in patches.json
 """
 from __future__ import annotations
 
@@ -335,6 +337,12 @@ def sample_tif80(lat, lon, used):
 def build_patch(lat0, lon0):
     """(height float64 (768, 768) with NaN = nodata, sorted list of source strings)."""
     x, y = pixel_centres()
+    return build_heights(lat0, lon0, x, y)
+
+
+def build_heights(lat0, lon0, x, y):
+    """Source heights (bilinear, NaN = nodata) at site-stereographic (x, y) metres of the patch
+    centred on (lat0, lon0), and the sorted list of source strings."""
     lat, lon = unit_to_latlon(site_inverse(x, y, frame(lat0, lon0)))
     h = np.full(lat.shape, np.nan)
     used: set[str] = set()
@@ -348,6 +356,73 @@ def build_patch(lat0, lon0):
     if todo.any():
         h[todo] = sample_sldem(lat[todo], lon[todo], lon0, used)
     return h, sorted(used)
+
+
+# --------------------------------------------------------------------------
+# outer level (docs/DATA_CONTRACT.md, "Two-level site patches")
+# --------------------------------------------------------------------------
+OUTER_SIZE = 768
+OUTER_PIXEL_M = 160.0
+OUTER_HALF_M = OUTER_SIZE * OUTER_PIXEL_M / 2.0     # 61440
+OUTER_SUB = 4                                       # 4 x 4 source samples (40 m apart) per 160 m pixel
+
+
+def outer_pixel_centres():
+    """(x, y) metres of every outer pixel centre; row 0 = maximum y, column 0 = minimum x."""
+    c = -OUTER_HALF_M + (np.arange(OUTER_SIZE) + 0.5) * OUTER_PIXEL_M
+    return np.meshgrid(c, -c)
+
+
+def build_outer(lat0, lon0):
+    """(height float64 (768, 768) of 160 m pixels with NaN = nodata, sorted source strings).
+
+    Area average, not a point sample: the same sources as the fine level are sampled
+    bilinearly on a regular 4 x 4 grid inside every 160 m pixel (40 m apart, finer than the
+    59 to 80 m sources) and the 16 values are averaged. A pixel is nodata if any of its 16
+    samples is nodata."""
+    n = OUTER_SIZE * OUTER_SUB
+    c = -OUTER_HALF_M + (np.arange(n) + 0.5) * (OUTER_PIXEL_M / OUTER_SUB)
+    x, y = np.meshgrid(c, -c)
+    h, src = build_heights(lat0, lon0, x, y)
+    return h.reshape(OUTER_SIZE, OUTER_SUB, OUTER_SIZE, OUTER_SUB).mean(axis=(1, 3)), src
+
+
+def outer_file(patch_id):
+    return f"{patch_id}.outer.png"
+
+
+def main_outer(only=None):
+    """Add the outer level to the 80 m site patches already listed in patches.json (the list is
+    not re-derived from missions.json). Writes <id>.outer.png and the entry's "outer" field."""
+    meta_path = OUT / "patches.json"
+    meta = json.loads(meta_path.read_text())
+    failed, total, n = [], 0, 0
+    for e in meta["patches"]:
+        if "kind" in e or (only and e["id"] not in only):
+            continue
+        print(f"{e['id']} outer  ({e['lat']}, {e['lon']})", flush=True)
+        try:
+            h, src = build_outer(e["lat"], e["lon"])
+        except Exception as exc:
+            print(f"   FAILED: {type(exc).__name__}: {exc}", flush=True)
+            failed.append((e["id"], f"{type(exc).__name__}: {exc}"))
+            continue
+        file = outer_file(e["id"])
+        bt.write_png(OUT / file, bt.encode_height(h))
+        dec = load_patch_png(OUT / file)
+        e["outer"] = {"file": file, "size": OUTER_SIZE, "pixel_m": int(OUTER_PIXEL_M),
+                      "source": "; ".join(src),
+                      "nodata_fraction": round(float(np.isnan(dec).mean()), 6)}
+        size = (OUT / file).stat().st_size
+        total += size
+        n += 1
+        print(f"   {size} bytes, nodata {e['outer']['nodata_fraction']}", flush=True)
+        meta_path.write_text(json.dumps(meta, indent=1) + "\n")
+    print(f"{n} outer levels, {total} bytes of PNG; {stats['requests']} requests, "
+          f"{stats['bytes'] / 1e6:.1f} MB downloaded this run")
+    for pid, why in failed:
+        print(f"NOT BUILT {pid}: {why}")
+    return 1 if failed else 0
 
 
 def load_patch_png(path):
@@ -388,6 +463,9 @@ def main(only=None):
             "min_m": float(np.nanmin(dec)) if np.isfinite(dec).any() else None,
             "max_m": float(np.nanmax(dec)) if np.isfinite(dec).any() else None,
         })
+        prev = old.get(p["id"], {})
+        if "outer" in prev and (prev["lat"], prev["lon"]) == (p["lat"], p["lon"]):
+            entries[-1]["outer"] = prev["outer"]      # built by --outer; same centre, still valid
         print(f"   {(OUT / file).stat().st_size} bytes, nodata {entries[-1]['nodata_fraction']}, "
               f"{entries[-1]['min_m']} .. {entries[-1]['max_m']} m", flush=True)
     order = {p["id"]: i for i, p in enumerate(patches)}
@@ -403,4 +481,7 @@ def main(only=None):
 
 
 if __name__ == "__main__":
-    sys.exit(main(set(sys.argv[1:]) or None))
+    _args = sys.argv[1:]
+    if "--outer" in _args:
+        sys.exit(main_outer(set(a for a in _args if a != "--outer") or None))
+    sys.exit(main(set(_args) or None))

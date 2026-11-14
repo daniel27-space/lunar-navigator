@@ -117,6 +117,15 @@ interface State {
   /** interface only: per pin id, a landing time kept as the baseline for a schedule slip */
   baselines: Record<number, number>
   setBaseline: (pinId: number, tMs: number | null) => void
+  /** interface only: the mission whose showcase is open (its id), and which pin stands for which mission */
+  showcase: string | null
+  openShowcase: (missionId: string) => void
+  closeShowcase: () => void
+  pinMission: Record<number, string>
+  linkMission: (pinId: number, missionId: string) => void
+  /** interface only: the Sun at the showcased mission's pin, taken from its site analysis for the model's light */
+  showcaseSun: { pinId: number; az: number; el: number; up: boolean } | null
+  setShowcaseSun: (s: { pinId: number; az: number; el: number; up: boolean } | null) => void
   /** interface only: the first-use guide is showing */
   help: boolean
   setHelp: (on: boolean) => void
@@ -228,6 +237,13 @@ export const useStore = create<State>((set) => ({
       else baselines[pinId] = tMs
       return { baselines }
     }),
+  showcase: null,
+  openShowcase: (showcase) => set({ showcase, tab: 'sites' }),
+  closeShowcase: () => set({ showcase: null }),
+  pinMission: {},
+  linkMission: (pinId, missionId) => set((s) => ({ pinMission: { ...s.pinMission, [pinId]: missionId } })),
+  showcaseSun: null,
+  setShowcaseSun: (showcaseSun) => set({ showcaseSun }),
   help: firstVisit(),
   setHelp: (help) => {
     if (!help) {

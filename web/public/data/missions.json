@@ -10,7 +10,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First soft landing on the Moon, in Oceanus Procellarum; position is approximate and the lander has not been confirmed in LRO images.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 9 was a Soviet probe that dropped a small, ball-shaped capsule onto Oceanus Procellarum, cushioned by airbags. It was the first craft to survive a landing on the Moon, and its panoramas showed that the surface was firm enough to stand on rather than a deep layer of dust.",
+    "facts": [
+      ["Launched", "31 Jan 1966"],
+      ["Landed", "3 Feb 1966"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 3 days of contact"],
+      ["Landed mass", "about 99 kg (capsule)"],
+      ["Outcome", "First soft landing and first pictures from the surface"]
+    ],
+    "image": {
+      "file": "missions/img/luna-9.jpg",
+      "caption": "Model of the Luna 9 spacecraft on display at the Tsiolkovsky Museum of the History of Cosmonautics, Kaluga.",
+      "credit": "Stolbovsky, Wikimedia Commons",
+      "license": "CC BY 4.0",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Luna_9_Space_Probe_1.jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "luna-lander",
+      "height_m": 0.58
+    }
   },
   {
     "id": "luna-13",
@@ -23,7 +44,21 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Second Soviet soft lander, in Oceanus Procellarum; tested soil density with a penetrometer. Position is approximate.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 13 was a near-copy of Luna 9: an airbag-cushioned capsule that opened like a flower once it came to rest. It added two folding arms, one that pushed a probe into the soil to test its strength and one that measured its density, and it sent back panoramas of the plain around it.",
+    "facts": [
+      ["Launched", "21 Dec 1966"],
+      ["Landed", "24 Dec 1966"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 4 days of contact"],
+      ["Landed mass", "about 112 kg (capsule)"],
+      ["Outcome", "Success; first direct tests of lunar soil strength"]
+    ],
+    "model": {
+      "kind": "archetype",
+      "archetype": "luna-lander",
+      "height_m": 0.58
+    }
   },
   {
     "id": "surveyor-1",
@@ -36,7 +71,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First US soft landing, in Oceanus Procellarum north of Flamsteed; returned over 11,000 images.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Surveyor 1 was a three-legged robotic lander built to prove that a spacecraft could set down gently on the Moon before astronauts tried it. It landed on its first attempt and sent back more than 11,000 television pictures of its surroundings and of its own footpads resting on the soil.",
+    "facts": [
+      ["Launched", "30 May 1966"],
+      ["Landed", "2 Jun 1966"],
+      ["Operator", "NASA / Jet Propulsion Laboratory"],
+      ["Time on the surface", "contact until Jan 1967"],
+      ["Landed mass", "about 300 kg"],
+      ["Outcome", "Success; first US soft landing, over 11,000 images"]
+    ],
+    "image": {
+      "file": "missions/img/surveyor-1.jpg",
+      "caption": "A Surveyor lander of the type flown as Surveyor 1, photographed on Earth.",
+      "credit": "NASA",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Surveyor_NASA_lunar_lander.jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "surveyor",
+      "height_m": 3.0
+    }
   },
   {
     "id": "surveyor-3",
@@ -49,7 +105,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Landed in Oceanus Procellarum; Apollo 12 astronauts visited it in 1969 and brought parts back to Earth.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Surveyor 3 bounced twice before settling inside a small crater, because its engines did not shut off at touchdown. It was the first Surveyor with a scoop arm, which dug trenches to test the soil. Thirty-one months later the Apollo 12 crew walked over to it and cut off its camera and scoop to take home.",
+    "facts": [
+      ["Launched", "17 Apr 1967"],
+      ["Landed", "20 Apr 1967"],
+      ["Operator", "NASA / Jet Propulsion Laboratory"],
+      ["Time on the surface", "about 2 weeks (one lunar day)"],
+      ["Landed mass", "about 300 kg"],
+      ["Outcome", "Success; dug the first trenches, later visited by Apollo 12"]
+    ],
+    "image": {
+      "file": "missions/img/surveyor-3.jpg",
+      "caption": "Pete Conrad examines Surveyor 3 in November 1969; the Apollo 12 Lunar Module stands on the crater rim behind.",
+      "credit": "NASA / Alan Bean",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Surveyor_3-Apollo_12.jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "surveyor",
+      "height_m": 3.0
+    }
   },
   {
     "id": "surveyor-5",
@@ -62,7 +139,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Landed in Mare Tranquillitatis and made the first chemical analysis of lunar soil with an alpha-scattering instrument.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Surveyor 5 nearly failed on the way to the Moon when a helium leak forced engineers to redesign its landing sequence in flight. It landed safely in Mare Tranquillitatis and lowered an alpha-scattering instrument onto the ground, which gave the first chemical analysis of lunar soil and showed it resembled basalt.",
+    "facts": [
+      ["Launched", "8 Sep 1967"],
+      ["Landed", "11 Sep 1967"],
+      ["Operator", "NASA / Jet Propulsion Laboratory"],
+      ["Time on the surface", "contact until Dec 1967"],
+      ["Landed mass", "about 300 kg"],
+      ["Outcome", "Success; first chemical analysis of lunar soil"]
+    ],
+    "image": {
+      "file": "missions/img/surveyor-5.jpg",
+      "caption": "Surveyor 5 (arrow) on Mare Tranquillitatis, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Surveyor_5-_A_hole-in-one_(LROC14_-_M106726943LE_S5_scale).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "surveyor",
+      "height_m": 3.0
+    }
   },
   {
     "id": "surveyor-6",
@@ -75,7 +173,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Landed in Sinus Medii and made the first lift-off and short hop from the lunar surface.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Surveyor 6 landed in Sinus Medii, near the centre of the Moon's disc. A week later controllers fired its small engines again, and it rose a few metres and came down about 2.5 m away: the first lift-off from another world. Pictures of the marks it left helped show how the soil behaves under a rocket exhaust.",
+    "facts": [
+      ["Launched", "7 Nov 1967"],
+      ["Landed", "10 Nov 1967"],
+      ["Operator", "NASA / Jet Propulsion Laboratory"],
+      ["Time on the surface", "about 2 weeks (one lunar day)"],
+      ["Landed mass", "about 300 kg"],
+      ["Outcome", "Success; first powered hop on the Moon, 17 Nov 1967"]
+    ],
+    "image": {
+      "file": "missions/img/surveyor-6.jpg",
+      "caption": "Surveyor 6 and its long shadow (enlarged in the inset) in Sinus Medii, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Surveyor_6_on_the_plains_of_Sinus_Medii_(LROCM117501284LE_S6_rev).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "surveyor",
+      "height_m": 3.0
+    }
   },
   {
     "id": "surveyor-7",
@@ -88,7 +207,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Only Surveyor in the highlands, landing on the ejecta blanket north of Tycho crater.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Surveyor 7 was the last of the series and the only one sent to the rugged highlands, on the blanket of debris thrown out by Tycho crater. It carried both the scoop arm and the soil chemistry instrument, and found highland material to be different from the dark mare plains sampled earlier.",
+    "facts": [
+      ["Launched", "7 Jan 1968"],
+      ["Landed", "10 Jan 1968"],
+      ["Operator", "NASA / Jet Propulsion Laboratory"],
+      ["Time on the surface", "contact until Feb 1968"],
+      ["Landed mass", "about 300 kg"],
+      ["Outcome", "Success; first analysis of highland material"]
+    ],
+    "image": {
+      "file": "missions/img/surveyor-7.jpg",
+      "caption": "Part of a panorama of the Tycho highlands assembled from Surveyor 7's own television pictures.",
+      "credit": "NASA / NSSDC",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Surveyor_7_-_America%27s_Last_Lunar_Unmanned_Lander_(LROC534_-_surveyortycho).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "surveyor",
+      "height_m": 3.0
+    }
   },
   {
     "id": "apollo-11",
@@ -101,7 +241,31 @@
     "status": "landed",
     "kind": "crewed",
     "summary": "First crewed landing, in Mare Tranquillitatis; Armstrong and Aldrin spent about 2.5 hours outside.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "about": "Eagle was the Apollo Lunar Module that carried Neil Armstrong and Buzz Aldrin to the first crewed landing on the Moon, while Michael Collins stayed in orbit. The two spent about two and a half hours outside, set up a few experiments and collected rock and soil. Eagle's upper stage then lifted them back to orbit, leaving the landing stage behind.",
+    "facts": [
+      ["Launched", "16 Jul 1969"],
+      ["Landed", "20 Jul 1969"],
+      ["Operator", "NASA"],
+      ["Crew", "Neil Armstrong, Buzz Aldrin (surface); Michael Collins (orbit)"],
+      ["Time on the surface", "21 h 36 min"],
+      ["Outcome", "First crewed landing; about 21.5 kg of samples returned"]
+    ],
+    "image": {
+      "file": "missions/img/apollo-11.jpg",
+      "caption": "Buzz Aldrin climbs down the ladder of the Lunar Module Eagle, photographed by Neil Armstrong, 20 Jul 1969.",
+      "credit": "NASA / Neil Armstrong",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Astronaut_Edwin_Aldrin_descends_the_Lunar_Module_ladder,_AS11-40-5868_(21037483754).jpg"
+    },
+    "model": {
+      "kind": "glb",
+      "file": "missions/models/apollo-lm.glb",
+      "height_m": 7.0,
+      "credit": "NASA (NASA 3D Resources)",
+      "license": "NASA media, not subject to copyright in the United States (\"free and without copyright\" per the NASA 3D Resources README); NASA media usage guidelines apply: no implied NASA endorsement, NASA insignia not covered",
+      "source_url": "https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/Apollo%20Lunar%20Module"
+    }
   },
   {
     "id": "apollo-12",
@@ -114,7 +278,31 @@
     "status": "landed",
     "kind": "crewed",
     "summary": "Precision landing in Oceanus Procellarum within walking distance of Surveyor 3.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "about": "Intrepid made the first pinpoint landing on the Moon, touching down within walking distance of the Surveyor 3 probe that had landed in 1967. Pete Conrad and Alan Bean made two moonwalks, set up a long-lived science station and brought parts of Surveyor 3 back to Earth.",
+    "facts": [
+      ["Launched", "14 Nov 1969"],
+      ["Landed", "19 Nov 1969"],
+      ["Operator", "NASA"],
+      ["Crew", "Pete Conrad, Alan Bean (surface); Richard Gordon (orbit)"],
+      ["Time on the surface", "31 h 31 min"],
+      ["Outcome", "Success; precision landing, about 34 kg of samples"]
+    ],
+    "image": {
+      "file": "missions/img/apollo-12.jpg",
+      "caption": "Alan Bean climbs down the ladder of the Lunar Module Intrepid, photographed by Pete Conrad.",
+      "credit": "NASA / Pete Conrad",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Bean_Descends_Intrepid_-_GPN-2000-001317.jpg"
+    },
+    "model": {
+      "kind": "glb",
+      "file": "missions/models/apollo-lm.glb",
+      "height_m": 7.0,
+      "credit": "NASA (NASA 3D Resources)",
+      "license": "NASA media, not subject to copyright in the United States (\"free and without copyright\" per the NASA 3D Resources README); NASA media usage guidelines apply: no implied NASA endorsement, NASA insignia not covered",
+      "source_url": "https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/Apollo%20Lunar%20Module"
+    }
   },
   {
     "id": "apollo-14",
@@ -127,7 +315,31 @@
     "status": "landed",
     "kind": "crewed",
     "summary": "Landed in the Fra Mauro highlands to sample Imbrium basin ejecta.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "about": "Antares landed in the hilly Fra Mauro region, the site originally meant for Apollo 13. Alan Shepard and Edgar Mitchell made two moonwalks, pulling a two-wheeled hand cart for tools and samples, and climbed towards the rim of Cone crater to collect rock thrown out by the giant Imbrium impact.",
+    "facts": [
+      ["Launched", "31 Jan 1971"],
+      ["Landed", "5 Feb 1971"],
+      ["Operator", "NASA"],
+      ["Crew", "Alan Shepard, Edgar Mitchell (surface); Stuart Roosa (orbit)"],
+      ["Time on the surface", "about 33.5 h"],
+      ["Outcome", "Success; about 42 kg of samples"]
+    ],
+    "image": {
+      "file": "missions/img/apollo-14.jpg",
+      "caption": "The Lunar Module Antares at Fra Mauro during the first moonwalk, 5 Feb 1971.",
+      "credit": "NASA",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Apollo_14_Lunar_Module_(LM)_on_the_moon.jpg"
+    },
+    "model": {
+      "kind": "glb",
+      "file": "missions/models/apollo-lm.glb",
+      "height_m": 7.0,
+      "credit": "NASA (NASA 3D Resources)",
+      "license": "NASA media, not subject to copyright in the United States (\"free and without copyright\" per the NASA 3D Resources README); NASA media usage guidelines apply: no implied NASA endorsement, NASA insignia not covered",
+      "source_url": "https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/Apollo%20Lunar%20Module"
+    }
   },
   {
     "id": "apollo-15",
@@ -140,7 +352,31 @@
     "status": "landed",
     "kind": "crewed",
     "summary": "Landed at Hadley-Apennine beside Hadley Rille; first mission with the Lunar Roving Vehicle.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "about": "Falcon was the first of the extended Lunar Modules, able to support a three-day stay and to carry the Lunar Roving Vehicle, used here for the first time. David Scott and James Irwin drove about 28 km between the Apennine mountain front and the edge of Hadley Rille over three moonwalks.",
+    "facts": [
+      ["Launched", "26 Jul 1971"],
+      ["Landed", "30 Jul 1971"],
+      ["Operator", "NASA"],
+      ["Crew", "David Scott, James Irwin (surface); Alfred Worden (orbit)"],
+      ["Time on the surface", "about 67 h"],
+      ["Outcome", "Success; first Lunar Roving Vehicle, about 77 kg of samples"]
+    ],
+    "image": {
+      "file": "missions/img/apollo-15.jpg",
+      "caption": "James Irwin salutes the flag beside the Lunar Module Falcon and the Lunar Roving Vehicle, with Hadley Delta behind.",
+      "credit": "NASA / David Scott",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Apollo_15_flag,_rover,_LM,_Irwin.jpg"
+    },
+    "model": {
+      "kind": "glb",
+      "file": "missions/models/apollo-lm.glb",
+      "height_m": 7.0,
+      "credit": "NASA (NASA 3D Resources)",
+      "license": "NASA media, not subject to copyright in the United States (\"free and without copyright\" per the NASA 3D Resources README); NASA media usage guidelines apply: no implied NASA endorsement, NASA insignia not covered",
+      "source_url": "https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/Apollo%20Lunar%20Module"
+    }
   },
   {
     "id": "apollo-16",
@@ -153,7 +389,31 @@
     "status": "landed",
     "kind": "crewed",
     "summary": "Only Apollo landing in the central highlands, at Descartes.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "about": "Orion landed in the Descartes highlands, the only Apollo site in the Moon's bright central highlands. John Young and Charles Duke made three moonwalks with the Lunar Roving Vehicle and found that the rocks there were mostly impact breccias rather than the volcanic rock geologists had expected.",
+    "facts": [
+      ["Launched", "16 Apr 1972"],
+      ["Landed", "21 Apr 1972"],
+      ["Operator", "NASA"],
+      ["Crew", "John Young, Charles Duke (surface); Ken Mattingly (orbit)"],
+      ["Time on the surface", "about 71 h"],
+      ["Outcome", "Success; about 96 kg of samples"]
+    ],
+    "image": {
+      "file": "missions/img/apollo-16.jpg",
+      "caption": "The Lunar Module Orion and the Lunar Roving Vehicle at Descartes during the first moonwalk, 21 Apr 1972.",
+      "credit": "NASA / Charles Duke",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:View_of_the_Lunar_Module_%22Orion%22_and_Lunar_Roving_Vehicle_during_first_EVA_(as16-107-17436).jpg"
+    },
+    "model": {
+      "kind": "glb",
+      "file": "missions/models/apollo-lm.glb",
+      "height_m": 7.0,
+      "credit": "NASA (NASA 3D Resources)",
+      "license": "NASA media, not subject to copyright in the United States (\"free and without copyright\" per the NASA 3D Resources README); NASA media usage guidelines apply: no implied NASA endorsement, NASA insignia not covered",
+      "source_url": "https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/Apollo%20Lunar%20Module"
+    }
   },
   {
     "id": "apollo-17",
@@ -166,7 +426,31 @@
     "status": "landed",
     "kind": "crewed",
     "summary": "Last crewed landing to date, in the Taurus-Littrow valley; longest stay of the Apollo programme.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_sites.html",
+    "about": "Challenger carried the last Apollo crew to the surface, into the Taurus-Littrow valley on the edge of Mare Serenitatis. Eugene Cernan and Harrison Schmitt, the only professional geologist to walk on the Moon, made three long moonwalks with the Lunar Roving Vehicle and brought back the largest sample load of the programme.",
+    "facts": [
+      ["Launched", "7 Dec 1972"],
+      ["Landed", "11 Dec 1972"],
+      ["Operator", "NASA"],
+      ["Crew", "Eugene Cernan, Harrison Schmitt (surface); Ronald Evans (orbit)"],
+      ["Time on the surface", "about 75 h"],
+      ["Outcome", "Success; last crewed landing, about 110 kg of samples"]
+    ],
+    "image": {
+      "file": "missions/img/apollo-17.jpg",
+      "caption": "Eugene Cernan test-drives the Lunar Roving Vehicle in front of the Lunar Module Challenger, 11 Dec 1972.",
+      "credit": "NASA / Harrison Schmitt",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Apollo_17_first_test_of_the_lunar_rover_AS17-147-22527HR.jpg"
+    },
+    "model": {
+      "kind": "glb",
+      "file": "missions/models/apollo-lm.glb",
+      "height_m": 7.0,
+      "credit": "NASA (NASA 3D Resources)",
+      "license": "NASA media, not subject to copyright in the United States (\"free and without copyright\" per the NASA 3D Resources README); NASA media usage guidelines apply: no implied NASA endorsement, NASA insignia not covered",
+      "source_url": "https://github.com/nasa/NASA-3D-Resources/tree/master/3D%20Models/Apollo%20Lunar%20Module"
+    }
   },
   {
     "id": "luna-16",
@@ -179,7 +463,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First robotic sample return, from Mare Fecunditatis.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 16 was a Soviet robotic lander with a drill arm and a small return rocket on top. It drilled into the soil of Mare Fecunditatis, sealed the sample in a capsule and launched it back to Earth: the first time a robot brought home material from another world.",
+    "facts": [
+      ["Launched", "12 Sep 1970"],
+      ["Landed", "20 Sep 1970"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 26 hours"],
+      ["Outcome", "First robotic sample return; 101 g, back on Earth 24 Sep 1970"]
+    ],
+    "image": {
+      "file": "missions/img/luna-16.jpg",
+      "caption": "The Luna 16 descent stage (enlarged in the inset) on Mare Fecunditatis, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Luna_16_descent_stage.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "luna-lander",
+      "height_m": 4.0
+    }
   },
   {
     "id": "luna-17",
@@ -192,7 +496,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Lander that delivered the Lunokhod 1 rover to Mare Imbrium.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 17 was the Soviet landing stage that carried the Lunokhod 1 rover to Mare Imbrium. After touchdown it lowered a pair of ramps and the rover drove off onto the surface; the empty platform and its ramps are still visible in orbital images.",
+    "facts": [
+      ["Launched", "10 Nov 1970"],
+      ["Landed", "17 Nov 1970"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Rover", "Lunokhod 1"],
+      ["Outcome", "Success; delivered the first lunar rover"]
+    ],
+    "image": {
+      "file": "missions/img/luna-17.jpg",
+      "caption": "The Luna 17 landing stage (arrow) on Mare Imbrium, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Luna_17_lander.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "lunokhod",
+      "height_m": 1.35
+    }
   },
   {
     "id": "lunokhod-1",
@@ -205,7 +529,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First planetary rover; final parked position in Mare Imbrium, located in LRO images. Date is the landing date.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Lunokhod 1 was the first wheeled vehicle to drive on another world: an eight-wheeled, tub-shaped rover steered by a crew of drivers on Earth watching its television pictures. It worked for about eleven months, travelling roughly 10.5 km across Mare Imbrium, and its laser reflector is still used for Earth-Moon ranging.",
+    "facts": [
+      ["Launched", "10 Nov 1970"],
+      ["Landed", "17 Nov 1970"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 11 months of operation"],
+      ["Landed mass", "about 756 kg (rover)"],
+      ["Outcome", "First planetary rover; drove about 10.5 km"]
+    ],
+    "image": {
+      "file": "missions/img/lunokhod-1.jpg",
+      "caption": "Full-size mock-up of the Lunokhod 1 rover in a museum.",
+      "credit": "Petar Milošević, Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Soviet_moonrover.JPG"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "lunokhod",
+      "height_m": 1.35
+    }
   },
   {
     "id": "luna-20",
@@ -218,7 +563,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Robotic sample return from the highlands near the Apollonius crater region.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 20 repeated the Luna 16 sample-return flight, but in the rugged highlands between Mare Fecunditatis and Mare Crisium. Its drill collected a small core of pale highland soil, which the return rocket carried back to Earth.",
+    "facts": [
+      ["Launched", "14 Feb 1972"],
+      ["Landed", "21 Feb 1972"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 1 day"],
+      ["Outcome", "Sample return from the highlands; about 55 g, back on Earth 25 Feb 1972"]
+    ],
+    "image": {
+      "file": "missions/img/luna-20.jpg",
+      "caption": "The Luna 20 descent stage (arrow) in the highlands near Mare Fecunditatis, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Luna_20_descent_stage.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "luna-lander",
+      "height_m": 4.0
+    }
   },
   {
     "id": "luna-21",
@@ -231,7 +596,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Lander that delivered the Lunokhod 2 rover inside Le Monnier crater.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 21 was the landing stage that delivered the Lunokhod 2 rover into Le Monnier crater, on the eastern edge of Mare Serenitatis. As with Luna 17, the rover rolled down ramps from the platform shortly after landing.",
+    "facts": [
+      ["Launched", "8 Jan 1973"],
+      ["Landed", "15 Jan 1973"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Rover", "Lunokhod 2"],
+      ["Outcome", "Success; delivered the second Soviet rover"]
+    ],
+    "image": {
+      "file": "missions/img/luna-21.jpg",
+      "caption": "The Luna 21 landing stage, the bright object at the centre, inside Le Monnier crater, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Luna_21_Lander_(LROC15_-_M122007650LE_L21_ano).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "lunokhod",
+      "height_m": 1.35
+    }
   },
   {
     "id": "lunokhod-2",
@@ -244,7 +629,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Rover that drove roughly 40 km in and around Le Monnier crater; final parked position. Date is the landing date.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Lunokhod 2 was an improved version of the first Soviet rover, with an extra camera and a higher driving speed. In about four months it covered roughly 39 km in and around Le Monnier crater, a distance record on another world that stood for four decades, before overheating ended the mission.",
+    "facts": [
+      ["Launched", "8 Jan 1973"],
+      ["Landed", "15 Jan 1973"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 4 months of operation"],
+      ["Landed mass", "about 840 kg (rover)"],
+      ["Outcome", "Success; drove about 39 km"]
+    ],
+    "image": {
+      "file": "missions/img/lunokhod-2.jpg",
+      "caption": "Lunokhod 2 at its final parking place in Le Monnier crater (enlarged in the inset), seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Lunokhod_2_Revisited_(LROC699_-_M175070494LR_thumb).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "lunokhod",
+      "height_m": 1.35
+    }
   },
   {
     "id": "luna-23",
@@ -257,7 +663,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Landed in Mare Crisium but was damaged on touchdown, so its drill could not collect a sample.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 23 was a Soviet sample-return lander with a longer drill meant to bring back a deep core from Mare Crisium. It was damaged on landing and could not drill, so no sample was launched; it transmitted for about three days. Orbital images later showed it lying on its side.",
+    "facts": [
+      ["Launched", "28 Oct 1974"],
+      ["Landed", "6 Nov 1974"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 3 days of contact"],
+      ["Outcome", "Landed but damaged; no sample returned"]
+    ],
+    "image": {
+      "file": "missions/img/luna-23.jpg",
+      "caption": "Luna 23 lying on its side on Mare Crisium (inset: D descent stage, A ascent stage), seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University (LROC)",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Luna23_figure.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "luna-lander",
+      "height_m": 4.0
+    }
   },
   {
     "id": "luna-24",
@@ -270,7 +696,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Returned a drill core from Mare Crisium; last lunar landing for 37 years.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 24 was the last of the Soviet Luna series and landed only a few kilometres from the failed Luna 23. Its drill pulled up a core from about two metres down in Mare Crisium, which the return rocket brought back to Earth. No spacecraft landed on the Moon again until Chang'e 3 in 2013.",
+    "facts": [
+      ["Launched", "9 Aug 1976"],
+      ["Landed", "18 Aug 1976"],
+      ["Operator", "Soviet space programme (Lavochkin)"],
+      ["Time on the surface", "about 1 day"],
+      ["Outcome", "Sample return; about 170 g, back on Earth 22 Aug 1976"]
+    ],
+    "image": {
+      "file": "missions/img/luna-24.jpg",
+      "caption": "The Luna 24 descent stage (arrow) on the rim of a small crater in Mare Crisium, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Soviet_Union_Lunar_Sample_Return_Missions_(LROCM119449091RE_L24_ano).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "luna-lander",
+      "height_m": 4.0
+    }
   },
   {
     "id": "change-3",
@@ -283,7 +729,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "China's first soft landing, in northern Mare Imbrium, carrying the Yutu rover.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Chang'e 3 was China's first lunar lander, a four-legged platform that carried the six-wheeled Yutu rover to northern Mare Imbrium. It was the first soft landing on the Moon since 1976. Yutu drove a little over 100 m before it lost the ability to move, while the lander's instruments, including an ultraviolet telescope, kept working for years.",
+    "facts": [
+      ["Launched", "1 Dec 2013"],
+      ["Landed", "14 Dec 2013"],
+      ["Operator", "CNSA"],
+      ["Launch mass", "about 3,800 kg"],
+      ["Rover", "Yutu, about 140 kg"],
+      ["Outcome", "Success; China's first soft landing"]
+    ],
+    "image": {
+      "file": "missions/img/change-3.jpg",
+      "caption": "Chang'e 3 (left) and Chang'e 4 (right) on the surface, seen from orbit by the Lunar Reconnaissance Orbiter; large arrows mark the landers, small arrows the rovers.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Chang%27e_4_Lander-_A_Closer_Look_(02_m1147290066lr_m130C5A1B).jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "change-lander",
+      "height_m": 2.0
+    }
   },
   {
     "id": "change-4",
@@ -296,7 +763,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First soft landing on the far side, in Von Karman crater inside the South Pole-Aitken basin.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Chang'e 4 was built as the backup to Chang'e 3 and then sent to the far side of the Moon, where no craft had landed before. Because the far side never faces Earth, it talked to controllers through the Queqiao relay satellite placed beyond the Moon. It set down in Von Karman crater and released the Yutu-2 rover.",
+    "facts": [
+      ["Launched", "7 Dec 2018"],
+      ["Landed", "3 Jan 2019"],
+      ["Operator", "CNSA"],
+      ["Country", "China"],
+      ["Rover", "Yutu-2, about 140 kg"],
+      ["Outcome", "Success; first landing on the far side"]
+    ],
+    "image": {
+      "file": "missions/img/change-4.jpg",
+      "caption": "Chang'e 3 (left) and Chang'e 4 (right) on the surface, seen from orbit by the Lunar Reconnaissance Orbiter; large arrows mark the landers, small arrows the rovers.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Chang%27e_4_Lander-_A_Closer_Look_(02_m1147290066lr_m130C5A1B).jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "change-lander",
+      "height_m": 2.0
+    }
   },
   {
     "id": "change-5",
@@ -309,7 +797,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Returned young basalt samples from northern Oceanus Procellarum near Mons Rumker.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Chang'e 5 was a sample-return mission: a lander with a drill, a scoop arm and a small ascent rocket on top. It collected rock and soil near Mons Rumker and launched it to an orbiter waiting above, which carried it home. The basalt it returned is about two billion years old, much younger than the Apollo and Luna samples.",
+    "facts": [
+      ["Launched", "23 Nov 2020"],
+      ["Landed", "1 Dec 2020"],
+      ["Operator", "CNSA"],
+      ["Time on the surface", "about 2 days"],
+      ["Outcome", "Sample return; 1,731 g, back on Earth 16 Dec 2020"]
+    ],
+    "image": {
+      "file": "missions/img/change-5.jpg",
+      "caption": "The Chang'e 5 lander (boxed) on Oceanus Procellarum, seen from orbit by the Lunar Reconnaissance Orbiter on 2 Dec 2020.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Chang%27e_5_as_seen_by_LRO_01.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "change-lander",
+      "height_m": 2.0
+    }
   },
   {
     "id": "chandrayaan-3",
@@ -322,7 +830,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "India's first soft landing, in the southern highlands about 600 km from the south pole.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Chandrayaan-3 was India's second attempt at a lunar landing, made up of the Vikram lander and the small six-wheeled Pragyan rover. It made India the fourth country to land softly on the Moon and was the first craft to land in the south polar region. Both worked for one lunar day, measuring the soil's temperature and chemistry, and Vikram made a short hop before being put to sleep.",
+    "facts": [
+      ["Launched", "14 Jul 2023"],
+      ["Landed", "23 Aug 2023"],
+      ["Operator", "ISRO"],
+      ["Time on the surface", "about 12 days of operation (one lunar day)"],
+      ["Launch mass", "about 3,900 kg with its propulsion module"],
+      ["Rover", "Pragyan, 26 kg"]
+    ],
+    "image": {
+      "file": "missions/img/chandrayaan-3.jpg",
+      "caption": "The Chandrayaan-3 lander at the centre of the bright halo left by its engine plume, seen from orbit by NASA's Lunar Reconnaissance Orbiter four days after landing.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:NASA%E2%80%99s_LRO_imagery_of_Chandrayaan-3_Landing_Site.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 1.2
+    }
   },
   {
     "id": "slim",
@@ -335,7 +864,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Japan's first landing, a pinpoint touchdown near Shioli crater; it came to rest upside down but operated.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "SLIM (Smart Lander for Investigating Moon) was a small Japanese lander built to show that a craft can land at a chosen spot rather than somewhere in a wide ellipse. It came down about 55 m from its target near Shioli crater, but an engine failure in the last seconds left it resting nose-down. It still returned images, released two tiny rovers and survived three lunar nights.",
+    "facts": [
+      ["Launched", "6 Sep 2023"],
+      ["Landed", "19 Jan 2024"],
+      ["Operator", "JAXA"],
+      ["Time on the surface", "contact until Apr 2024"],
+      ["Rover", "LEV-1 hopper and LEV-2 (SORA-Q)"],
+      ["Outcome", "Pinpoint landing achieved; came to rest nose-down"]
+    ],
+    "image": {
+      "file": "missions/img/slim.jpg",
+      "caption": "The SLIM lander (arrow) on the slope near Shioli crater, seen from orbit by the Lunar Reconnaissance Orbiter on 24 Jan 2024.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:M1460739214L_JAXA_SLIM_landing_site_imaged_by_Lunar_Reconnaissance_Orbiter_Camera_(LROC).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 2.4
+    }
   },
   {
     "id": "im-1-odysseus",
@@ -348,7 +898,28 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First commercial landing, near Malapert A; the lander tipped onto its side but returned data.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Odysseus was a Nova-C lander built by Intuitive Machines and flown under NASA's Commercial Lunar Payload Services programme. It was the first privately built craft to land softly on the Moon and the first US landing since Apollo 17. It caught a leg on touchdown near Malapert A and came to rest tilted on its side, but its payloads returned data for about a week.",
+    "facts": [
+      ["Launched", "15 Feb 2024"],
+      ["Landed", "22 Feb 2024"],
+      ["Operator", "Intuitive Machines (NASA CLPS)"],
+      ["Time on the surface", "about 7 days of operation"],
+      ["Launch mass", "about 1,900 kg"],
+      ["Outcome", "First commercial landing; tipped over, returned data"]
+    ],
+    "image": {
+      "file": "missions/img/im-1-odysseus.jpg",
+      "caption": "Odysseus (arrow) near Malapert A, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Image_(M1463440322L)_of_Intuitive_Machines_IM-1_Nova-C,_known_as_Odysseus_landing_site_captured_by_Lunar_Reconnaissance_Orbiter_Camera_(LROC)_(with_arrow).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "nova-c",
+      "height_m": 4.3
+    }
   },
   {
     "id": "change-6",
@@ -361,7 +932,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First sample return from the far side, from the southern Apollo basin.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Chang'e 6 repeated the Chang'e 5 sample-return design on the far side of the Moon, working through the Queqiao-2 relay satellite. It drilled and scooped material in the southern part of the Apollo basin, inside the huge South Pole-Aitken basin, and launched it back to an orbiter. These are the first samples ever returned from the far side.",
+    "facts": [
+      ["Launched", "3 May 2024"],
+      ["Landed", "1 Jun 2024"],
+      ["Operator", "CNSA"],
+      ["Time on the surface", "about 2 days"],
+      ["Outcome", "First far-side sample return; 1,935 g, back on Earth 25 Jun 2024"]
+    ],
+    "image": {
+      "file": "missions/img/change-6.jpg",
+      "caption": "The Chang'e 6 landing site on a dark lava plain in the southern Apollo basin, in a colour mosaic from the Lunar Reconnaissance Orbiter's wide-angle camera.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:First_Look-_Chang%27e_6_(LROC1374).jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "change-lander",
+      "height_m": 2.0
+    }
   },
   {
     "id": "blue-ghost-m1",
@@ -374,7 +965,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "First fully successful commercial landing, near Mons Latreille in Mare Crisium.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Blue Ghost Mission 1 was a squat four-legged lander built by Firefly Aerospace, carrying ten NASA instruments under the Commercial Lunar Payload Services programme. It landed upright in Mare Crisium and worked for a full lunar day, drilling into the soil, testing dust-removal and navigation technology and filming a solar eclipse and a lunar sunset.",
+    "facts": [
+      ["Launched", "15 Jan 2025"],
+      ["Landed", "2 Mar 2025"],
+      ["Operator", "Firefly Aerospace (NASA CLPS)"],
+      ["Time on the surface", "about 14 days of operation"],
+      ["Outcome", "Success; first fully successful commercial landing"]
+    ],
+    "image": {
+      "file": "missions/img/blue-ghost-m1.jpg",
+      "caption": "Blue Ghost (arrow) on Mare Crisium, with the volcanic cone Mons Latreille at lower right, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Blue_Ghost_Lunar_Lander_Seen_From_Above_(LROC1407_-_content_M1495619099LR_mos_str01_320cm_1300p).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 2.0
+    }
   },
   {
     "id": "im-2-athena",
@@ -387,7 +998,27 @@
     "status": "landed",
     "kind": "robotic",
     "summary": "Touched down on the Mons Mouton plateau but tipped over in a crater; the mission ended within days.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Athena was Intuitive Machines' second Nova-C lander, sent to the Mons Mouton plateau near the south pole with a NASA drill and mass spectrometer meant to look for ice below the surface. It touched down about 250 m from its target but ended up on its side inside a shallow, shadowed crater. Without enough sunlight on its solar panels, its batteries ran out about a day later.",
+    "facts": [
+      ["Launched", "27 Feb 2025"],
+      ["Landed", "6 Mar 2025"],
+      ["Operator", "Intuitive Machines (NASA CLPS)"],
+      ["Time on the surface", "about 1 day of operation"],
+      ["Outcome", "Landed on its side; mission ended 7 Mar 2025"]
+    ],
+    "image": {
+      "file": "missions/img/im-2-athena.jpg",
+      "caption": "Oblique Lunar Reconnaissance Orbiter view of the Mons Mouton plateau where Athena came to rest, taken on 10 Mar 2025.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:IM-2_Athena-_A_Closer_View_(LROC1409_-_content_M1496181900_LRmos_warp_str01_CROP1300p).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "nova-c",
+      "height_m": 4.3
+    }
   },
   {
     "id": "beresheet",
@@ -400,7 +1031,27 @@
     "status": "crashed",
     "kind": "robotic",
     "summary": "Private Israeli lander that crashed in Mare Serenitatis after an engine fault during descent.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Beresheet was a small lander built by the Israeli non-profit SpaceIL with Israel Aerospace Industries, and the first privately funded craft to attempt a Moon landing. It reached lunar orbit, but during the descent its main engine shut down, and it hit the surface of Mare Serenitatis at high speed.",
+    "facts": [
+      ["Launched", "22 Feb 2019"],
+      ["Impact", "11 Apr 2019"],
+      ["Operator", "SpaceIL / Israel Aerospace Industries"],
+      ["Launch mass", "about 585 kg"],
+      ["Outcome", "Crashed during descent after main engine shutdown"]
+    ],
+    "image": {
+      "file": "missions/img/beresheet.jpg",
+      "caption": "The Beresheet crash site (boxed) on Mare Serenitatis, seen by the Lunar Reconnaissance Orbiter eleven days after the landing attempt.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Beresheet_Crash_Site_Spotted_LRO_01.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 1.5
+    }
   },
   {
     "id": "vikram-chandrayaan-2",
@@ -413,7 +1064,28 @@
     "status": "crashed",
     "kind": "robotic",
     "summary": "Chandrayaan-2 lander lost during descent; debris was found in LRO images near the intended site.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Vikram was the lander of India's Chandrayaan-2 mission, carrying the small Pragyan rover towards a site in the far southern highlands. In the final phase of its descent it strayed from its planned path and contact was lost about two kilometres above the surface. The Chandrayaan-2 orbiter, launched with it, kept working around the Moon.",
+    "facts": [
+      ["Launched", "22 Jul 2019"],
+      ["Impact", "6 Sep 2019"],
+      ["Operator", "ISRO"],
+      ["Country", "India"],
+      ["Rover", "Pragyan, 27 kg (not deployed)"],
+      ["Outcome", "Crashed during descent; orbiter continued"]
+    ],
+    "image": {
+      "file": "missions/img/vikram-chandrayaan-2.jpg",
+      "caption": "The Vikram impact point and debris field; green dots mark spacecraft debris and blue dots disturbed soil, on a Lunar Reconnaissance Orbiter image.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Chandrayaan-2_Vikram_lander_Impact_Ejecta_with_scalebar.png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 1.2
+    }
   },
   {
     "id": "hakuto-r-m1",
@@ -426,7 +1098,28 @@
     "status": "crashed",
     "kind": "robotic",
     "summary": "Commercial lander that ran out of fuel after an altitude estimation error and crashed near Atlas crater.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Hakuto-R Mission 1 was the first lander of the Japanese company ispace, carrying among other payloads the Rashid rover from the United Arab Emirates. During the descent towards Atlas crater its software misjudged its altitude after passing over a crater rim, so it hovered high above the ground until its fuel ran out and then fell.",
+    "facts": [
+      ["Launched", "11 Dec 2022"],
+      ["Impact", "25 Apr 2023"],
+      ["Operator", "ispace"],
+      ["Launch mass", "about 1,000 kg"],
+      ["Rover", "Rashid (UAE), not deployed"],
+      ["Outcome", "Crashed during descent after running out of fuel"]
+    ],
+    "image": {
+      "file": "missions/img/hakuto-r-m1.jpg",
+      "caption": "The Hakuto-R Mission 1 impact site (boxed) near Atlas crater, seen by the Lunar Reconnaissance Orbiter the day after the landing attempt.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Impact_Site_of_the_HAKUTO-R_Mission_1_Lunar_Lander_(LROC1302_-_content_ispaceImpact_Cover_scale).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 2.3
+    }
   },
   {
     "id": "luna-25",
@@ -439,7 +1132,27 @@
     "status": "crashed",
     "kind": "robotic",
     "summary": "Russian south polar lander that crashed after an engine burn ran too long in lunar orbit.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Luna 25 was Russia's first Moon mission since Luna 24 in 1976, a four-legged lander aimed at the area north of Boguslawsky crater near the south pole. While it was being moved into its pre-landing orbit, an engine burn lasted much longer than planned and the craft struck the Moon.",
+    "facts": [
+      ["Launched", "10 Aug 2023"],
+      ["Impact", "19 Aug 2023"],
+      ["Operator", "Roscosmos"],
+      ["Launch mass", "about 1,750 kg"],
+      ["Outcome", "Crashed after an over-long orbit-lowering burn"]
+    ],
+    "image": {
+      "file": "missions/img/luna-25.jpg",
+      "caption": "The small fresh crater thought to mark the Luna 25 impact, in an enlarged Lunar Reconnaissance Orbiter image 275 m wide.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Luna_25_Impact_Site_zoomed.jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 2.0
+    }
   },
   {
     "id": "hakuto-r-m2",
@@ -452,7 +1165,27 @@
     "status": "crashed",
     "kind": "robotic",
     "summary": "Second ispace lander, lost during descent in Mare Frigoris after a laser rangefinder problem.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "Resilience was ispace's second Hakuto-R lander, carrying the small Tenacious rover built by the company's European arm. It took a slow, fuel-saving route to the Moon and attempted to land in Mare Frigoris, but its laser rangefinder was late in measuring the height above the ground, the craft could not slow down enough, and it made a hard landing.",
+    "facts": [
+      ["Launched", "15 Jan 2025"],
+      ["Impact", "5 Jun 2025"],
+      ["Operator", "ispace"],
+      ["Rover", "Tenacious, not deployed"],
+      ["Outcome", "Crashed during descent (hard landing)"]
+    ],
+    "image": {
+      "file": "missions/img/hakuto-r-m2.jpg",
+      "caption": "The dark smudge (arrow) left by the impact of ispace's Resilience lander in Mare Frigoris, seen from orbit by the Lunar Reconnaissance Orbiter.",
+      "credit": "NASA/GSFC/Arizona State University",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Ispace_Mission_2_SMBC_x_HAKUTO-R_Venture_Moon_Impact_Site_(LROC1456).png"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 2.3
+    }
   },
   {
     "id": "lcross-centaur",
@@ -465,7 +1198,26 @@
     "status": "crashed",
     "kind": "robotic",
     "summary": "Deliberate impact of the spent Centaur stage into Cabeus crater; the plume showed water ice.",
-    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html"
+    "source_url": "https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html",
+    "about": "LCROSS (Lunar Crater Observation and Sensing Satellite) used the empty Centaur upper stage of its own rocket as a projectile. The stage, weighing roughly 2.3 tonnes, was steered into the permanently shadowed Cabeus crater near the south pole while a small shepherding spacecraft followed about four minutes behind, measuring the debris plume before hitting the Moon itself. The plume contained water ice.",
+    "facts": [
+      ["Launched", "18 Jun 2009"],
+      ["Impact", "9 Oct 2009"],
+      ["Operator", "NASA Ames Research Center"],
+      ["Outcome", "Planned impact; water ice detected in the plume"]
+    ],
+    "image": {
+      "file": "missions/img/lcross-centaur.jpg",
+      "caption": "Artist's impression of the LCROSS spacecraft attached to its Centaur upper stage on the way to the Moon.",
+      "credit": "NASA",
+      "license": "Public domain",
+      "source_url": "https://commons.wikimedia.org/wiki/File:LCROSS_Centaur_1.jpg"
+    },
+    "model": {
+      "kind": "archetype",
+      "archetype": "impactor",
+      "height_m": 12.7
+    }
   },
   {
     "id": "im-3",
@@ -478,7 +1230,19 @@
     "status": "planned",
     "kind": "robotic",
     "summary": "Region centre only: IAU centre of the Reiner Gamma swirl, the announced target; not the landing point.",
-    "source_url": "https://planetarynames.wr.usgs.gov/Feature/4987"
+    "source_url": "https://planetarynames.wr.usgs.gov/Feature/4987",
+    "about": "IM-3 is a planned third flight of Intuitive Machines' Nova-C lander for NASA's Commercial Lunar Payload Services programme. It is intended to land at Reiner Gamma, a bright swirl on Oceanus Procellarum that coincides with a local magnetic field, carrying NASA's Lunar Vertex instruments and a set of small cooperating rovers (CADRE). It has not launched.",
+    "facts": [
+      ["Planned landing", "not before 2027"],
+      ["Operator", "Intuitive Machines (NASA CLPS)"],
+      ["Country", "USA"],
+      ["Outcome", "Planned; not yet launched"]
+    ],
+    "model": {
+      "kind": "archetype",
+      "archetype": "nova-c",
+      "height_m": 4.3
+    }
   },
   {
     "id": "griffin-1",
@@ -491,7 +1255,20 @@
     "status": "planned",
     "kind": "robotic",
     "summary": "Region centre only: IAU centre of Nobile crater, the announced south polar target region; not the landing point.",
-    "source_url": "https://planetarynames.wr.usgs.gov/Feature/4321"
+    "source_url": "https://planetarynames.wr.usgs.gov/Feature/4321",
+    "about": "Griffin Mission 1 is the planned first flight of Astrobotic's large Griffin lander, aimed at the Moon's south polar region. It was originally built to carry NASA's VIPER rover; after NASA took VIPER off the flight, the main payload became FLIP, a commercial rover from Venturi Astrolab. It is intended to launch on a SpaceX Falcon Heavy and has not launched.",
+    "facts": [
+      ["Planned landing", "not before late 2026"],
+      ["Operator", "Astrobotic (NASA CLPS)"],
+      ["Country", "USA"],
+      ["Rover", "FLIP (Venturi Astrolab)"],
+      ["Outcome", "Planned; not yet launched"]
+    ],
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 3.0
+    }
   },
   {
     "id": "blue-ghost-m2",
@@ -504,7 +1281,19 @@
     "status": "planned",
     "kind": "robotic",
     "summary": "Region centre only: IAU centre of Nassau crater on the far side, Firefly's stated target; not the landing point.",
-    "source_url": "https://planetarynames.wr.usgs.gov/Feature/4159"
+    "source_url": "https://planetarynames.wr.usgs.gov/Feature/4159",
+    "about": "Blue Ghost Mission 2 is Firefly Aerospace's planned second lunar flight and is intended to land on the far side of the Moon. The lander is to ride on Firefly's Elytra transfer vehicle, which stays in orbit as a radio relay, and to deliver LuSEE-Night, a radio telescope meant to listen to the sky from the radio-quiet far side. It has not launched.",
+    "facts": [
+      ["Planned landing", "not before 2027"],
+      ["Operator", "Firefly Aerospace (NASA CLPS)"],
+      ["Country", "USA"],
+      ["Outcome", "Planned; not yet launched"]
+    ],
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 2.0
+    }
   },
   {
     "id": "apex-cp-12",
@@ -517,7 +1306,19 @@
     "status": "planned",
     "kind": "robotic",
     "summary": "Region centre only: IAU centre of the 316 km Schrodinger basin on the far side; landing point not published.",
-    "source_url": "https://planetarynames.wr.usgs.gov/Feature/5381"
+    "source_url": "https://planetarynames.wr.usgs.gov/Feature/5381",
+    "about": "CP-12 is a planned NASA Commercial Lunar Payload Services delivery led by Draper, using the APEX 1.0 lander designed by ispace's US subsidiary. It is intended to land in Schrodinger basin on the far side with seismometers and a heat-flow probe, supported by relay satellites in lunar orbit. No launch date is confirmed.",
+    "facts": [
+      ["Planned landing", "2027 (unconfirmed)"],
+      ["Operator", "Draper / ispace-U.S. (NASA CLPS)"],
+      ["Country", "USA"],
+      ["Outcome", "Planned; not yet launched"]
+    ],
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 3.1
+    }
   },
   {
     "id": "blue-ghost-m3",
@@ -530,6 +1331,18 @@
     "status": "planned",
     "kind": "robotic",
     "summary": "Region centre only: IAU centre of Mons Gruithuisen Gamma, one of the target Gruithuisen Domes.",
-    "source_url": "https://planetarynames.wr.usgs.gov/Feature/3982"
+    "source_url": "https://planetarynames.wr.usgs.gov/Feature/3982",
+    "about": "Blue Ghost Mission 3 is a planned Firefly Aerospace flight to the Gruithuisen Domes, steep volcanic hills that appear to be made of silica-rich lava unlike the surrounding mare. It is intended to carry NASA's Lunar-VISE instruments, some of them on a rover, to work out what the domes are made of. It has not launched.",
+    "facts": [
+      ["Planned landing", "2028"],
+      ["Operator", "Firefly Aerospace (NASA CLPS)"],
+      ["Country", "USA"],
+      ["Outcome", "Planned; not yet launched"]
+    ],
+    "model": {
+      "kind": "archetype",
+      "archetype": "small-lander",
+      "height_m": 2.0
+    }
   }
 ]

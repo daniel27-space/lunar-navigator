@@ -1,5 +1,5 @@
 // Elevation tiles (see docs/DATA_CONTRACT.md): the LOLA south-pole tiles and the 80 m patches
-// around mission sites. Both are stereographic maps; they differ only in where the map is
+// around mission sites (optionally with a 160 m outer level) and the 20 m patches. Both are stereographic maps; they differ only in where the map is
 // centred, which the `frame` records.
 import { localFrame, spProject, upVector, type Vec3 } from './geo'
 import { globalHeightAt, type GlobalDem } from './globalDem'
@@ -27,7 +27,7 @@ export interface Level {
 
 export interface Terrain {
   radiusM: number
-  /** coarse to fine: [L0 full extent, L1 central]; a site patch has one level */
+  /** coarse to fine: [L0 full extent, L1 central]; a site patch has one level, or [outer, fine] */
   levels: Level[]
   frame: Frame
   /** patch id, absent for the south-pole tiles */
@@ -95,6 +95,8 @@ export interface PatchEntry {
   pixel_m?: number
   height_scale_m?: number
   height_offset_m?: number
+  /** a coarser, wider level around the same centre, same height encoding (two-level site patches) */
+  outer?: { file: string; size: number; pixel_m: number }
 }
 export interface PatchIndex {
   radiusM: number
@@ -119,13 +121,21 @@ export function patchFrame(latDeg: number, lonDeg: number): Frame {
 const sizeOf = (index: PatchIndex, e: PatchEntry) => e.size ?? index.size
 const pixelOf = (index: PatchIndex, e: PatchEntry) => e.pixel_m ?? index.pixelM
 
-export function patchTerrain(index: PatchIndex, entry: PatchEntry, h: Float32Array): Terrain {
-  const size = sizeOf(index, entry)
-  const pixel = pixelOf(index, entry)
+const squareLevel = (size: number, pixel: number, h: Float32Array): Level => {
   const half = (size * pixel) / 2
+  return { size, xMin: -half, xMax: half, yMin: -half, yMax: half, pixel, h }
+}
+
+/**
+ * The terrain of a patch from its decoded heights. With `outerH` (heights of the entry's
+ * outer level) the levels are [outer, fine], coarse to fine like the south-pole tiles.
+ */
+export function patchTerrain(index: PatchIndex, entry: PatchEntry, h: Float32Array, outerH?: Float32Array): Terrain {
+  const levels = [squareLevel(sizeOf(index, entry), pixelOf(index, entry), h)]
+  if (entry.outer && outerH) levels.unshift(squareLevel(entry.outer.size, entry.outer.pixel_m, outerH))
   return {
     radiusM: index.radiusM,
-    levels: [{ size, xMin: -half, xMax: half, yMin: -half, yMax: half, pixel, h }],
+    levels,
     frame: patchFrame(entry.lat, entry.lon),
     id: entry.id,
     kind: entry.kind,
@@ -139,14 +149,25 @@ export function decodePatch(index: PatchIndex, entry: PatchEntry, rgba: Uint8Cla
   return decodeHeights(rgba, size * size, entry.height_scale_m ?? 0.5, entry.height_offset_m ?? -10000)
 }
 
+/** Heights of a patch's outer-level image (same encoding as the patch itself). */
+export function decodePatchOuter(entry: PatchEntry, rgba: Uint8ClampedArray): Float32Array {
+  const size = entry.outer!.size
+  return decodeHeights(rgba, size * size, entry.height_scale_m ?? 0.5, entry.height_offset_m ?? -10000)
+}
+
 export async function loadPatch(base: string, index: PatchIndex, entry: PatchEntry): Promise<Terrain> {
-  const img = await decodePng(`${base}patches/${entry.file}`)
-  return patchTerrain(index, entry, decodePatch(index, entry, img.data))
+  const [img, outer] = await Promise.all([
+    decodePng(`${base}patches/${entry.file}`),
+    entry.outer ? decodePng(`${base}patches/${entry.outer.file}`) : null,
+  ])
+  return patchTerrain(index, entry, decodePatch(index, entry, img.data), outer ? decodePatchOuter(entry, outer.data) : undefined)
 }
 
 /**
  * The patch whose map contains (lat, lon), keeping clear of its edge (2 km, or 30 % of the
- * half-width for a small patch). The finest patch wins, then the nearest centre.
+ * half-width for a small patch). A patch with an outer level reaches to the edge of that
+ * level. The finest patch wins (by its fine pixel: a 20 m patch over an 80 m one), then the
+ * nearest centre.
  */
 export function patchCovering(index: PatchIndex, latDeg: number, lonDeg: number): PatchEntry | null {
   const d = upVector(latDeg, lonDeg)
@@ -155,7 +176,7 @@ export function patchCovering(index: PatchIndex, latDeg: number, lonDeg: number)
   let bestPixel = Infinity
   for (const p of index.patches) {
     const pixel = pixelOf(index, p)
-    const full = (sizeOf(index, p) * pixel) / 2
+    const full = p.outer ? (p.outer.size * p.outer.pixel_m) / 2 : (sizeOf(index, p) * pixel) / 2
     const half = full - Math.min(2000, full * 0.3)
     const f = patchFrame(p.lat, p.lon)
     const xy = frameProject(f, d[0], d[1], d[2], index.radiusM)
@@ -168,6 +189,28 @@ export function patchCovering(index: PatchIndex, latDeg: number, lonDeg: number)
     }
   }
   return best
+}
+
+/**
+ * Every patch whose map contains (lat, lon), finest first (same edge rule as `patchCovering`),
+ * at most one per pixel size. A polar lander has a 20 m patch reaching 5 km and an 80 m patch
+ * reaching 61 km; a horizon there should use both, in that order.
+ */
+export function patchesCovering(index: PatchIndex, latDeg: number, lonDeg: number): PatchEntry[] {
+  const d = upVector(latDeg, lonDeg)
+  const best = new Map<number, { p: PatchEntry; c: number }>()
+  for (const p of index.patches) {
+    const pixel = pixelOf(index, p)
+    const full = p.outer ? (p.outer.size * p.outer.pixel_m) / 2 : (sizeOf(index, p) * pixel) / 2
+    const half = full - Math.min(2000, full * 0.3)
+    const f = patchFrame(p.lat, p.lon)
+    const xy = frameProject(f, d[0], d[1], d[2], index.radiusM)
+    if (!xy || Math.abs(xy[0]) > half || Math.abs(xy[1]) > half) continue
+    const c = d[0] * f.up[0] + d[1] * f.up[1] + d[2] * f.up[2]
+    const had = best.get(pixel)
+    if (!had || c > had.c) best.set(pixel, { p, c })
+  }
+  return [...best.entries()].sort((x, y) => x[0] - y[0]).map(([, v]) => v.p)
 }
 
 /** Map (x, y) of a body-fixed unit direction, or null on the far side from the map's centre. */

@@ -7,6 +7,7 @@ import {
   fmtDateTime,
   fmtDay,
   fmtDurationWords,
+  fmtMissionDate,
   fmtMonth,
   fmtPeriod,
   parseCoord,
@@ -93,6 +94,13 @@ describe('format', () => {
     expect(fmtDurationWords(14)).toBe('14 hours')
     expect(fmtDurationWords(1)).toBe('1.0 hour')
     expect(fmtDurationWords(0)).toBe('none')
+  })
+
+  it('mission dates: ISO dates are formatted, anything else is shown as given', () => {
+    expect(fmtMissionDate('1971-07-30')).toBe('30 Jul 1971')
+    expect(fmtMissionDate('2024-02-22T23:23:00Z')).toBe('22 Feb 2024')
+    expect(fmtMissionDate('NET late 2026 (planned)')).toBe('NET late 2026 (planned)')
+    expect(fmtMissionDate('')).toBe(MISSING)
   })
 
   it('periods are named by their real dates', () => {

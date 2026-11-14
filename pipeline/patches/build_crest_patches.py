@@ -1,4 +1,5 @@
-"""Build the 20 m crest patches (docs/DATA_CONTRACT.md, "20 m crest patches").
+"""Build the 20 m crest patches (docs/DATA_CONTRACT.md, "20 m crest patches") and the 20 m
+patches at the polar landers (same format, see LANDERS).
 
 Four 512 x 512 patches of 20 m pixels (x and y from -5120 m to +5120 m) in the site
 stereographic projection, each centred on a crest near the south pole. They are appended to
@@ -69,6 +70,21 @@ def crest_list():
            ("de-gerlache-rim", "de Gerlache rim", -88.67, 291.8),
            ("malapert-massif", "Malapert massif", -85.964, 357.681)]
     return [{"id": i, "name": n, "lat": round(la, 6), "lon": round(wrap180(lo), 6)} for i, n, la, lo in raw]
+
+
+# Polar landers: the same 20 m patch centred on a mission site (id "<mission id>-20m", name =
+# the mission's display name in missions.json, sites = [mission id]). The 20 m product stops
+# at 80S, so the IM-1 patch (80.13S) is only partly covered: pixels without source data stay
+# nodata (raw 0).
+LANDERS = [("im-2-athena", "IM-2 Athena", -84.7906, 29.1957),
+           ("lcross-centaur", "LCROSS Centaur impact", -84.6796, -48.7093),
+           ("griffin-1", "Griffin Mission 1 (FLIP rover)", -85.28, 53.27),
+           ("im-1-odysseus", "IM-1 Odysseus", -80.13, 1.44)]
+
+
+def lander_list():
+    """[{id, name, lat, lon, sites}] for the polar-lander 20 m patches."""
+    return [{"id": m + "-20m", "name": n, "lat": la, "lon": lo, "sites": [m]} for m, n, la, lo in LANDERS]
 
 
 # --------------------------------------------------------------------------
@@ -167,7 +183,7 @@ def entry_for(c, h):
     dec = decode_height(rgb, offset).astype(np.float64)
     return {
         "id": c["id"], "name": c["name"], "kind": KIND, "render": False,
-        "lat": c["lat"], "lon": c["lon"], "file": c["id"] + ".png", "sites": [],
+        "lat": c["lat"], "lon": c["lon"], "file": c["id"] + ".png", "sites": list(c.get("sites", [])),
         "size": SIZE, "pixel_m": int(PIXEL_M), "height_scale_m": H_SCALE, "height_offset_m": offset,
         "source": SOURCE,
         "nodata_fraction": round(float(np.isnan(dec).mean()), 6),
@@ -180,7 +196,7 @@ def main():
     meta = json.loads(meta_path.read_text())
     keep = [p for p in meta["patches"] if p.get("kind") != KIND]
     new = []
-    for c in crest_list():
+    for c in crest_list() + lander_list():
         h = build_crest(c["lat"], c["lon"])
         entry, rgb = entry_for(c, h)
         bt.write_png(bp.OUT / entry["file"], rgb)

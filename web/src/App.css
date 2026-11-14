@@ -92,7 +92,10 @@
   --cmp-col: 64px; /* comparison value column */
   --cmp-row: 32px;
   --wtl-col: 56px;
-  --cmp-head-h: 56px; /* the comparison's sticky identity row, for scroll offsets */ /* value column of the landing-date grid (four columns in a card) */
+  --cmp-head-h: 56px;
+  --scrim-hero: radial-gradient(ellipse farthest-side at 50% 55%, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0.45) 60%, transparent); /* keeps the craft readable over sunlit ground */
+  --showcase-img: 220px;
+  --phone-timebar: 112px; /* time bar plus its margins on a phone */ /* the comparison's sticky identity row, for scroll offsets */ /* value column of the landing-date grid (four columns in a card) */
   --tabs-h: 40px;
   --w-finder: 320px;
   --w-sites: 360px;
@@ -1758,6 +1761,159 @@ h2.panel-head {
   vertical-align: middle;
 }
 
+/* ---------- mission showcase: the craft in its own view (hero) and a panel of facts ---------- */
+.mission-hero {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  background: var(--scrim-hero);
+  pointer-events: auto;
+}
+.app[data-showcase='on'] .dock-left,
+.app[data-showcase='on'] .sites {
+  display: none;
+}
+.hero-title {
+  position: absolute;
+  top: var(--sp-4);
+  left: var(--sp-4);
+  right: var(--sp-4);
+  pointer-events: none;
+}
+.hero-title h2 {
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: var(--fw-semibold);
+}
+.hero-title p,
+.hero-notes {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
+.hero-notes {
+  position: absolute;
+  left: var(--sp-4);
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  display: grid;
+  gap: var(--sp-0);
+  pointer-events: none;
+}
+.hero-notes a,
+.showcase a {
+  color: var(--text-1);
+  text-underline-offset: var(--sp-0);
+  pointer-events: auto;
+}
+.lander-view {
+  flex: 1;
+  min-height: 0;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.showcase {
+  width: var(--w-compare);
+  max-width: 100%;
+}
+.showcase-head {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0 var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+}
+.showcase-head h2 {
+  min-width: 0;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.showcase-head .caption {
+  grid-column: 1 / -1;
+  padding-bottom: var(--sp-1);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: var(--badge);
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: var(--fs-cap);
+  color: var(--text-1);
+  white-space: nowrap;
+}
+.showcase-body {
+  gap: var(--sp-4);
+}
+.showcase figure {
+  margin: 0;
+  display: grid;
+  gap: var(--sp-2);
+}
+.showcase img {
+  display: block;
+  width: 100%;
+  max-height: var(--showcase-img);
+  object-fit: cover;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.showcase figcaption {
+  display: grid;
+  gap: var(--sp-0);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
+.showcase .credit {
+  color: var(--text-3);
+}
+.facts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--sp-3);
+  align-items: baseline;
+  min-height: var(--row-h);
+  padding: var(--sp-1) 0;
+  border-top: var(--hairline) solid var(--border);
+}
+.facts dt {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
+.facts dd {
+  font-weight: var(--fw-medium);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.about {
+  color: var(--text-1);
+  text-wrap: pretty;
+}
+.showcase-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.discs {
+  align-items: center;
+  flex-wrap: wrap;
+}
+.discs .link {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+}
+
 /* ---------- tablet: one side panel at a time, layer row scrolls ---------- */
 @media (min-width: 761px) and (max-width: 1099px) {
   .tablet-only {
@@ -2013,6 +2169,35 @@ h2.panel-head {
   .hint {
     padding: var(--sp-2) var(--sp-3);
   }
+  /* Showcase on a phone: the craft in the space above the time bar, the facts in the sheet. */
+  .mission-hero {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--phone-bar) + env(safe-area-inset-top));
+    bottom: calc(var(--sheet-h) + var(--phone-timebar));
+    border-radius: 0;
+  }
+  .app[data-sheet='full'] .mission-hero {
+    display: none;
+  }
+  /* The name is in the sheet's header just below, so it is not repeated over the craft. */
+  .hero-title {
+    display: none;
+  }
+  .hero-notes {
+    left: var(--sp-3);
+    right: var(--sp-3);
+    bottom: var(--sp-1);
+  }
+  .showcase-head {
+    position: static;
+    padding: 0 var(--sp-1) 0 var(--sp-3);
+    border-bottom: 0;
+  }
+  .showcase {
+    width: auto;
+  }
   .intro {
     padding: 0 var(--sp-3) var(--sp-3);
   }
@@ -2144,5 +2329,71 @@ h2.panel-head {
   .seg button:active,
   .shortlist button:active {
     transform: none;
+  }
+}
+
+/* Comparison: the sites, listed once. Badge and name share a row so they always line up, and
+   the remove control is always visible at the end of the row. */
+.cmp-sites {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--sp-0);
+}
+.cmp-sites li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-radius: var(--r-md);
+}
+.cmp-sites li:hover,
+.cmp-sites li:focus-within {
+  background: var(--surface-2);
+}
+.app .cmp-site {
+  min-width: 0;
+  min-height: var(--ctl-h);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-2);
+  text-align: left;
+  border-radius: var(--r-md);
+}
+.cmp-site-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-md);
+  line-height: var(--lh-md);
+  color: var(--text-1);
+}
+.app .cmp-site-x {
+  width: var(--ctl-h);
+  height: var(--ctl-h);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  font-size: var(--fs-lg);
+  color: var(--text-2);
+}
+.app .cmp-site-x:hover {
+  color: var(--text-1);
+  background: var(--surface-3);
+}
+.cmp-mhead .cmp-letter {
+  display: flex;
+  justify-content: flex-end;
+}
+@media (max-width: 760px) {
+  .app .cmp-site,
+  .app .cmp-site-x {
+    min-height: var(--touch);
+  }
+  .app .cmp-site-x {
+    width: var(--touch);
+    height: var(--touch);
   }
 }

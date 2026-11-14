@@ -14,7 +14,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_270_315_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2735.0,
-   "max_m": -239.0
+   "max_m": -239.0,
+   "outer": {
+    "file": "luna-9.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_270_315_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "luna-13",
@@ -27,7 +34,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_270_315_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2504.5,
-   "max_m": -2016.0
+   "max_m": -2016.0,
+   "outer": {
+    "file": "luna-13.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_270_315_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "surveyor-1",
@@ -40,7 +54,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2464.5,
-   "max_m": -1339.0
+   "max_m": -1339.0,
+   "outer": {
+    "file": "surveyor-1.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_270_315_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "surveyor-3",
@@ -54,7 +75,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -1779.0,
-   "max_m": -1205.0
+   "max_m": -1205.0,
+   "outer": {
+    "file": "surveyor-3.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "surveyor-5",
@@ -67,7 +95,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2484.5,
-   "max_m": -1491.0
+   "max_m": -1491.0,
+   "outer": {
+    "file": "surveyor-5.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "surveyor-6",
@@ -80,7 +115,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_315_360_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -1184.0,
-   "max_m": -344.0
+   "max_m": -344.0,
+   "outer": {
+    "file": "surveyor-6.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_315_360_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "surveyor-7",
@@ -93,7 +135,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2018.0,
-   "max_m": 1545.0
+   "max_m": 1545.0,
+   "outer": {
+    "file": "surveyor-7.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "apollo-11",
@@ -106,7 +155,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2485.5,
-   "max_m": -1288.0
+   "max_m": -1288.0,
+   "outer": {
+    "file": "apollo-11.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "apollo-14",
@@ -119,7 +175,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -1590.5,
-   "max_m": -433.5
+   "max_m": -433.5,
+   "outer": {
+    "file": "apollo-14.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "apollo-15",
@@ -132,7 +195,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2968.5,
-   "max_m": 2172.0
+   "max_m": 2172.0,
+   "outer": {
+    "file": "apollo-15.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "apollo-16",
@@ -145,7 +215,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -423.5,
-   "max_m": 1117.5
+   "max_m": 1117.5,
+   "outer": {
+    "file": "apollo-16.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "apollo-17",
@@ -158,7 +235,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -3140.5,
-   "max_m": -193.5
+   "max_m": -193.5,
+   "outer": {
+    "file": "apollo-17.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "luna-16",
@@ -171,7 +255,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_045_090_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2979.5,
-   "max_m": -2130.0
+   "max_m": -2130.0,
+   "outer": {
+    "file": "luna-16.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_045_090_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "luna-17",
@@ -185,7 +276,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2964.5,
-   "max_m": -2236.0
+   "max_m": -2236.0,
+   "outer": {
+    "file": "luna-17.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "luna-20",
@@ -198,7 +296,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -4036.0,
-   "max_m": -101.0
+   "max_m": -101.0,
+   "outer": {
+    "file": "luna-20.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "luna-21",
@@ -212,7 +317,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -3267.5,
-   "max_m": 51.0
+   "max_m": 51.0,
+   "outer": {
+    "file": "luna-21.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "luna-23",
@@ -226,7 +338,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -4892.0,
-   "max_m": -2638.0
+   "max_m": -2638.0,
+   "outer": {
+    "file": "luna-23.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "change-3",
@@ -239,7 +358,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -3140.0,
-   "max_m": -2465.5
+   "max_m": -2465.5,
+   "outer": {
+    "file": "change-3.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "change-4",
@@ -252,7 +378,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_135_180_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -6587.0,
-   "max_m": -4683.0
+   "max_m": -4683.0,
+   "outer": {
+    "file": "change-4.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_135_180_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_180_225_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "change-5",
@@ -265,7 +398,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_270_315_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2773.0,
-   "max_m": -1958.5
+   "max_m": -1958.5,
+   "outer": {
+    "file": "change-5.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_270_315_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "chandrayaan-3",
@@ -278,7 +418,14 @@
    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
    "nodata_fraction": 0.0,
    "min_m": -572.5,
-   "max_m": 2191.0
+   "max_m": 2191.0,
+   "outer": {
+    "file": "chandrayaan-3.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "slim",
@@ -291,7 +438,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -4752.0,
-   "max_m": 2801.5
+   "max_m": 2801.5,
+   "outer": {
+    "file": "slim.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "im-1-odysseus",
@@ -304,7 +458,14 @@
    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG; LOLA south pole 80 m, NASA GSFC PGDA product 78 (local copy): https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF",
    "nodata_fraction": 0.0,
    "min_m": -519.5,
-   "max_m": 3523.0
+   "max_m": 3523.0,
+   "outer": {
+    "file": "im-1-odysseus.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG; LOLA south pole 80 m, NASA GSFC PGDA product 78 (local copy): https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "change-6",
@@ -317,7 +478,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_180_225_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -5706.5,
-   "max_m": -4346.5
+   "max_m": -4346.5,
+   "outer": {
+    "file": "change-6.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_180_225_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "blue-ghost-m1",
@@ -330,7 +498,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -3888.0,
-   "max_m": -3355.5
+   "max_m": -3355.5,
+   "outer": {
+    "file": "blue-ghost-m1.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_045_090_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "beresheet",
@@ -343,7 +518,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_000_045_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -3189.0,
-   "max_m": -2392.0
+   "max_m": -2392.0,
+   "outer": {
+    "file": "beresheet.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_000_045_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "vikram-chandrayaan-2",
@@ -356,7 +538,14 @@
    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
    "nodata_fraction": 0.0,
    "min_m": -537.5,
-   "max_m": 2339.0
+   "max_m": 2339.0,
+   "outer": {
+    "file": "vikram-chandrayaan-2.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "hakuto-r-m1",
@@ -369,7 +558,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_000_045_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_045_090_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -3757.5,
-   "max_m": -37.0
+   "max_m": -37.0,
+   "outer": {
+    "file": "hakuto-r-m1.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_000_045_FLOAT.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_045_090_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "luna-25",
@@ -382,7 +578,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_045_090_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -3296.5,
-   "max_m": 1240.0
+   "max_m": 1240.0,
+   "outer": {
+    "file": "luna-25.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_60S_30S_045_090_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "hakuto-r-m2",
@@ -395,7 +598,14 @@
    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60N_60M.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2832.0,
-   "max_m": -1607.0
+   "max_m": -1607.0,
+   "outer": {
+    "file": "hakuto-r-m2.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60N_60M.IMG; SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "im-3",
@@ -408,7 +618,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_270_315_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2122.5,
-   "max_m": -1572.5
+   "max_m": -1572.5,
+   "outer": {
+    "file": "im-3.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_00N_30N_270_315_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "blue-ghost-m2",
@@ -421,7 +638,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_135_180_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -4591.5,
-   "max_m": -495.0
+   "max_m": -495.0,
+   "outer": {
+    "file": "blue-ghost-m2.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30S_00S_135_180_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "apex-cp-12",
@@ -434,7 +658,14 @@
    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
    "nodata_fraction": 0.0,
    "min_m": -5503.0,
-   "max_m": -2334.0
+   "max_m": -2334.0,
+   "outer": {
+    "file": "apex-cp-12.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "LOLA GDR polar 60 m (PDS LOLA node): https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/IMG/LDEM_60S_60M.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "blue-ghost-m3",
@@ -447,7 +678,14 @@
    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
    "nodata_fraction": 0.0,
    "min_m": -2507.5,
-   "max_m": -91.0
+   "max_m": -91.0,
+   "outer": {
+    "file": "blue-ghost-m3.outer.png",
+    "size": 768,
+    "pixel_m": 160,
+    "source": "SLDEM2015 512 px/deg (LOLA + Kaguya TC; NASA GSFC PGDA product 54, files on the PDS LOLA node): https://imbrium.mit.edu/DATA/SLDEM2015/TILES/FLOAT_IMG/SLDEM2015_512_30N_60N_315_360_FLOAT.IMG",
+    "nodata_fraction": 0.0
+   }
   },
   {
    "id": "connecting-ridge",
@@ -520,6 +758,86 @@
    "nodata_fraction": 0.0,
    "min_m": 2870.3,
    "max_m": 4993.0
+  },
+  {
+   "id": "im-2-athena-20m",
+   "name": "IM-2 Athena",
+   "kind": "crest20",
+   "render": false,
+   "lat": -84.7906,
+   "lon": 29.1957,
+   "file": "im-2-athena-20m.png",
+   "sites": [
+    "im-2-athena"
+   ],
+   "size": 512,
+   "pixel_m": 20,
+   "height_scale_m": 0.1,
+   "height_offset_m": 4872.0,
+   "source": "LOLA south pole 20 m, NASA GSFC PGDA product 78 (local copy): https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+   "nodata_fraction": 0.0,
+   "min_m": 4873.8,
+   "max_m": 5358.4
+  },
+  {
+   "id": "lcross-centaur-20m",
+   "name": "LCROSS Centaur impact",
+   "kind": "crest20",
+   "render": false,
+   "lat": -84.6796,
+   "lon": -48.7093,
+   "file": "lcross-centaur-20m.png",
+   "sites": [
+    "lcross-centaur"
+   ],
+   "size": 512,
+   "pixel_m": 20,
+   "height_scale_m": 0.1,
+   "height_offset_m": -3953.0,
+   "source": "LOLA south pole 20 m, NASA GSFC PGDA product 78 (local copy): https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+   "nodata_fraction": 0.0,
+   "min_m": -3951.2,
+   "max_m": -2673.9
+  },
+  {
+   "id": "griffin-1-20m",
+   "name": "Griffin Mission 1 (FLIP rover)",
+   "kind": "crest20",
+   "render": false,
+   "lat": -85.28,
+   "lon": 53.27,
+   "file": "griffin-1-20m.png",
+   "sites": [
+    "griffin-1"
+   ],
+   "size": 512,
+   "pixel_m": 20,
+   "height_scale_m": 0.1,
+   "height_offset_m": -285.0,
+   "source": "LOLA south pole 20 m, NASA GSFC PGDA product 78 (local copy): https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+   "nodata_fraction": 0.0,
+   "min_m": -283.3,
+   "max_m": 1225.7
+  },
+  {
+   "id": "im-1-odysseus-20m",
+   "name": "IM-1 Odysseus",
+   "kind": "crest20",
+   "render": false,
+   "lat": -80.13,
+   "lon": 1.44,
+   "file": "im-1-odysseus-20m.png",
+   "sites": [
+    "im-1-odysseus"
+   ],
+   "size": 512,
+   "pixel_m": 20,
+   "height_scale_m": 0.1,
+   "height_offset_m": 2009.0,
+   "source": "LOLA south pole 20 m, NASA GSFC PGDA product 78 (local copy): https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_20MPP_ADJ.TIF",
+   "nodata_fraction": 0.107235,
+   "min_m": 2010.8,
+   "max_m": 2819.9
   }
  ]
 }

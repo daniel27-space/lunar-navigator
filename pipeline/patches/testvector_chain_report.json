@@ -156,13 +156,14 @@
       "patch": "apollo-17",
       "surface_h_m": -2627.25,
       "observer_height_from": "patch",
-      "horizon_min_deg": 0.25191147357007615,
+      "horizon_min_deg": 0.2705982170679341,
       "horizon_max_deg": 14.196859363225373,
       "azimuths_set_by": {
-        "patch": 692,
+        "patch": 685,
         "L1": 0,
         "L0": 0,
-        "whole-Moon map": 28
+        "whole-Moon map": 0,
+        "patch outer": 35
       }
     },
     {
@@ -172,13 +173,14 @@
       "patch": "apollo-15",
       "surface_h_m": -1926.5,
       "observer_height_from": "patch",
-      "horizon_min_deg": 0.23449577741800906,
+      "horizon_min_deg": 0.4104753831418694,
       "horizon_max_deg": 13.5700432961978,
       "azimuths_set_by": {
-        "patch": 712,
+        "patch": 708,
         "L1": 0,
         "L0": 0,
-        "whole-Moon map": 8
+        "whole-Moon map": 0,
+        "patch outer": 12
       }
     },
     {
@@ -188,13 +190,14 @@
       "patch": "im-1-odysseus",
       "surface_h_m": 2591.625,
       "observer_height_from": "patch",
-      "horizon_min_deg": -0.2823437511361187,
+      "horizon_min_deg": -0.24320921800465792,
       "horizon_max_deg": 11.079765714560551,
       "azimuths_set_by": {
-        "patch": 681,
+        "patch": 674,
         "L1": 0,
         "L0": 0,
-        "whole-Moon map": 39
+        "whole-Moon map": 0,
+        "patch outer": 46
       }
     },
     {
@@ -207,10 +210,11 @@
       "horizon_min_deg": 0.49164408725404957,
       "horizon_max_deg": 2.465845328761429,
       "azimuths_set_by": {
-        "patch": 606,
+        "patch": 565,
         "L1": 0,
         "L0": 0,
-        "whole-Moon map": 114
+        "whole-Moon map": 0,
+        "patch outer": 155
       }
     },
     {
@@ -226,7 +230,8 @@
         "patch": 720,
         "L1": 0,
         "L0": 0,
-        "whole-Moon map": 0
+        "whole-Moon map": 0,
+        "patch outer": 0
       }
     },
     {
@@ -242,7 +247,8 @@
         "patch": 0,
         "L1": 0,
         "L0": 0,
-        "whole-Moon map": 720
+        "whole-Moon map": 720,
+        "patch outer": 0
       }
     },
     {
@@ -258,7 +264,8 @@
         "patch": 619,
         "L1": 101,
         "L0": 0,
-        "whole-Moon map": 0
+        "whole-Moon map": 0,
+        "patch outer": 0
       }
     },
     {
@@ -274,7 +281,8 @@
         "patch": 720,
         "L1": 0,
         "L0": 0,
-        "whole-Moon map": 0
+        "whole-Moon map": 0,
+        "patch outer": 0
       }
     },
     {
@@ -290,7 +298,8 @@
         "patch": 430,
         "L1": 290,
         "L0": 0,
-        "whole-Moon map": 0
+        "whole-Moon map": 0,
+        "patch outer": 0
       }
     },
     {
@@ -306,7 +315,8 @@
         "patch": 455,
         "L1": 113,
         "L0": 152,
-        "whole-Moon map": 0
+        "whole-Moon map": 0,
+        "patch outer": 0
       }
     },
     {
@@ -322,12 +332,81 @@
         "patch": 445,
         "L1": 275,
         "L0": 0,
-        "whole-Moon map": 0
+        "whole-Moon map": 0,
+        "patch outer": 0
+      }
+    },
+    {
+      "name": "IM-2 Athena site (20 m patch)",
+      "lat": -84.7906,
+      "lon": 29.1957,
+      "patch": "im-2-athena-20m",
+      "surface_h_m": 5321.9,
+      "observer_height_from": "patch",
+      "horizon_min_deg": -1.4693718747099143,
+      "horizon_max_deg": 4.061340927175555,
+      "azimuths_set_by": {
+        "patch": 242,
+        "L1": 478,
+        "L0": 0,
+        "whole-Moon map": 0,
+        "patch outer": 0
+      }
+    },
+    {
+      "name": "LCROSS Centaur impact site (20 m patch)",
+      "lat": -84.6796,
+      "lon": -48.7093,
+      "patch": "lcross-centaur-20m",
+      "surface_h_m": -3833.975,
+      "observer_height_from": "patch",
+      "horizon_min_deg": 1.109045098744822,
+      "horizon_max_deg": 11.342524672076694,
+      "azimuths_set_by": {
+        "patch": 137,
+        "L1": 583,
+        "L0": 0,
+        "whole-Moon map": 0,
+        "patch outer": 0
+      }
+    },
+    {
+      "name": "Griffin Mission 1 site (20 m patch)",
+      "lat": -85.28,
+      "lon": 53.27,
+      "patch": "griffin-1-20m",
+      "surface_h_m": 915.45,
+      "observer_height_from": "patch",
+      "horizon_min_deg": -2.1611522570206416,
+      "horizon_max_deg": 7.858816160468708,
+      "azimuths_set_by": {
+        "patch": 209,
+        "L1": 478,
+        "L0": 33,
+        "whole-Moon map": 0,
+        "patch outer": 0
+      }
+    },
+    {
+      "name": "IM-1 Odysseus site (20 m patch)",
+      "lat": -80.13,
+      "lon": 1.44,
+      "patch": "im-1-odysseus-20m",
+      "surface_h_m": 2591.95,
+      "observer_height_from": "patch",
+      "horizon_min_deg": -0.28279550822361604,
+      "horizon_max_deg": 11.115603320818739,
+      "azimuths_set_by": {
+        "patch": 653,
+        "L1": 0,
+        "L0": 17,
+        "whole-Moon map": 50,
+        "patch outer": 0
       }
     }
   ],
   "bytes": {
     "horizon_testvectors.json": 41866,
-    "patch_testvectors.json": 75442
+    "patch_testvectors.json": 102493
   }
 }

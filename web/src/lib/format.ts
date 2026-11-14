@@ -123,6 +123,14 @@ export function fmtDay(ms: number): string {
   return known(ms) ? `${fmtTick(ms)} ${new Date(ms).getUTCFullYear()}` : MISSING
 }
 
+/** A mission's date: "30 Jul 1971" when it is an ISO date, otherwise the text as given ("NET late 2026 (planned)"). */
+export function fmtMissionDate(text: string): string {
+  const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(text)
+  if (!m) return text.trim() || MISSING
+  const ms = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+  return known(ms) ? fmtDay(ms) : text
+}
+
 /** A period by its real dates: "12 Nov \u2013 11 Jan 2027 (60 days)"; the year is on the end date (UTC). */
 export function fmtPeriod(startMs: number, days: number): string {
   if (!known(startMs) || !known(days)) return MISSING

@@ -99,6 +99,9 @@ height is the first of these that has data:
      of 0.5 m and exact; with 0.1 m steps the float32 rounding (up to 6e-5 m
      at 1 km height) is part of the reference and must be reproduced, because
      a sample 20 m from the observer turns 1e-4 m into 3e-4 degrees.
+  1b. the patch's outer level, if it has one ("Two-level site patches": 768 x 768 pixels of
+     160 m, x and y from -61440 m to +61440 m, same centre, projection, registration and
+     height encoding): the same grid sample with the same x, y. NO DATA -> go on.
   2. south-pole tile L1, then L0 (grid sample above). If q_z >= 0 (northern
      hemisphere or equator) the tiles are not covered and the stereographic x, y
      is not computed, so nothing divides by zero at the north pole.
@@ -410,9 +413,10 @@ def _sample_global(g, qx, qy, qz):
 
 
 @njit(cache=True)
-def _sample_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
+def _sample_chain(pa, pfr, p_half, p_px, use_p, oa, o_half, o_px, use_o, l1, l1_xmin, l1_ymax, l1_px,
                   l0, l0_xmin, l0_ymax, l0_px, g, radius, qx, qy, qz):
-    """Height and the level that supplied it (0 patch, 1 L1, 2 L0, 3 whole-Moon map)."""
+    """Height and the level that supplied it (0 patch, 1 L1, 2 L0, 3 whole-Moon map, 4 the
+    patch's outer level, which is looked up right after the patch's fine level)."""
     if use_p:
         c = qx * pfr[2, 0] + qy * pfr[2, 1] + qz * pfr[2, 2]
         if c > 0.0:
@@ -421,6 +425,10 @@ def _sample_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
             h = _sample(pa, -p_half, p_half, p_px, x, y)
             if not np.isnan(h):
                 return h, 0
+            if use_o:
+                h = _sample(oa, -o_half, o_half, o_px, x, y)
+                if not np.isnan(h):
+                    return h, 4
     if qz < 0.0:
         x = 2.0 * radius * qy / (1.0 - qz)
         y = 2.0 * radius * qx / (1.0 - qz)
@@ -434,7 +442,7 @@ def _sample_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
 
 
 @njit(cache=True)
-def _kernel_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
+def _kernel_chain(pa, pfr, p_half, p_px, use_p, oa, o_half, o_px, use_o, l1, l1_xmin, l1_ymax, l1_px,
                   l0, l0_xmin, l0_ymax, l0_px, g,
                   lat_deg, lon_deg, obs_h, az_step_deg, n_az, sched, radius,
                   out_elev, out_dist, out_level):
@@ -448,7 +456,7 @@ def _kernel_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
     ex, ey, ez = -so, co, 0.0
     nx, ny, nz = -sl * co, -sl * so, cl
 
-    h0, lev0 = _sample_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
+    h0, lev0 = _sample_chain(pa, pfr, p_half, p_px, use_p, oa, o_half, o_px, use_o, l1, l1_xmin, l1_ymax, l1_px,
                              l0, l0_xmin, l0_ymax, l0_px, g, radius, ux, uy, uz)
     r0 = radius + h0 + obs_h
     px0, py0, pz0 = r0 * ux, r0 * uy, r0 * uz
@@ -475,7 +483,7 @@ def _kernel_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
             qx = ux * ct[i] + dx * st[i]
             qy = uy * ct[i] + dy * st[i]
             qz = uz * ct[i] + dz * st[i]
-            h, lev = _sample_chain(pa, pfr, p_half, p_px, use_p, l1, l1_xmin, l1_ymax, l1_px,
+            h, lev = _sample_chain(pa, pfr, p_half, p_px, use_p, oa, o_half, o_px, use_o, l1, l1_xmin, l1_ymax, l1_px,
                                    l0, l0_xmin, l0_ymax, l0_px, g, radius, qx, qy, qz)
             rq = radius + h
             vx = rq * qx - px0
@@ -499,9 +507,16 @@ class Patch:
     """A site terrain patch: heights (row 0 = north edge, NaN = nodata) in the site
     stereographic projection centred on (lat0, lon0). See docs/DATA_CONTRACT.md."""
 
-    def __init__(self, data, lat0, lon0, pixel_m=80.0, patch_id=None):
+    def __init__(self, data, lat0, lon0, pixel_m=80.0, patch_id=None, outer=None, outer_pixel_m=160.0):
         self.data = np.ascontiguousarray(data, dtype=np.float32)
         assert self.data.ndim == 2 and self.data.shape[0] == self.data.shape[1]
+        # optional outer level ("Two-level site patches"): same centre, coarser and wider
+        self.outer = None if outer is None else np.ascontiguousarray(outer, dtype=np.float32)
+        self.outer_pixel_m = float(outer_pixel_m)
+        self.outer_half_m = 0.0
+        if self.outer is not None:
+            assert self.outer.ndim == 2 and self.outer.shape[0] == self.outer.shape[1]
+            self.outer_half_m = self.outer.shape[0] * self.outer_pixel_m / 2.0
         self.lat0 = float(lat0)
         self.lon0 = float(lon0)
         self.pixel_m = float(pixel_m)
@@ -540,7 +555,16 @@ def load_patch(patch_id, patch_dir=DEFAULT_PATCH_DIR) -> Patch:
             h = decode_patch_rgb(np.asarray(im), entry.get("height_scale_m", 0.5),
                                  entry.get("height_offset_m", -10000.0))
         assert h.shape == (size, size)
-        _cache[key] = Patch(h, entry["lat"], entry["lon"], pixel_m, patch_id)
+        outer, outer_px = None, 160.0
+        if "outer" in entry:                      # same encoding as the patch itself
+            o = entry["outer"]
+            with Image.open(patch_dir / o["file"]) as im:
+                assert im.mode == "RGB", im.mode
+                outer = decode_patch_rgb(np.asarray(im), entry.get("height_scale_m", 0.5),
+                                         entry.get("height_offset_m", -10000.0))
+            assert outer.shape == (o["size"], o["size"])
+            outer_px = o["pixel_m"]
+        _cache[key] = Patch(h, entry["lat"], entry["lon"], pixel_m, patch_id, outer, outer_px)
     return _cache[key]
 
 
@@ -564,16 +588,19 @@ _DUMMY_FRAME = np.eye(3)
 
 def _chain_args(patch, l0, l1, g):
     if patch is None:
-        p = (_DUMMY, _DUMMY_FRAME, 1.0, 1.0, False)
+        p = (_DUMMY, _DUMMY_FRAME, 1.0, 1.0, False, _DUMMY, 1.0, 1.0, False)
+    elif patch.outer is None:
+        p = (patch.data, patch.frame, patch.half_m, patch.pixel_m, True, _DUMMY, 1.0, 1.0, False)
     else:
-        p = (patch.data, patch.frame, patch.half_m, patch.pixel_m, True)
+        p = (patch.data, patch.frame, patch.half_m, patch.pixel_m, True,
+             patch.outer, patch.outer_half_m, patch.outer_pixel_m, True)
     return p + (l1.data, l1.x_min, l1.y_max, l1.pixel_m, l0.data, l0.x_min, l0.y_max, l0.pixel_m, g)
 
 
 def height_chain(lat, lon, patch: Patch | None = None, tile_dir=DEFAULT_TILE_DIR,
                  global_dem=DEFAULT_GLOBAL_DEM, radius=R_MOON_M, return_level=False, grids=None):
     """Ground height (m) at lat/lon from the lookup chain; with return_level also which level
-    supplied it (0 patch, 1 L1, 2 L0, 3 whole-Moon map). `grids` = (L0 Grid, L1 Grid,
+    supplied it (0 patch, 1 L1, 2 L0, 3 whole-Moon map, 4 patch outer level). `grids` = (L0 Grid, L1 Grid,
     whole-Moon float32 array) replaces the files (used by the tests)."""
     l0, l1, g = grids if grids is not None else (*load_tile_grids(tile_dir), load_global_dem(global_dem))
     la, lo = math.radians(lat), math.radians(lon)
@@ -592,7 +619,8 @@ def horizon_chain(lat, lon, observer_height_m=2.0, az_step_deg=0.5, patch: Patch
 
     Returns elev_deg, or with return_details (elev_deg, dist_m, h0, level) where dist_m is the
     arc length of the sample that sets the horizon, h0 the looked-up ground height under the
-    observer and level the lookup level (0 patch, 1 L1, 2 L0, 3 whole-Moon map) of that sample.
+    observer and level the lookup level (0 patch, 1 L1, 2 L0, 3 whole-Moon map, 4 patch outer
+    level; lookup order is 0, 4, 1, 2, 3) of that sample.
     """
     l0, l1, g = grids if grids is not None else (*load_tile_grids(tile_dir), load_global_dem(global_dem))
     g = np.ascontiguousarray(g, dtype=np.float32)

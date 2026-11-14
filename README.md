@@ -24,8 +24,10 @@ Pick any point near the Moon's south pole and any date from 2024 to 2036, and se
 - pin a point by typing its latitude and longitude, as well as by clicking the map;
 - **a comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
   one shared timeline, and one row per measure with the winner marked;
-- 41 past, failed and planned landing sites across the whole Moon, each with 80 m terrain
-  around it, so the same analysis works at Apollo 15 or Chang'e 4 as at the pole.
+- 41 past, failed and planned landing sites across the whole Moon, each with detailed terrain
+  around it, so the same analysis works at Apollo 15 or Chang'e 4 as at the pole;
+- **a mission view** for each of them: the craft in 3D lit by the real Sun at its site, a
+  picture where a freely licensed one exists, key facts and what the mission did.
 
 Map layers: sunlight now, average sunlight, average Earth visibility, permanently shadowed
 regions, elevation and slope.
@@ -77,12 +79,17 @@ property search, product-comparison sites, sun-planning tools); see
 
 ## Known limits
 
-- Detailed terrain (80 m) covers 80°S to 90°S and a 61 km square around each mission site.
+- Detailed terrain covers 80°S to 90°S (80 m) and a square around each mission site (80 m out
+  to about 30 km, 160 m out to about 60 km).
   Everywhere else the globe uses a whole-Moon elevation map (about 2.7 km per pixel, slope
   lighting only, no cast shadows). A point pinned there gets a horizon from that map alone,
   which misses hills smaller than a few km; the card says so.
-- At a mission site the horizon uses 80 m terrain out to about 30 km and the whole-Moon map
-  beyond, so a distant peak can be underestimated.
+- At a mission site the horizon uses 80 m terrain out to about 30 km, 160 m to about 60 km and
+  the whole-Moon map beyond, so a peak further away than that can be underestimated. The four
+  polar landers also have 20 m terrain within 5 km; the 20 m product does not exist elsewhere.
+- In the mission view only the Apollo Lunar Module is a real 3D model (NASA). The other craft
+  are simplified stand-ins for their class and are labelled so. 17 missions have no picture
+  because none could be found under a free licence.
 - Inside about 84.6°S the browser uses 80 m terrain. Outside it uses about 300 m terrain, where
   the horizon can be wrong by a degree or more; rise and set times there are less certain.
 - On ridge crests the result is very sensitive to observer height: a mast a metre taller can
@@ -117,6 +124,8 @@ property search, product-comparison sites, sun-planning tools); see
 | JPL Horizons, used as the independent check on Sun and Earth angles | https://ssd.jpl.nasa.gov/horizons/ |
 | Whole-Moon colour map (LROC WAC) and whole-Moon elevation `ldem_16.tif` (LOLA, 16 pixels per degree), CGI Moon Kit | NASA's Scientific Visualization Studio, https://svs.gsfc.nasa.gov/4720 |
 | 80 m terrain around mission sites: SLDEM2015 (LOLA + Kaguya, 512 pixels per degree) between 60°S and 60°N; LOLA polar grids `LDEM_60S_60M`, `LDEM_60N_60M` beyond | NASA PDS LOLA node, https://imbrium.mit.edu/DATA/SLDEM2015/ and https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/ (also linked from NASA GSFC PGDA product 54); exact file per site in `web/public/data/patches/patches.json` |
+| Apollo Lunar Module 3D model | NASA 3D Resources, https://github.com/nasa/NASA-3D-Resources |
+| Mission pictures (NASA and LRO/LROC imagery, two Wikimedia Commons photographs under CC BY 4.0 and CC BY-SA 3.0) | credit, licence and source page for each in `docs/research/mission-media.md` and shown beside the picture in the app |
 | Landing and impact site coordinates | NASA NSSDCA, https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html (per-site sources in `web/public/data/missions.json`) |
 
 ## References
@@ -130,6 +139,8 @@ property search, product-comparison sites, sun-planning tools); see
   resolution Digital Terrain Models from LOLA, Icarus 243, 78–90.
 - Acton, C. H. (1996), Ancillary data services of NASA's Navigation and Ancillary Information
   Facility (SPICE).
+- Draco mesh decoder (Google, Apache-2.0), shipped with three.js, used to read the compressed
+  Lunar Module model.
 - Software: SpiceyPy, NumPy, SciPy, Numba, Rasterio, Pillow, pytest (Python); React, three.js,
   @react-three/fiber, @react-three/drei, zustand, Vite, Vitest, pngjs (web).
 - Research notes with sources: `docs/research/`.

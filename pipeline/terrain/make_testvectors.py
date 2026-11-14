@@ -4,7 +4,7 @@ Default run (.venv/bin/python pipeline/terrain/make_testvectors.py):
   web/public/data/terrain/horizon_testvectors.json   six south-pole points, lookup chain
       without a patch (web tile L1 -> L0 -> whole-Moon map; horizon.horizon_chain)
   web/public/data/patches/patch_testvectors.json     observers with a site patch (same
-      shape plus "patch": patch id or null)
+      shape plus "patch": patch id or null); a patch with an outer level uses both levels
   pipeline/patches/testvector_chain_report.json      what the whole-Moon fallback changed
       relative to the tiles-only vectors kept in
       pipeline/patches/horizon_testvectors_tiles_only_before_chain.json
@@ -60,6 +60,14 @@ CREST_CENTRES = [
     ("Malapert massif 20 m patch centre", "malapert-massif"),
 ]
 CREST_POINTS = [("Glaser spot 2 on the connecting ridge", -89.4399, 222.8524, "connecting-ridge")]
+# 20 m patches at the polar landers, appended last: an observer at the mission site (the patch
+# centre, read from patches.json).
+LANDER_CENTRES = [
+    ("IM-2 Athena site (20 m patch)", "im-2-athena-20m"),
+    ("LCROSS Centaur impact site (20 m patch)", "lcross-centaur-20m"),
+    ("Griffin Mission 1 site (20 m patch)", "griffin-1-20m"),
+    ("IM-1 Odysseus site (20 m patch)", "im-1-odysseus-20m"),
+]
 PATCH_DIR = hz.DEFAULT_PATCH_DIR
 OLD_VECTORS = hz.REPO / "pipeline" / "patches" / "horizon_testvectors_tiles_only_before_chain.json"
 CHAIN_REPORT = hz.REPO / "pipeline" / "patches" / "testvector_chain_report.json"
@@ -97,12 +105,16 @@ def patch_points():
     entries = {p["id"]: p for p in json.loads((PATCH_DIR / "patches.json").read_text())["patches"]}
     for name, pid in CREST_CENTRES:
         pts.append((name, entries[pid]["lat"], entries[pid]["lon"], pid))
-    return pts + CREST_POINTS
+    pts = pts + CREST_POINTS
+    for name, pid in LANDER_CENTRES:
+        pts.append((name, entries[pid]["lat"], entries[pid]["lon"], pid))
+    return pts
 
 
 def main(patches_only=False):
     """Vectors from the lookup chain (see module docstring)."""
-    level_names = ["patch", "L1", "L0", "whole-Moon map"]
+    # index = level code of horizon.horizon_chain (lookup order: patch, patch outer, L1, L0, map)
+    level_names = ["patch", "L1", "L0", "whole-Moon map", "patch outer"]
     out = hz.DEFAULT_TILE_DIR / "horizon_testvectors.json"
     if patches_only:
         report = json.loads(CHAIN_REPORT.read_text())
@@ -114,7 +126,7 @@ def main(patches_only=False):
         v, e, d, lev = _vector(name, lat, lon)
         vectors.append(v)
         row = {"name": name, "lat": lat, "lon": lon,
-               "azimuths_set_by": {level_names[i]: int((lev == i).sum()) for i in range(4)}}
+               "azimuths_set_by": {level_names[i]: int((lev == i).sum()) for i in range(len(level_names))}}
         if name in old:
             diff = e - np.array(old[name]["elev_deg"])
             k = int(np.argmax(np.abs(diff)))
@@ -145,7 +157,7 @@ def _patch_part(report, level_names, out):
         prows.append({"name": name, "lat": lat, "lon": lon, "patch": pid,
                       "surface_h_m": v["surface_h_m"], "observer_height_from": level_names[lev0],
                       "horizon_min_deg": float(e.min()), "horizon_max_deg": float(e.max()),
-                      "azimuths_set_by": {level_names[i]: int((lev == i).sum()) for i in range(4)}})
+                      "azimuths_set_by": {level_names[i]: int((lev == i).sum()) for i in range(len(level_names))}})
     pout = PATCH_DIR / "patch_testvectors.json"
     pout.write_text(json.dumps(pvectors, separators=(",", ":")) + "\n")
 

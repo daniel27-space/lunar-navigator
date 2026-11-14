@@ -72,7 +72,8 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
   const landRef = useRef<HTMLDetailsElement>(null)
   // A spot picked from the finder's shortlist goes straight to its dates: open them and bring them into view.
   useEffect(() => {
-    if (focus === null || focus !== newest) return
+    if (focus === null || !sites.some((a) => a.pin.id === focus)) return
+    setLandPin(focus)
     setLandOpen(true)
     if (isPhone() && sheet === 'peek') setSheet('half')
     setTimeout(() => {
@@ -100,26 +101,26 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
 
   return (
     <section className="compare" style={{ '--n': sites.length } as CSSProperties}>
-      <div className="cmp-row cmp-head">
-        <span />
+      {/* Site identity, once: badge, full name, remove. The grids below refer to sites by badge. */}
+      <ul className="cmp-sites" aria-label="Sites being compared">
         {sites.map((a) => (
-          <div key={a.pin.id} className="cmp-col">
+          <li key={a.pin.id}>
             <button
               type="button"
-              className="cmp-fly"
+              className="cmp-site"
               onClick={() => goTo({ kind: 'site', lat: a.pin.lat, lon: a.pin.lon, hM: a.hM })}
               title={`${a.pin.label}: fly to this site`}
               aria-label={`Fly to ${a.pin.label}`}
             >
               <Badge slot={a.pin.slot} />
-              <span className="cmp-name">{a.pin.label}</span>
+              <span className="cmp-site-name">{a.pin.label}</span>
             </button>
-            <button type="button" className="cmp-x" onClick={() => removePin(a.pin.id)} aria-label={`Remove ${a.pin.label}`}>
+            <button type="button" className="cmp-site-x" onClick={() => removePin(a.pin.id)} aria-label={`Remove ${a.pin.label}`} title="Remove this site">
               ×
             </button>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
 
       <div className="cmp-verdict">
         <p className="verdict">
@@ -154,7 +155,7 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
           <h3 className="section">Measures</h3>
           {sites.map((a) => (
             <span key={a.pin.id} className="cmp-letter">
-              {SITE_LETTERS[a.pin.slot]}
+              <Badge slot={a.pin.slot} />
             </span>
           ))}
         </div>
