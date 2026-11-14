@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { bodyVectors, ephemEndMs, ephemStartMs, loadEphem, type Ephem } from './lib/ephem'
+import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
 import { sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
+import type { GlobalDem } from './lib/globalDem'
 import {
   heightAt,
   loadPatch,
@@ -19,8 +21,11 @@ import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
 import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
-import { useStore, type LayerMode } from './store'
+import { SITE_COLORS, useStore, type LayerMode, type Pin } from './store'
+import { Compare } from './ui/Compare'
+import { FinderPanel } from './ui/FinderPanel'
 import { SiteCard } from './ui/SiteCard'
+import { useSiteAnalysis, type SiteAnalysis } from './ui/useSiteAnalysis'
 import './App.css'
 
 const BASE = `${import.meta.env.BASE_URL}data/`
@@ -69,6 +74,11 @@ const RATES: { label: string; value: number }[] = [
   { label: '7 d/s', value: 7 * 86400 },
 ]
 const LAYERS: { label: string; value: LayerMode; legend: string; ramp?: string; ends?: [string, string] }[] = [
+  {
+    label: 'Find a site',
+    value: 'finder',
+    legend: 'Ground that meets every limit, brightest where it fits best. Slope from LOLA; long-term sunlight, Earth view and permanent shadow from NASA GSFC.',
+  },
   { label: 'Sunlight now', value: 'natural', legend: 'Sunlight and shadow at the selected time, from LOLA terrain and the JPL DE440 ephemeris.' },
   {
     label: 'Average sunlight',
@@ -88,11 +98,6 @@ const LAYERS: { label: string; value: LayerMode; legend: string; ramp?: string; 
     label: 'Permanent shadow',
     value: 'psr',
     legend: 'Blue areas never see the Sun: cold enough for water ice to survive. NASA GSFC LOLA.',
-  },
-  {
-    label: 'Site filter',
-    value: 'filter',
-    legend: 'Green areas meet every constraint. Slope from LOLA 80 m; long-term sunlight and Earth view from NASA GSFC.',
   },
   {
     label: 'Elevation',
@@ -171,10 +176,11 @@ function PinMarkers({ elevation }: { elevation: (lat: number, lon: number) => nu
   return (
     <>
       {pins.map((p) => (
-        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={[0.05, 0.05, 1]} renderOrder={6}>
+        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={p.id === active ? [0.058, 0.058, 1] : [0.046, 0.046, 1]} renderOrder={6}>
           <spriteMaterial
             map={map}
-            color={p.id === active ? '#ffcf4a' : '#6fd3ff'}
+            color={SITE_COLORS[p.slot]}
+            opacity={p.id === active ? 1 : 0.75}
             sizeAttenuation={false}
             depthTest={false}
             transparent
@@ -182,6 +188,76 @@ function PinMarkers({ elevation }: { elevation: (lat: number, lon: number) => nu
         </sprite>
       ))}
     </>
+  )
+}
+
+/** Numbered markers for the site finder's shortlist. */
+function CandidateMarkers({ candidates, elevation }: { candidates: Candidate[]; elevation: (lat: number, lon: number) => number }) {
+  const maps = useMemo(() => Array.from({ length: 8 }, (_, i) => numberTexture(i + 1)), [])
+  return (
+    <>
+      {candidates.map((k) => (
+        <sprite key={k.rank} position={sitePosKm(k.lat, k.lon, elevation(k.lat, k.lon) + 250)} scale={[0.04, 0.04, 1]} renderOrder={5}>
+          <spriteMaterial map={maps[(k.rank - 1) % 8]} sizeAttenuation={false} depthTest={false} transparent />
+        </sprite>
+      ))}
+    </>
+  )
+}
+
+function numberTexture(n: number): THREE.Texture {
+  const c = document.createElement('canvas')
+  c.width = c.height = 96
+  const g = c.getContext('2d')!
+  g.fillStyle = '#0b0c0f'
+  g.beginPath()
+  g.arc(48, 48, 40, 0, Math.PI * 2)
+  g.fill()
+  g.lineWidth = 6
+  g.strokeStyle = '#fff26b'
+  g.stroke()
+  g.fillStyle = '#fff'
+  g.font = '600 52px system-ui, sans-serif'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.fillText(String(n), 48, 51)
+  return new THREE.CanvasTexture(c)
+}
+
+interface SitesPanelProps {
+  pins: Pin[]
+  activePin: number | null
+  ephem: Ephem
+  terrain: Terrain
+  patchOf: (lat: number, lon: number) => Terrain | null
+  global: GlobalDem | null
+}
+
+/** Right-hand panel: one card per pinned site, or the comparison once there are two or more. */
+function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global }: SitesPanelProps) {
+  const [mode, setMode] = useState<'compare' | 'cards'>('compare')
+  const p = [pins[0] ?? null, pins[1] ?? null, pins[2] ?? null]
+  // Always three calls (hooks cannot be called in a loop of changing length).
+  const a0 = useSiteAnalysis(p[0], ephem, terrain, p[0] ? patchOf(p[0].lat, p[0].lon) : null, global)
+  const a1 = useSiteAnalysis(p[1], ephem, terrain, p[1] ? patchOf(p[1].lat, p[1].lon) : null, global)
+  const a2 = useSiteAnalysis(p[2], ephem, terrain, p[2] ? patchOf(p[2].lat, p[2].lon) : null, global)
+  const sites = [a0, a1, a2].filter((a): a is SiteAnalysis => a !== null)
+  const comparing = sites.length >= 2 && mode === 'compare'
+  return (
+    <aside className={`panel ${comparing ? 'wide' : ''}`}>
+      {sites.length === 0 && <p className="hint">Click the surface or a mission marker to pin a point. Pin two or three to compare them.</p>}
+      {sites.length >= 2 && (
+        <div className="tabs" role="tablist">
+          <button role="tab" aria-selected={mode === 'compare'} className={mode === 'compare' ? 'on' : ''} onClick={() => setMode('compare')}>
+            Compare
+          </button>
+          <button role="tab" aria-selected={mode === 'cards'} className={mode === 'cards' ? 'on' : ''} onClick={() => setMode('cards')}>
+            Site by site
+          </button>
+        </div>
+      )}
+      {comparing ? <Compare sites={sites} /> : sites.map((a) => <SiteCard key={a.pin.id} a={a} active={a.pin.id === activePin} />)}
+    </aside>
   )
 }
 
@@ -216,8 +292,37 @@ export default function App() {
   const addPin = useStore((s) => s.addPin)
   const activePin = useStore((s) => s.activePin)
   const goTo = useStore((s) => s.goTo)
-  const filter = useStore((s) => s.filter)
-  const setFilter = useStore((s) => s.setFilter)
+  const finder = useStore((s) => s.finder)
+  const preset = useStore((s) => s.preset)
+  const setWindowStart = useStore((s) => s.setWindowStart)
+  const windowStart = useStore((s) => s.windowStart)
+
+  // The 60-day analysis window only moves when the clock leaves it, so playback stays smooth.
+  useEffect(() => {
+    if (tMs < windowStart || tMs > windowStart + 57 * 86400000) setWindowStart(Math.floor(tMs / 3600000) * 3600000 - 2 * 86400000)
+  }, [tMs, windowStart, setWindowStart])
+
+  // Site finder: the layers are fetched the first time it is opened, then every change of
+  // the limits re-scores the whole grid (about 0.1 s).
+  const [finderGrid, setFinderGrid] = useState<FinderGrid | null>(null)
+  const finderOn = layer === 'finder'
+  useEffect(() => {
+    if (finderOn && !finderGrid) loadFinderGrid(BASE).then(setFinderGrid, () => {})
+  }, [finderOn, finderGrid])
+  const criteria = useDeferredValue(finder)
+  const finderResult = useMemo(() => (finderOn && finderGrid ? runFinder(finderGrid, criteria) : null), [finderOn, finderGrid, criteria])
+  const scoreTex = useMemo(() => {
+    if (!finderGrid) return null
+    const t = new THREE.DataTexture(new Uint8Array(finderGrid.size * finderGrid.size), finderGrid.size, finderGrid.size, THREE.RedFormat, THREE.UnsignedByteType)
+    t.minFilter = t.magFilter = THREE.LinearFilter
+    return t
+  }, [finderGrid])
+  const score = useMemo(() => {
+    if (!scoreTex || !finderResult) return null
+    ;(scoreTex.image.data as Uint8Array).set(finderResult.score)
+    scoreTex.needsUpdate = true
+    return { tex: scoreTex, min: finderResult.minPref, max: finderResult.maxPref }
+  }, [scoreTex, finderResult])
 
   const sun = useMemo(() => {
     if (!ephem) return { dir: [1, 0, 0] as Vec3, rad: 0.00465 }
@@ -297,6 +402,14 @@ export default function App() {
     },
     [pick, goTo, terrain, elevation, patchIdFor],
   )
+  const pickCandidate = useCallback(
+    (k: Candidate, fly = true) => {
+      const name = PRESETS.find((p) => p.id === preset)?.short ?? 'Custom'
+      pick(k.lat, k.lon, `${name} #${k.rank}`)
+      if (fly) goTo({ kind: 'site', lat: k.lat, lon: k.lon, hM: elevation(k.lat, k.lon) })
+    },
+    [pick, goTo, elevation, preset],
+  )
   const missionHeights = useMemo(() => missions.map((m) => elevation(m.lat, m.lon)), [missions, elevation])
   const [hover, setHover] = useState<{ m: Mission; x: number; y: number } | null>(null)
   const onHover = useCallback((m: Mission | null, x: number, y: number) => setHover(m ? { m, x, y } : null), [])
@@ -308,13 +421,14 @@ export default function App() {
         <color attach="background" args={['#000']} />
         <Globe sunDir={sun.dir} cuts={cuts} map={globeMap} relief={globeRelief} onPick={pick} />
         {terrain && (
-          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} relief={globeRelief} overlays cuts={patchCuts} onPick={pick} />
+          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} score={score} dataBase={BASE} map={globeMap} relief={globeRelief} overlays cuts={patchCuts} onPick={pick} />
         )}
         {shownPatches.map((t) => (
-          <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} onPick={pick} />
+          <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} onPick={pick} />
         ))}
         <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
         <PinMarkers elevation={elevation} />
+        {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} />}
         <Rig />
       </Canvas>
 
@@ -355,7 +469,9 @@ export default function App() {
         </div>
       </header>
 
-      <div className="legend">
+      {finderOn && <FinderPanel result={finderResult} onPick={pickCandidate} onCompareTop={(cs) => cs.forEach((k) => pickCandidate(k, false))} />}
+
+      <div className="legend" hidden={finderOn}>
         {current.ramp && (
           <div className="ramp">
             <span>{current.ends![0]}</span>
@@ -363,47 +479,12 @@ export default function App() {
             <span>{current.ends![1]}</span>
           </div>
         )}
-        {layer === 'filter' && (
-          <div className="filter">
-            <label>
-              <span>Slope at most {filter.maxSlopeDeg}°</span>
-              <input type="range" min={2} max={30} step={1} value={filter.maxSlopeDeg} onChange={(e) => setFilter({ maxSlopeDeg: Number(e.target.value) })} />
-            </label>
-            <label>
-              <span>Sunlit at least {Math.round(filter.minSunAvg * 100)}% of the time</span>
-              <input type="range" min={0} max={0.9} step={0.05} value={filter.minSunAvg} onChange={(e) => setFilter({ minSunAvg: Number(e.target.value) })} />
-            </label>
-            <label>
-              <span>Earth in view at least {Math.round(filter.minEarthAvg * 100)}% of the time</span>
-              <input type="range" min={0} max={1} step={0.05} value={filter.minEarthAvg} onChange={(e) => setFilter({ minEarthAvg: Number(e.target.value) })} />
-            </label>
-            <label className="check">
-              <input type="checkbox" checked={filter.litNow} onChange={(e) => setFilter({ litNow: e.target.checked })} />
-              <span>Also in sunlight at the selected time</span>
-            </label>
-          </div>
-        )}
         <p>{current.legend}</p>
       </div>
 
-      <aside className="panel">
-        {pins.length === 0 && (
-          <p className="hint">Click the surface or a mission marker to pin a point. Up to three can be compared.</p>
-        )}
-        {ephem &&
-          terrain &&
-          pins.map((p) => (
-            <SiteCard
-              key={p.id}
-              pin={p}
-              ephem={ephem}
-              terrain={terrain}
-              patch={patchOf(p.lat, p.lon)}
-              global={globeRelief ? globeRelief.dem : null}
-              active={p.id === activePin}
-            />
-          ))}
-      </aside>
+      {ephem && terrain ? (
+        <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} global={globeRelief ? globeRelief.dem : null} />
+      ) : null}
 
       {hover && (
         <div className="tip" style={{ left: hover.x + 12, top: hover.y + 12 }}>

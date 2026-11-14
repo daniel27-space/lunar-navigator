@@ -1,17 +1,10 @@
 import { create } from 'zustand'
+import { PRESETS, type FinderCriteria } from './lib/finder'
 
-export type LayerMode = 'natural' | 'elevation' | 'slope' | 'sunavg' | 'earthavg' | 'psr' | 'filter'
+export type LayerMode = 'natural' | 'elevation' | 'slope' | 'sunavg' | 'earthavg' | 'psr' | 'finder'
 
-/** Mission constraints for the site filter layer. */
-export interface SiteFilter {
-  maxSlopeDeg: number
-  /** minimum long-term share of time in sunlight, 0..1 */
-  minSunAvg: number
-  /** minimum long-term share of time with Earth in view, 0..1 */
-  minEarthAvg: number
-  /** also require sunlight at the selected time */
-  litNow: boolean
-}
+/** One colour per pinned site, used everywhere that site appears. */
+export const SITE_COLORS = ['#b79bff', '#5fd38d', '#ff8f6b']
 
 /** Where the camera should go. `seq` changes on every request so repeats still animate. */
 export type ViewGoal =
@@ -25,6 +18,8 @@ export interface Pin {
   lon: number
   hM: number
   label: string
+  /** which of the three site colours this pin holds */
+  slot: number
 }
 
 interface State {
@@ -34,8 +29,14 @@ interface State {
   /** simulated seconds per real second */
   rate: number
   layer: LayerMode
-  filter: SiteFilter
-  setFilter: (f: Partial<SiteFilter>) => void
+  /** site finder: what the user needs from a site, and the preset it came from ('custom' once edited) */
+  finder: FinderCriteria
+  preset: string
+  setFinder: (f: Partial<FinderCriteria>) => void
+  applyPreset: (id: string) => void
+  /** start of the 60-day analysis window shared by every site card and the comparison */
+  windowStart: number
+  setWindowStart: (t: number) => void
   pins: Pin[]
   activePin: number | null
   view: ViewGoal
@@ -44,7 +45,7 @@ interface State {
   setPlaying: (p: boolean) => void
   setRate: (r: number) => void
   setLayer: (l: LayerMode) => void
-  addPin: (p: Omit<Pin, 'id' | 'label'> & { label?: string }) => void
+  addPin: (p: Omit<Pin, 'id' | 'label' | 'slot'> & { label?: string }) => void
   removePin: (id: number) => void
   setActivePin: (id: number | null) => void
 }
@@ -57,8 +58,16 @@ export const useStore = create<State>((set) => ({
   playing: false,
   rate: 6 * 3600,
   layer: 'natural',
-  filter: { maxSlopeDeg: 10, minSunAvg: 0.4, minEarthAvg: 0.4, litNow: false },
-  setFilter: (f) => set((s) => ({ filter: { ...s.filter, ...f } })),
+  finder: PRESETS[0].criteria,
+  preset: PRESETS[0].id,
+  setFinder: (f) => set((s) => ({ finder: { ...s.finder, ...f }, preset: 'custom' })),
+  applyPreset: (id) =>
+    set((s) => {
+      const p = PRESETS.find((x) => x.id === id)
+      return p ? { finder: p.criteria, preset: id } : s
+    }),
+  windowStart: Math.floor(Date.now() / 3600000) * 3600000 - 2 * 86400000,
+  setWindowStart: (windowStart) => set({ windowStart }),
   pins: [],
   activePin: null,
   view: { kind: 'pole', seq: 0 },
@@ -70,9 +79,11 @@ export const useStore = create<State>((set) => ({
   addPin: (p) =>
     set((s) => {
       const id = nextId++
-      const pin: Pin = { ...p, id, label: p.label ?? `Point ${String.fromCharCode(64 + ((id - 1) % 26) + 1)}` }
-      // Keep the most recent pins so comparison stays readable.
-      const pins = [...s.pins, pin].slice(-MAX_PINS)
+      // Keep the most recent pins so comparison stays readable; the new pin takes a free colour.
+      const kept = s.pins.slice(-(MAX_PINS - 1))
+      const slot = [0, 1, 2].find((k) => !kept.some((q) => q.slot === k)) ?? 0
+      const pin: Pin = { ...p, id, slot, label: p.label ?? `Point ${String.fromCharCode(64 + ((id - 1) % 26) + 1)}` }
+      const pins = [...kept, pin]
       return { pins, activePin: id }
     }),
   removePin: (id) =>

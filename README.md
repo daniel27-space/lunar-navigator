@@ -15,12 +15,20 @@ Pick any point near the Moon's south pole and any date from 2024 to 2036, and se
 - whether the point is in sunlight and whether Earth is in view, and how long until that changes;
 - sunlight and Earth-visibility windows over the next 60 days, the longest night and the
   longest communication outage;
-- up to three points side by side, to compare sites or dates;
+- **a site finder**: say what the mission needs (slope limit, how much sunlight, how much Earth
+  view, in or near permanent shadow) or pick a goal such as "Ice prospecting", and the map
+  shades the ground that qualifies, brightest where it fits best, with a ranked shortlist;
+- **a comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
+  one shared timeline, and one row per measure with the winner marked;
 - 41 past, failed and planned landing sites across the whole Moon, each with 80 m terrain
   around it, so the same analysis works at Apollo 15 or Chang'e 4 as at the pole.
 
 Map layers: sunlight now, average sunlight, average Earth visibility, permanently shadowed
 regions, elevation and slope.
+
+The finder and comparison were designed from patterns in other fields (GIS suitability tools,
+property search, product-comparison sites, sun-planning tools); see
+`docs/research/design-references.md`.
 
 ## How it works
 
@@ -71,6 +79,9 @@ regions, elevation and slope.
 - On ridge crests the result is very sensitive to observer height: a mast a metre taller can
   halve the longest night.
 - When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
+- The site finder works on cells about 300 m across and NASA's 18.6-year averages, so narrow
+  ridge tops are blurred and its figures are a first cut; pin a spot for exact numbers. Inside
+  about 84.6°S a cell's slope is the steepest 80 m slope in it; outside it is the cell average.
 - Planned missions are placed at the centre of their announced target feature, not at a landing
   point.
 - In the 3D view the outer 50 km of the detailed terrain (roughly 80°S to 81.7°S) fades into

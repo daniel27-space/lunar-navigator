@@ -8,7 +8,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { latLonOf, R2D, type Vec3 } from '../lib/geo'
 import { globalHeightAt, type GlobalDem } from '../lib/globalDem'
 import { frameDirection, sampleXY, type Level, type Terrain } from '../lib/terrain'
-import type { LayerMode, SiteFilter } from '../store'
+import type { LayerMode } from '../store'
 import {
   applyCuts,
   applyGlobeMap,
@@ -139,12 +139,10 @@ uniform vec3 uAy;
 uniform vec3 uUp;
 uniform vec3 uSun;    // unit, body-fixed, towards the Sun
 uniform float uSunRad; // angular radius, radians
-uniform int uMode;    // 0 natural, 1 elevation, 2 slope, 3 avg sunlight, 4 avg Earth, 5 PSR, 6 site filter
+uniform int uMode;    // 0 natural, 1 elevation, 2 slope, 3 avg sunlight, 4 avg Earth, 5 PSR, 6 site finder
 uniform sampler2D uOverlay; // 8-bit layer on the L0 grid
-uniform sampler2D uSunAvg;
-uniform sampler2D uEarthAvg;
-uniform vec3 uCrit;    // max slope deg, min average sunlight 0..1, min average Earth view 0..1
-uniform float uLitNow; // 1 = must be sunlit at the selected time
+uniform sampler2D uScore;  // site finder: 0 = eliminated, else 1..255 = how well the cell fits
+uniform vec2 uScoreRange;  // lowest and highest fit among eligible cells, 0..1
 uniform float uEdge;   // km, where the globe takes over
 uniform float uFade;   // km, width of the fade into the globe
 varying vec2 vXY;
@@ -256,14 +254,19 @@ void main() {
     vec3 base = uMode == 3 ? sunRamp(f) : earthRamp(f);
     col = ov > 0.99 ? vec3(0.05) : base * relief;
   } else if (uMode == 6) {
-    // Site filter: green where every enabled constraint is met.
-    float slopeDeg = degrees(acos(clamp(dot(n, up), -1.0, 1.0)));
-    float sa = texture2D(uSunAvg, uv0).r * 255.0 / 250.0;
-    float ea = texture2D(uEarthAvg, uv0).r * 255.0 / 250.0;
-    bool pass = slopeDeg <= uCrit.x && sa >= uCrit.y && ea >= uCrit.z && (uLitNow < 0.5 || lit > 0.5);
+    // Site finder: eliminated ground stays dim grey with its relief; eligible ground runs from
+    // dark teal (just passes) to bright yellow (best fit).
+    float sc = texture2D(uScore, uv0).r * 255.0;
     float relief = 0.35 + 0.65 * (1.0 - exp(-direct * 6.0));
     float g = mix(0.6, relief, 0.6);
-    col = pass ? vec3(0.16, 0.80, 0.42) * g * 1.3 : vec3(0.20, 0.20, 0.23) * g;
+    if (sc < 0.5) {
+      col = vec3(0.17, 0.17, 0.20) * g;
+    } else {
+      float t = clamp(((sc - 1.0) / 254.0 - uScoreRange.x) / max(uScoreRange.y - uScoreRange.x, 0.02), 0.0, 1.0);
+      vec3 ramp = t < 0.5 ? mix(vec3(0.04, 0.30, 0.34), vec3(0.16, 0.72, 0.46), t / 0.5)
+                          : mix(vec3(0.16, 0.72, 0.46), vec3(1.00, 0.95, 0.42), (t - 0.5) / 0.5);
+      col = ramp * mix(0.8, 1.15, g);
+    }
   } else {
     float relief = 0.45 + 0.55 * (1.0 - exp(-direct * 6.0));
     float lightMask = mix(0.55, 1.0, lit);
@@ -279,7 +282,7 @@ void main() {
   gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
 }`
 
-const MODE: Record<LayerMode, number> = { natural: 0, elevation: 1, slope: 2, sunavg: 3, earthavg: 4, psr: 5, filter: 6 }
+const MODE: Record<LayerMode, number> = { natural: 0, elevation: 1, slope: 2, sunavg: 3, earthavg: 4, psr: 5, finder: 6 }
 const OVERLAY_FILE: Partial<Record<LayerMode, string>> = {
   sunavg: 'sun_avg.png',
   earthavg: 'earth_avg.png',
@@ -308,7 +311,8 @@ interface Props {
   /** Sun angular radius in radians */
   sunRad: number
   layer: LayerMode
-  filter: SiteFilter
+  /** site finder result for the south-pole grid: per-cell fit and the best fit; null when not in use */
+  score?: { tex: THREE.Texture; min: number; max: number } | null
   /** URL prefix of the data folder */
   dataBase: string
   map: GlobeMap | null
@@ -320,7 +324,7 @@ interface Props {
   onPick: (lat: number, lon: number) => void
 }
 
-export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, map, relief, overlays, cuts, onPick }: Props) {
+export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, map, relief, overlays, cuts, onPick }: Props) {
   const gl = useThree((s) => s.gl)
   const global = relief ? relief.dem : null
   const geometry = useMemo(() => buildGeometry(terrain, global, overlays ? 768 : 384), [terrain, global, overlays])
@@ -350,10 +354,8 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
         uSunRad: { value: 0.00465 },
         uMode: { value: 0 },
         uOverlay: { value: blankOverlay },
-        uSunAvg: { value: blankOverlay },
-        uEarthAvg: { value: blankOverlay },
-        uCrit: { value: new THREE.Vector3(10, 0, 0) },
-        uLitNow: { value: 0 },
+        uScore: { value: blankOverlay },
+        uScoreRange: { value: new THREE.Vector2(0, 1) },
       },
     })
   }, [terrain, global, gl])
@@ -377,12 +379,8 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
   material.uniforms.uMode.value = MODE[shown]
   const file = overlays ? OVERLAY_FILE[layer] : undefined
   material.uniforms.uOverlay.value = file ? overlayTexture(dataBase, file) : blankOverlay
-  if (shown === 'filter') {
-    material.uniforms.uSunAvg.value = overlayTexture(dataBase, 'sun_avg.png')
-    material.uniforms.uEarthAvg.value = overlayTexture(dataBase, 'earth_avg.png')
-    material.uniforms.uCrit.value.set(filter.maxSlopeDeg, filter.minSunAvg, filter.minEarthAvg)
-    material.uniforms.uLitNow.value = filter.litNow ? 1 : 0
-  }
+  material.uniforms.uScore.value = score ? score.tex : blankOverlay
+  material.uniforms.uScoreRange.value.set(score ? score.min : 0, score ? score.max : 1)
 
   const handleClick = (ev: ThreeEvent<MouseEvent>) => {
     if (ev.delta > 4) return // it was a drag, not a click

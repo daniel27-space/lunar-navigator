@@ -1,25 +1,8 @@
 // One pinned point: what the Sun and Earth are doing there now, and over the next two months.
-import { useMemo, useState } from 'react'
-import { skyAt, type Ephem } from '../lib/ephem'
-import { computeHorizon, discVisibleFraction, horizonAt } from '../lib/horizon'
-import { upVector } from '../lib/geo'
-import type { GlobalDem } from '../lib/globalDem'
-import { slopeAt, sourceHeight, terrainTier, type HeightSource, type Terrain } from '../lib/terrain'
-import {
-  computeSeries,
-  eclipseFactor,
-  DEFAULT_CRITERIA,
-  hasComm,
-  isSunlit,
-  nextChange,
-  summarise,
-  type Series,
-} from '../lib/windows'
-import { useStore, type Pin } from '../store'
-
-const DAY = 86400000
-const WINDOW_DAYS = 60
-const STEP_MS = 20 * 60000
+import { useMemo } from 'react'
+import { DEFAULT_CRITERIA, hasComm, isSunlit, type Series } from '../lib/windows'
+import { SITE_COLORS, useStore } from '../store'
+import { DAY, runs, WINDOW_DAYS, type SiteAnalysis } from './useSiteAnalysis'
 
 const fmtLat = (v: number) => `${Math.abs(v).toFixed(3)}°${v < 0 ? 'S' : 'N'}`
 const fmtLon = (v: number) => `${Math.abs(v).toFixed(3)}°${v < 0 ? 'W' : 'E'}`
@@ -34,21 +17,6 @@ const TIER_NOTE = {
   global:
     'Horizon from the whole-Moon map only (2.7 km pixels): hills smaller than a few km are missed, so treat times as rough.',
   none: 'No terrain data here: smooth-sphere horizon, so real hills are ignored.',
-}
-
-/** Consecutive runs where `test` is true, as [startIndex, endIndex) pairs. */
-function runs(count: number, test: (i: number) => boolean): [number, number][] {
-  const out: [number, number][] = []
-  let start = -1
-  for (let i = 0; i <= count; i++) {
-    const on = i < count && test(i)
-    if (on && start < 0) start = i
-    if (!on && start >= 0) {
-      out.push([start, i])
-      start = -1
-    }
-  }
-  return out
 }
 
 function Timeline({ s, tMs, onSeek }: { s: Series; tMs: number; onSeek: (t: number) => void }) {
@@ -188,61 +156,24 @@ function Panorama({
 }
 
 interface Props {
-  pin: Pin
-  ephem: Ephem
-  /** the south-pole tiles */
-  terrain: Terrain
-  /** the 80 m site patch covering this point, once loaded */
-  patch: Terrain | null
-  /** the whole-Moon elevation map, once loaded */
-  global: GlobalDem | null
+  a: SiteAnalysis
   active: boolean
 }
 
-export function SiteCard({ pin, ephem, terrain, patch, global, active }: Props) {
+export function SiteCard({ a, active }: Props) {
   const tMs = useStore((s) => s.tMs)
   const setTime = useStore((s) => s.setTime)
   const removePin = useStore((s) => s.removePin)
   const setActivePin = useStore((s) => s.setActivePin)
-  // Height lookup order: site patch, south-pole tiles, whole-Moon map.
-  const source: HeightSource = useMemo(
-    () => ({ terrains: patch ? [patch, terrain] : [terrain], global }),
-    [patch, terrain, global],
-  )
-  const hM = useMemo(() => {
-    const u = upVector(pin.lat, pin.lon)
-    const h = sourceHeight(source, u[0], u[1], u[2])
-    return Number.isNaN(h) ? 0 : h
-  }, [source, pin.lat, pin.lon])
-  const polarTier = terrainTier(terrain, pin.lat, pin.lon)
-  const tier = patch ? 'patch' : polarTier !== 'none' ? polarTier : global ? 'global' : 'none'
-
-  const slope = useMemo(() => {
-    const s = patch ? slopeAt(patch, pin.lat, pin.lon) : NaN
-    return Number.isNaN(s) ? slopeAt(terrain, pin.lat, pin.lon) : s
-  }, [patch, terrain, pin.lat, pin.lon])
-  const horizon = useMemo(() => computeHorizon(source, pin.lat, pin.lon), [source, pin.lat, pin.lon])
-
-  // The analysis window only moves when the clock leaves it, so playback stays smooth.
-  const [anchor, setAnchor] = useState(() => Math.floor(tMs / 3600000) * 3600000 - 2 * DAY)
-  if (tMs < anchor || tMs > anchor + (WINDOW_DAYS - 3) * DAY) {
-    setAnchor(Math.floor(tMs / 3600000) * 3600000 - 2 * DAY)
-  }
-  const series = useMemo(
-    () => computeSeries(ephem, horizon, hM, anchor, anchor + WINDOW_DAYS * DAY, STEP_MS),
-    [ephem, horizon, hM, anchor],
-  )
-  const summary = useMemo(() => summarise(series), [series])
-
-  const sky = skyAt(ephem, tMs, pin.lat, pin.lon, hM + horizon.observerHeightM)
-  const eclipse = eclipseFactor(sky)
-  const sunFrac = discVisibleFraction(horizon, sky.sun.az, sky.sun.el, sky.sun.radius) * eclipse
-  const earthClear = sky.earth.el - horizonAt(horizon, sky.earth.az)
-  const sunNext = nextChange(series, tMs, (i) => isSunlit(series, i, DEFAULT_CRITERIA))
-  const commNext = nextChange(series, tMs, (i) => hasComm(series, i, DEFAULT_CRITERIA))
+  const anchor = useStore((s) => s.windowStart)
+  const { pin, hM, slope, horizon, series, summary, sky, eclipse, sunFrac, earthClear, sunNext, commNext, tier } = a
 
   return (
-    <section className={`site ${active ? 'active' : ''}`} onClick={() => setActivePin(pin.id)}>
+    <section
+      className={`site ${active ? 'active' : ''}`}
+      style={{ borderLeftColor: SITE_COLORS[pin.slot] }}
+      onClick={() => setActivePin(pin.id)}
+    >
       <header>
         <strong>{pin.label}</strong>
         <span className="muted">
