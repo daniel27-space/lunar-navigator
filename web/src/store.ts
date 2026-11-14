@@ -98,6 +98,9 @@ interface State {
   setSheet: (s: SheetState) => void
   tab: PanelTab
   setTab: (t: PanelTab) => void
+  /** interface only: ids of pins that came from the finder's shortlist (their card opens on "When to land") */
+  fromFinder: Record<number, true>
+  markFromFinder: (id: number) => void
 }
 
 const MAX_PINS = 3
@@ -155,4 +158,6 @@ export const useStore = create<State>((set) => ({
   setSheet: (sheet) => set({ sheet }),
   tab: 'sites',
   setTab: (tab) => set({ tab }),
+  fromFinder: {},
+  markFromFinder: (id) => set((s) => ({ fromFinder: { ...s.fromFinder, [id]: true } })),
 }))

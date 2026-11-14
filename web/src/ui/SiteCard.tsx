@@ -5,6 +5,7 @@ import type { Series } from '../lib/windows'
 import { useStore } from '../store'
 import { Badge } from './controls'
 import { SiteTimeline } from './Timeline'
+import { WhenToLand } from './WhenToLand'
 import { DAY, WINDOW_DAYS, type SiteAnalysis, type Tier } from './useSiteAnalysis'
 
 const TIER_NOTE: Record<Tier, string> = {
@@ -138,6 +139,9 @@ export function SiteCard({ a, active }: Props) {
   // The horizon view follows the active card until the user opens or closes it by hand.
   const [panoChoice, setPanoChoice] = useState<boolean | null>(null)
   const [help, setHelp] = useState(false)
+  // A spot pinned from the finder's shortlist opens straight on the next question: when to land.
+  const fromFinder = useStore((s) => !!s.fromFinder[pin.id])
+  const [land, setLand] = useState(fromFinder)
   const pano = panoChoice ?? active
   const [tierShort, rough] = TIER_SHORT[tier]
   const until = (event: string, h: number | null) => (h === null ? `${event} ${fmtDuration(null, WINDOW_DAYS)}` : `${event} in ${fmtDuration(h)}`)
@@ -210,6 +214,21 @@ export function SiteCard({ a, active }: Props) {
           <dd>{fmtDuration(summary.longestNoCommH)}</dd>
         </div>
       </dl>
+
+      <button
+        type="button"
+        className="btn wtl-toggle"
+        aria-expanded={land}
+        onClick={(e) => {
+          e.stopPropagation()
+          setLand(!land)
+          setActivePin(pin.id)
+        }}
+      >
+        When to land
+        <span>{land ? 'Hide' : 'Compare landing dates'}</span>
+      </button>
+      {land && <WhenToLand a={a} />}
 
       <div className="discs">
         <button

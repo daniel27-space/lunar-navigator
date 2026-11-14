@@ -5,10 +5,12 @@ import { useMemo, useState, type CSSProperties } from 'react'
 import { fmtAngle, fmtCoord, fmtDate, fmtElevation, fmtMeasure, MISSING } from '../lib/format'
 import { measures, type Measure, type SiteFacts } from '../lib/verdict'
 import { useStore } from '../store'
-import { Badge, SITE_LETTERS } from './controls'
+import { Badge, Segmented, SITE_LETTERS } from './controls'
 import { SiteTimeline } from './Timeline'
 import { WINDOW_DAYS, type SiteAnalysis, type Tier } from './useSiteAnalysis'
+import { useWants } from './useWants'
 import { MISSION, verdictSentence } from './verdictSentence'
+import { WhenToLand } from './WhenToLand'
 
 /** [panel label, phone label] */
 const LABEL: Record<Measure['id'], [string, string]> = {
@@ -46,22 +48,14 @@ function Scale({ m, sites }: { m: Measure; sites: SiteAnalysis[] }) {
 }
 
 export function Compare({ sites }: { sites: SiteAnalysis[] }) {
-  const finder = useStore((s) => s.finder)
   const preset = useStore((s) => s.preset)
-  const layer = useStore((s) => s.layer)
   const setLayer = useStore((s) => s.setLayer)
   const setTab = useStore((s) => s.setTab)
   const removePin = useStore((s) => s.removePin)
   const goTo = useStore((s) => s.goTo)
   const [onlyDiff, setOnlyDiff] = useState(false)
-  // "Better" follows the finder's mission when it is in use; otherwise sunlight and Earth view are good.
-  const wants = useMemo(
-    () =>
-      layer === 'finder' || preset !== 'solar'
-        ? { sunHigh: finder.sunPrefer !== 'low', earthHigh: finder.earthPrefer !== 'low' }
-        : { sunHigh: true, earthHigh: true },
-    [finder, preset, layer],
-  )
+  const wants = useWants()
+  const [landSite, setLandSite] = useState(0)
   const facts: SiteFacts[] = useMemo(
     () => sites.map((a) => ({ label: a.pin.label, summary: a.summary, slopeDeg: a.slope })),
     [sites],
@@ -219,6 +213,24 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             {WINDOW_DAYS} days from {fmtDate(sites[0].series.t0Ms)} UTC, observer 2 m above the surface. Differences under 3 points, 0.5 d or 1° are
             ignored.
           </p>
+        </div>
+      </details>
+
+      <details className="disclosure">
+        <summary>When to land</summary>
+        <div className="cmp-details">
+          <div className="field">
+            <span className="field-head">
+              <span>Site</span>
+            </span>
+            <Segmented
+              label="Site"
+              options={sites.map((a, i) => [i, <Badge key={a.pin.id} slot={a.pin.slot} />, a.pin.label] as const)}
+              value={Math.min(landSite, sites.length - 1)}
+              onChange={setLandSite}
+            />
+          </div>
+          <WhenToLand key={sites[Math.min(landSite, sites.length - 1)].pin.id} a={sites[Math.min(landSite, sites.length - 1)]} />
         </div>
       </details>
     </section>

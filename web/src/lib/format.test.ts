@@ -5,6 +5,11 @@ import {
   fmtCoord,
   fmtDate,
   fmtDateTime,
+  fmtDay,
+  fmtDurationWords,
+  fmtMonth,
+  parseCoord,
+  splitCoordPair,
   fmtDegrees,
   fmtDistance,
   fmtDuration,
@@ -76,6 +81,52 @@ describe('format', () => {
     expect(fmtDate(t)).toBe('2026-11-14')
     expect(fmtTick(Date.UTC(2026, 10, 12))).toBe('12 Nov')
     expect(fmtTick(Date.UTC(2027, 0, 1, 23, 59))).toBe('1 Jan')
+  })
+
+  it('landing dates, month ticks and durations in words', () => {
+    const t = Date.UTC(2027, 2, 3, 6)
+    expect(fmtDay(t)).toBe('3 Mar 2027')
+    expect(fmtMonth(t)).toBe('Mar')
+    expect(fmtDurationWords(13.9 * 24)).toBe('13.9 days')
+    expect(fmtDurationWords(24 * 1.0 * 2)).toBe('2.0 days')
+    expect(fmtDurationWords(14)).toBe('14 hours')
+    expect(fmtDurationWords(1)).toBe('1.0 hour')
+    expect(fmtDurationWords(0)).toBe('none')
+  })
+
+  it('parses typed coordinates: signs, hemisphere letters, 0..360 longitude', () => {
+    expect(parseCoord('-89.45', '222.8')).toEqual({ ok: true, value: { lat: -89.45, lon: 222.8 - 360 } })
+    expect(parseCoord('89.45 S', '137.2W')).toEqual({ ok: true, value: { lat: -89.45, lon: -137.2 } })
+    expect(parseCoord('\u221226.1°', ' +3.6 ')).toEqual({ ok: true, value: { lat: -26.1, lon: 3.6 } })
+    expect(parseCoord('26.1 N', '180')).toEqual({ ok: true, value: { lat: 26.1, lon: 180 } })
+    expect(parseCoord('90', '360')).toEqual({ ok: true, value: { lat: 90, lon: 0 } })
+  })
+
+  it('rejects coordinates that are missing, not numbers, out of range or with the wrong letter', () => {
+    const bad = (a: string, b: string, word: string) => {
+      const r = parseCoord(a, b)
+      expect(r.ok).toBe(false)
+      if (!r.ok) expect(r.error).toContain(word)
+    }
+    bad('', '10', 'Latitude')
+    bad('91', '10', 'Latitude')
+    bad('45 E', '10', 'Latitude')
+    bad('abc', '10', 'Latitude')
+    bad('45', '', 'Longitude')
+    bad('45', '361', 'Longitude')
+    bad('45', '-181', 'Longitude')
+    bad('45', '10 N', 'Longitude')
+    bad('45', '1e3', 'Longitude')
+  })
+
+  it('splits a pasted pair', () => {
+    expect(splitCoordPair('-89.45, 222.8')).toEqual(['-89.45', '222.8'])
+    expect(splitCoordPair('89.45 S, 137.2 W')).toEqual(['89.45 S', '137.2 W'])
+    expect(splitCoordPair('89.45S 137.2W')).toEqual(['89.45S', '137.2W'])
+    expect(splitCoordPair('-89.45 222.8')).toEqual(['-89.45', '222.8'])
+    expect(splitCoordPair('89.45 S')).toBeNull()
+    expect(splitCoordPair('-89.45')).toBeNull()
+    expect(splitCoordPair('1, 2, 3')).toBeNull()
   })
 
   it('comparison measures follow the rule of their unit', () => {

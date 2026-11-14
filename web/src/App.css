@@ -91,6 +91,7 @@
   --seg-h: calc(var(--ctl-h) - 2 * var(--sp-0)); /* one segment */
   --cmp-col: 64px; /* comparison value column */
   --cmp-row: 32px;
+  --wtl-col: 56px; /* value column of the landing-date grid (four columns in a card) */
   --tabs-h: 40px;
   --w-finder: 320px;
   --w-sites: 360px;
@@ -1380,6 +1381,168 @@ h2.panel-head {
   box-shadow: 0 0 0 var(--hairline) var(--surface-1-solid);
 }
 
+/* ---------- "When to land" (per site) and adding a point by coordinates ---------- */
+.app .wtl-toggle {
+  justify-content: space-between;
+  width: 100%;
+}
+.wtl-toggle span {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: var(--text-2);
+}
+.wtl-toggle span::after {
+  content: ' ▸';
+  color: var(--text-3);
+}
+.wtl-toggle[aria-expanded='true'] span::after {
+  content: ' ▾';
+}
+.wtl {
+  --cmp-col: var(--wtl-col);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.wtl .seg {
+  display: flex;
+  margin-top: var(--sp-1);
+}
+.wtl-sentence {
+  font-weight: var(--fw-semibold);
+  text-wrap: pretty;
+}
+.wtl .cmp-row {
+  column-gap: var(--sp-1);
+}
+.wtl .cmp-val .dot {
+  position: absolute;
+  right: 0;
+  top: calc(50% - var(--dot) / 2);
+}
+.dot.ink {
+  background: var(--accent);
+}
+.wtl-head {
+  align-items: end;
+  padding-bottom: var(--sp-1);
+}
+.wtl-head .cmp-letter {
+  font-size: var(--fs-cap);
+}
+.app .wtl-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-0);
+  min-height: var(--ctl-h);
+  padding: var(--sp-1) var(--sp-3) var(--sp-1) 0;
+  border-radius: var(--r-md);
+  font-size: var(--fs-cap);
+  line-height: var(--lh-cap);
+  font-weight: var(--fw-semibold);
+  color: var(--text-2);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: var(--sp-0);
+}
+.wtl-pick b,
+.tl-marks span {
+  display: grid;
+  place-items: center;
+  width: var(--sp-4);
+  height: var(--sp-4);
+  border-radius: var(--r-full);
+  border: var(--hairline) solid var(--border-strong);
+  background: var(--surface-1-solid);
+  font-size: var(--fs-cap);
+  line-height: 1;
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+}
+.wtl-pick[aria-pressed='true'] b {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.tl-marks {
+  position: relative;
+  height: var(--sp-5);
+}
+.tl-marks b {
+  position: absolute;
+  bottom: 0;
+  height: var(--sp-1);
+  min-width: var(--line);
+  border-radius: var(--sp-0);
+  background: var(--accent);
+}
+.tl-marks span {
+  position: absolute;
+  bottom: var(--sp-1);
+  left: calc(50% - var(--sp-2));
+}
+.tl-year .tl-ticks span:first-child,
+.tl-year .tl-ticks span:last-child {
+  transform: translateX(-50%);
+}
+.sw.stay {
+  height: var(--sp-1);
+  border-radius: var(--sp-0);
+  background: var(--accent);
+  vertical-align: middle;
+}
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  color: var(--text-2);
+}
+.add-more {
+  padding: 0 var(--sp-4) var(--sp-3);
+}
+.coords {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+  gap: var(--sp-2);
+}
+.coords label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
+.app .coords input {
+  width: 100%;
+  height: var(--ctl-h);
+  padding: 0 var(--sp-2);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--fs-input);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+.coords input::placeholder {
+  color: var(--text-3);
+}
+.app .coords input[aria-invalid='true'] {
+  border-color: var(--data-danger);
+}
+.coords .dot {
+  vertical-align: middle;
+}
+
 /* ---------- tablet: one side panel at a time, layer row scrolls ---------- */
 @media (min-width: 761px) and (max-width: 1099px) {
   .tablet-only {
@@ -1634,6 +1797,13 @@ h2.panel-head {
   h2.panel-head,
   .hint {
     padding: var(--sp-2) var(--sp-3);
+  }
+  .empty {
+    gap: var(--sp-3);
+    padding: 0 var(--sp-3) var(--sp-3);
+  }
+  .add-more {
+    padding: 0 var(--sp-3) var(--sp-3);
   }
   .tabs {
     padding: 0 var(--sp-3);

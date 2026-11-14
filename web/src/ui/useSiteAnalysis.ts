@@ -29,6 +29,8 @@ export type Tier = 'crest' | 'patch' | 'fine' | 'coarse' | 'global' | 'none'
 
 export interface SiteAnalysis {
   pin: Pin
+  /** the Sun and Earth table the figures come from (for longer look-aheads) */
+  ephem: Ephem
   /** metres above the reference sphere */
   hM: number
   /** degrees, NaN where no detailed terrain covers the point */
@@ -91,6 +93,7 @@ export function useSiteAnalysis(
   const eclipse = eclipseFactor(sky)
   return {
     pin,
+    ephem,
     ...fixed,
     series,
     summary,

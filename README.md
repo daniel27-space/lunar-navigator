@@ -18,6 +18,10 @@ Pick any point near the Moon's south pole and any date from 2024 to 2036, and se
 - **a site finder**: say what the mission needs (slope limit, how much sunlight, how much Earth
   view, in or near permanent shadow) or pick a goal such as "Ice prospecting", and the map
   shades the ground that qualifies, brightest where it fits best, with a ranked shortlist;
+- **when to land**: for any pinned site, the next year on one strip, the best landing dates
+  ranked for a 7, 14 or 30-day stay, and the selected date compared with them, for when a
+  schedule slips;
+- pin a point by typing its latitude and longitude, as well as by clicking the map;
 - **a comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
   one shared timeline, and one row per measure with the winner marked;
 - 41 past, failed and planned landing sites across the whole Moon, each with 80 m terrain

@@ -23,6 +23,7 @@ import { POLE_POSE, Rig } from './scene/Rig'
 import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
 import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
+import { AddByCoords } from './ui/AddByCoords'
 import { Compare } from './ui/Compare'
 import { INK, ON_ACCENT, Segmented, SITE_LETTERS } from './ui/controls'
 import { FinderPanel } from './ui/FinderPanel'
@@ -256,10 +257,11 @@ interface SitesPanelProps {
   terrain: Terrain
   patchOf: (lat: number, lon: number) => Terrain | null
   global: GlobalDem | null
+  onAddCoords: (lat: number, lon: number) => void
 }
 
 /** Right-hand panel: one card per pinned site, or the comparison once there are two or more. */
-function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global }: SitesPanelProps) {
+function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global, onAddCoords }: SitesPanelProps) {
   const [mode, setMode] = useState<'compare' | 'cards'>('compare')
   const setTab = useStore((s) => s.setTab)
   // Sites are listed in badge order (A, B, C), whatever order they were pinned in.
@@ -280,7 +282,15 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global }: SitesP
   }, [newest, setTab])
   return (
     <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
-      {sites.length === 0 && <p className="hint">Click or tap the surface, or a mission marker, to pin a point. Pin two or three to compare them.</p>}
+      {sites.length === 0 && (
+        <div className="empty">
+          <p>Click or tap the surface, or a mission marker, to pin a point. Pin two or three to compare them.</p>
+          <div className="group">
+            <h3 className="section">Or add a point by coordinates</h3>
+            <AddByCoords onAdd={onAddCoords} />
+          </div>
+        </div>
+      )}
       {sites.length >= 2 && (
         <div className="tabs panel-head" role="tablist">
           <button role="tab" aria-selected={mode === 'compare'} onClick={() => setMode('compare')}>
@@ -301,6 +311,12 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global }: SitesP
             ))}
           </div>
         )
+      )}
+      {sites.length > 0 && (
+        <details className="disclosure add-more">
+          <summary>Add a point by coordinates</summary>
+          <AddByCoords onAdd={onAddCoords} />
+        </details>
       )}
     </aside>
   )
@@ -469,10 +485,25 @@ export default function App() {
     },
     [pick, goTo, terrain, elevation, patchIdFor],
   )
+  // Typed coordinates: pinned like a map click, then flown to like a mission site.
+  const addByCoords = useCallback(
+    (lat: number, lon: number) => {
+      pick(lat, lon)
+      if (terrain && (terrainTier(terrain, lat, lon) !== 'none' || patchIdFor(lat, lon))) {
+        goTo({ kind: 'site', lat, lon, hM: elevation(lat, lon) })
+      } else {
+        goTo({ kind: 'globe', lat, lon })
+      }
+    },
+    [pick, goTo, terrain, elevation, patchIdFor],
+  )
   const pickCandidate = useCallback(
     (k: Candidate, fly = true) => {
       const name = PRESETS.find((p) => p.id === preset)?.short ?? 'Custom'
       pick(k.lat, k.lon, `${name} #${k.rank}`)
+      // Remember that this pin came from the finder: its card opens on "When to land".
+      const id = useStore.getState().activePin
+      if (id !== null) useStore.getState().markFromFinder(id)
       if (fly) goTo({ kind: 'site', lat: k.lat, lon: k.lon, hM: elevation(k.lat, k.lon) })
     },
     [pick, goTo, elevation, preset],
@@ -653,7 +684,7 @@ export default function App() {
           </div>
           <div className="dock dock-right" onClick={expandOnTap}>
             {ephem && terrain ? (
-              <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} global={globeRelief ? globeRelief.dem : null} />
+              <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} />
             ) : null}
           </div>
         </div>

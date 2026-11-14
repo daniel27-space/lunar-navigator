@@ -175,6 +175,7 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
                   </li>
                 ))}
               </ol>
+              {result.candidates.length > 0 && <p className="caption">Pick a spot, then see when to land there.</p>}
             </div>
 
             <details className="disclosure">
