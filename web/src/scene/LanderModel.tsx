@@ -9,7 +9,7 @@
 // A craft is either a real model file (glTF binary) or a simplified stand-in built here from
 // primitives, one per "archetype" in docs/DATA_CONTRACT.md. Stand-ins are drawn 1 unit tall and
 // scaled to the real craft's height.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { makeGround, startViewAz, type Ground, type GroundStyle } from './landers/ground'
@@ -341,11 +341,31 @@ const BUILD: Record<Archetype, () => ReactNode> = {
   impactor: Impactor,
 }
 
-function ArchetypeModel({ archetype, heightM }: { archetype: Archetype; heightM: number }) {
+/**
+ * Craft that did not end up upright, by mission id: how far they lean from vertical, in degrees.
+ * Both Intuitive Machines landers tipped over at touchdown: Odysseus (IM-1) came to rest leaning
+ * at about 30 degrees to the ground, Athena (IM-2) on its side in a small crater.
+ */
+export const TIPPED: Record<string, number> = { 'im-1-odysseus': 60, 'im-2-athena': 88 }
+
+function ArchetypeModel({ archetype, heightM, tiltDeg = 0, turnDeg = 0 }: { archetype: Archetype; heightM: number; tiltDeg?: number; turnDeg?: number }) {
   const Build = BUILD[archetype]
+  const lean = useRef<THREE.Group>(null)
+  // A leaning craft is rotated, then lowered until its lowest point rests on the ground.
+  useLayoutEffect(() => {
+    const g = lean.current
+    if (!g) return
+    g.position.y = 0
+    g.updateWorldMatrix(true, true)
+    if (tiltDeg) g.position.y = -new THREE.Box3().setFromObject(g, true).min.y
+  }, [tiltDeg, turnDeg, heightM, archetype])
   return (
-    <group scale={heightM}>
-      <Build />
+    <group rotation={[0, turnDeg * D2R, 0]}>
+      <group ref={lean} rotation={[0, 0, -tiltDeg * D2R]}>
+        <group scale={heightM}>
+          <Build />
+        </group>
+      </group>
     </group>
   )
 }
@@ -716,7 +736,7 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
         </mesh>
       </group>
 
-      {state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} /> : null}
+      {state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} tiltDeg={TIPPED[seed] ?? 0} turnDeg={seed === 'im-2-athena' ? 40 : 0} /> : null}
     </>
   )
 }
