@@ -1,0 +1,4942 @@
+{
+ "period": "2024-01-01T00:00:00Z + 163048 h hourly; events 2026 at 300 s",
+ "observer_m": 2.0,
+ "radii_m": [
+  0,
+  2000,
+  5000,
+  10000,
+  20000,
+  40000
+ ],
+ "reference_radius_m": 40000,
+ "rows": [
+  {
+   "name": "Shackleton rim",
+   "lat": -89.78,
+   "lon": 204.3,
+   "kind": "crest",
+   "slope_deg_800m": 5.807879200960428,
+   "km_from_pole": 6.671145289641368,
+   "by_radius": {
+    "0": {
+     "h0_m": 1733.309502040865,
+     "in_light": 0.6137333791276188,
+     "avg_illum": 0.5471549053800108,
+     "longest_dark_d": 29.166666666666668,
+     "earth_visible": 0.5378538835189638,
+     "horizon_median_dist_m": 100.0
+    },
+    "2000": {
+     "h0_m": 1728.511949327931,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.11657303370786516,
+     "horizon_median_dist_m": 60.0
+    },
+    "5000": {
+     "h0_m": 1728.511949327931,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.11657303370786516,
+     "horizon_median_dist_m": 60.0
+    },
+    "10000": {
+     "h0_m": 1728.511949327931,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.11657303370786516,
+     "horizon_median_dist_m": 60.0
+    },
+    "20000": {
+     "h0_m": 1728.511949327931,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.11657303370786516,
+     "horizon_median_dist_m": 60.0
+    },
+    "40000": {
+     "h0_m": 1728.511949327931,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.11657303370786516,
+     "horizon_median_dist_m": 60.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 5.51822770952842,
+    "max_abs": 7.792703665682522
+   },
+   "obs10m_on_80m": {
+    "h0_m": 1733.309502040865,
+    "in_light": 0.9068065845640547,
+    "avg_illum": 0.8650952205295055,
+    "longest_dark_d": 2.6666666666666665,
+    "earth_visible": 0.5682314410480349,
+    "horizon_median_dist_m": 46203.480585645346
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 18,
+     "n_b": 40,
+     "median_min": 45.0,
+     "p90_min": 18665.5,
+     "max_min": 19160.0,
+     "within_60min": 0.6666666666666666
+    },
+    "sunset": {
+     "n_a": 18,
+     "n_b": 40,
+     "median_min": 20.0,
+     "p90_min": 11558.5,
+     "max_min": 18445.0,
+     "within_60min": 0.6666666666666666
+    },
+    "all": {
+     "n": 36,
+     "median_min": 32.5,
+     "p90_min": 15367.5,
+     "max_min": 19160.0,
+     "within_60min": 0.6666666666666666
+    }
+   },
+   "d20": {
+    "in_light": -0.6137333791276188,
+    "avg_illum": -0.5471549053800108,
+    "longest_dark_d": 6764.5,
+    "earth_visible": -0.42128084981109865,
+    "h0_m": -4.797552712934021
+   },
+   "d10m": {
+    "in_light": 0.2930732054364359,
+    "avg_illum": 0.3179403151494947,
+    "longest_dark_d": -26.5,
+    "earth_visible": 0.03037755752907112
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.4087998626171434,
+     0.7254182817329866,
+     0.8758218438741966
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.6681406702320789,
+     0.8724118051126049
+    ],
+    "pointwise_abs_d_in_light_median": 0.05478141406211667,
+    "pointwise_abs_d_in_light_p90": 0.28465359894018943,
+    "pointwise_abs_d_in_light_max": 0.664657033511604,
+    "mean_in_light_20_minus_80": -0.059849409564129874,
+    "best_in_light_20_minus_80": -0.0034100387615917382,
+    "pointwise_abs_d_longest_dark_d_median": 2.7499999999999982,
+    "shortest_longest_dark_d_80": 6.791666666666667,
+    "shortest_longest_dark_d_20": 5.083333333333333
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Connecting ridge (Glaser spot 2)",
+   "lat": -89.4399,
+   "lon": 222.8524,
+   "kind": "crest",
+   "slope_deg_800m": 0.3617575840908161,
+   "km_from_pole": 16.984243827009845,
+   "by_radius": {
+    "0": {
+     "h0_m": 1957.7205084107782,
+     "in_light": 0.9172758942152004,
+     "avg_illum": 0.8698718424261748,
+     "longest_dark_d": 8.541666666666666,
+     "earth_visible": 0.5832454246602228,
+     "horizon_median_dist_m": 360.0
+    },
+    "2000": {
+     "h0_m": 1958.8376442091185,
+     "in_light": 0.9208208625680782,
+     "avg_illum": 0.8775584108953213,
+     "longest_dark_d": 4.666666666666667,
+     "earth_visible": 0.5832760904764241,
+     "horizon_median_dist_m": 360.0
+    },
+    "5000": {
+     "h0_m": 1958.8376442091185,
+     "in_light": 0.9208208625680782,
+     "avg_illum": 0.8775584108953213,
+     "longest_dark_d": 4.666666666666667,
+     "earth_visible": 0.5832760904764241,
+     "horizon_median_dist_m": 360.0
+    },
+    "10000": {
+     "h0_m": 1958.8376442091185,
+     "in_light": 0.9208208625680782,
+     "avg_illum": 0.8775584108953213,
+     "longest_dark_d": 4.666666666666667,
+     "earth_visible": 0.5832760904764241,
+     "horizon_median_dist_m": 360.0
+    },
+    "20000": {
+     "h0_m": 1958.8376442091187,
+     "in_light": 0.9208208625680782,
+     "avg_illum": 0.8775372085425558,
+     "longest_dark_d": 4.666666666666667,
+     "earth_visible": 0.5832760904764241,
+     "horizon_median_dist_m": 360.0
+    },
+    "40000": {
+     "h0_m": 1958.8376442091187,
+     "in_light": 0.9208147294048379,
+     "avg_illum": 0.8775202484770904,
+     "longest_dark_d": 4.666666666666667,
+     "earth_visible": 0.5832760904764241,
+     "horizon_median_dist_m": 360.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 2.5,
+      "p90_min": 473.0000000000001,
+      "max_min": 4365.0,
+      "within_60min": 0.6666666666666666
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 5.0,
+      "p90_min": 440.5000000000001,
+      "max_min": 670.0,
+      "within_60min": 0.5555555555555556
+     },
+     "all": {
+      "n": 36,
+      "median_min": 5.0,
+      "p90_min": 480.0,
+      "max_min": 4365.0,
+      "within_60min": 0.6111111111111112
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 2.5,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 2.5,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 2.5,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 2.5,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.03847705184332362,
+    "max_abs": 0.39568183220755726
+   },
+   "obs10m_on_80m": {
+    "h0_m": 1957.7205084107782,
+    "in_light": 0.9495424660222757,
+    "avg_illum": 0.919980279439415,
+    "longest_dark_d": 3.7083333333333335,
+    "earth_visible": 0.5834171532309504,
+    "horizon_median_dist_m": 59075.09670806492
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 18,
+     "n_b": 19,
+     "median_min": 7.5,
+     "p90_min": 985.0000000000001,
+     "max_min": 2640.0,
+     "within_60min": 0.6666666666666666
+    },
+    "sunset": {
+     "n_a": 18,
+     "n_b": 19,
+     "median_min": 10.0,
+     "p90_min": 1798.5000000000007,
+     "max_min": 2635.0,
+     "within_60min": 0.6111111111111112
+    },
+    "all": {
+     "n": 36,
+     "median_min": 10.0,
+     "p90_min": 1335.0,
+     "max_min": 2640.0,
+     "within_60min": 0.6388888888888888
+    }
+   },
+   "d20": {
+    "in_light": 0.0035388351896374903,
+    "avg_illum": 0.007648406050915657,
+    "longest_dark_d": -3.874999999999999,
+    "earth_visible": 3.0665816201369545e-05,
+    "h0_m": 1.1171357983405414
+   },
+   "d10m": {
+    "in_light": 0.03226657180707526,
+    "avg_illum": 0.05010843701324019,
+    "longest_dark_d": -4.833333333333332,
+    "earth_visible": 0.00017172857072766945
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.6010131985672931,
+     0.8171213385015456,
+     0.9221640253176978
+    ],
+    "in_light_20_min_med_max": [
+     0.4553751042637751,
+     0.7604815759776262,
+     0.9208208625680782
+    ],
+    "pointwise_abs_d_in_light_median": 0.02496810755115053,
+    "pointwise_abs_d_in_light_p90": 0.11177812668661997,
+    "pointwise_abs_d_in_light_max": 0.2262155929542221,
+    "mean_in_light_20_minus_80": -0.047500347963138734,
+    "best_in_light_20_minus_80": -0.001343162749619653,
+    "pointwise_abs_d_longest_dark_d_median": 1.25,
+    "shortest_longest_dark_d_80": 5.958333333333333,
+    "shortest_longest_dark_d_20": 4.666666666666667
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0015946224424708833,
+     "d_longest_dark_d": -0.04166666666666696
+    },
+    "0.1": {
+     "d_in_light": 0.00045998724302043215,
+     "d_longest_dark_d": -0.04166666666666696
+    }
+   }
+  },
+  {
+   "name": "Connecting ridge (repo point)",
+   "lat": -89.45,
+   "lon": 222.7,
+   "kind": "crest",
+   "slope_deg_800m": 1.2538595783629176,
+   "km_from_pole": 16.677970801906213,
+   "by_radius": {
+    "0": {
+     "h0_m": 1954.4355260009327,
+     "in_light": 0.8112764339335655,
+     "avg_illum": 0.7603377031481341,
+     "longest_dark_d": 9.75,
+     "earth_visible": 0.5148729208576616,
+     "horizon_median_dist_m": 300.0
+    },
+    "2000": {
+     "h0_m": 1955.2213425840268,
+     "in_light": 0.7450873362445415,
+     "avg_illum": 0.6819093085200856,
+     "longest_dark_d": 12.75,
+     "earth_visible": 0.49991413571463617,
+     "horizon_median_dist_m": 220.0
+    },
+    "5000": {
+     "h0_m": 1955.2213425840268,
+     "in_light": 0.7450873362445415,
+     "avg_illum": 0.6819093085200856,
+     "longest_dark_d": 12.75,
+     "earth_visible": 0.49991413571463617,
+     "horizon_median_dist_m": 220.0
+    },
+    "10000": {
+     "h0_m": 1955.2213425840268,
+     "in_light": 0.7449953387959374,
+     "avg_illum": 0.6818665041644202,
+     "longest_dark_d": 12.791666666666666,
+     "earth_visible": 0.49991413571463617,
+     "horizon_median_dist_m": 220.0
+    },
+    "20000": {
+     "h0_m": 1955.2213425840264,
+     "in_light": 0.7449953387959374,
+     "avg_illum": 0.6818665041644202,
+     "longest_dark_d": 12.791666666666666,
+     "earth_visible": 0.49991413571463617,
+     "horizon_median_dist_m": 220.0
+    },
+    "40000": {
+     "h0_m": 1955.2213425840268,
+     "in_light": 0.7449892056326971,
+     "avg_illum": 0.6818107897201655,
+     "longest_dark_d": 12.791666666666666,
+     "earth_visible": 0.49991413571463617,
+     "horizon_median_dist_m": 220.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 16,
+      "n_b": 15,
+      "median_min": 1567.5,
+      "p90_min": 4580.0,
+      "max_min": 4885.0,
+      "within_60min": 0.1875
+     },
+     "sunset": {
+      "n_a": 16,
+      "n_b": 15,
+      "median_min": 185.0,
+      "p90_min": 5885.0,
+      "max_min": 8665.0,
+      "within_60min": 0.4375
+     },
+     "all": {
+      "n": 32,
+      "median_min": 630.0,
+      "p90_min": 4620.0,
+      "max_min": 8665.0,
+      "within_60min": 0.3125
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 14,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 14,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 28,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 14,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 14,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 28,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 30,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 30,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0958885983870366,
+    "max_abs": 1.7075261151192846
+   },
+   "obs10m_on_80m": {
+    "h0_m": 1954.4355260009327,
+    "in_light": 0.9535964869240959,
+    "avg_illum": 0.9227854000332643,
+    "longest_dark_d": 3.1666666666666665,
+    "earth_visible": 0.5830675629262548,
+    "horizon_median_dist_m": 39893.062472036516
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 16,
+     "n_b": 20,
+     "median_min": 2490.0,
+     "p90_min": 24922.5,
+     "max_min": 44805.0,
+     "within_60min": 0.375
+    },
+    "sunset": {
+     "n_a": 16,
+     "n_b": 20,
+     "median_min": 1405.0,
+     "p90_min": 26905.0,
+     "max_min": 43380.0,
+     "within_60min": 0.375
+    },
+    "all": {
+     "n": 32,
+     "median_min": 1472.5,
+     "p90_min": 33833.500000000044,
+     "max_min": 44805.0,
+     "within_60min": 0.375
+    }
+   },
+   "d20": {
+    "in_light": -0.06628722830086842,
+    "avg_illum": -0.07852691342796858,
+    "longest_dark_d": 3.041666666666666,
+    "earth_visible": -0.0149587851430254,
+    "h0_m": 0.7858165830941743
+   },
+   "d10m": {
+    "in_light": 0.1423200529905304,
+    "avg_illum": 0.16244769688513017,
+    "longest_dark_d": -6.583333333333334,
+    "earth_visible": 0.06819464206859327
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.5558424513026838,
+     0.7431737893135764,
+     0.9013174034640106
+    ],
+    "in_light_20_min_med_max": [
+     0.3344045925126343,
+     0.649348658063883,
+     0.9079166871105442
+    ],
+    "pointwise_abs_d_in_light_median": 0.05220548550120219,
+    "pointwise_abs_d_in_light_p90": 0.2026691526421668,
+    "pointwise_abs_d_in_light_max": 0.39005078259162945,
+    "mean_in_light_20_minus_80": -0.07575570584447922,
+    "best_in_light_20_minus_80": 0.006599283646533616,
+    "pointwise_abs_d_longest_dark_d_median": 1.1666666666666643,
+    "shortest_longest_dark_d_80": 4.875,
+    "shortest_longest_dark_d_20": 4.916666666666667
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -0.013762818311172209,
+     "d_longest_dark_d": 0.9166666666666661
+    },
+    "0.1": {
+     "d_in_light": -0.00044772091653988433,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "de Gerlache rim",
+   "lat": -88.67,
+   "lon": 291.8,
+   "kind": "crest",
+   "slope_deg_800m": 0.5305768764030693,
+   "km_from_pole": 40.33186710810646,
+   "by_radius": {
+    "0": {
+     "h0_m": 1809.9177466471497,
+     "in_light": 0.7419042245228399,
+     "avg_illum": 0.6916429842898116,
+     "longest_dark_d": 18.791666666666668,
+     "earth_visible": 0.6153280015700898,
+     "horizon_median_dist_m": 220.0
+    },
+    "2000": {
+     "h0_m": 1810.3467182654283,
+     "in_light": 0.7102816348559934,
+     "avg_illum": 0.6607371324222006,
+     "longest_dark_d": 19.125,
+     "earth_visible": 0.6153464010598106,
+     "horizon_median_dist_m": 200.0
+    },
+    "5000": {
+     "h0_m": 1810.3467182654283,
+     "in_light": 0.7102816348559934,
+     "avg_illum": 0.6607371324222006,
+     "longest_dark_d": 19.125,
+     "earth_visible": 0.6153464010598106,
+     "horizon_median_dist_m": 200.0
+    },
+    "10000": {
+     "h0_m": 1810.3467182654283,
+     "in_light": 0.7102816348559934,
+     "avg_illum": 0.6607371324222006,
+     "longest_dark_d": 19.125,
+     "earth_visible": 0.6153464010598106,
+     "horizon_median_dist_m": 200.0
+    },
+    "20000": {
+     "h0_m": 1810.3467182654283,
+     "in_light": 0.7102816348559934,
+     "avg_illum": 0.6607371324222006,
+     "longest_dark_d": 19.125,
+     "earth_visible": 0.6153464010598106,
+     "horizon_median_dist_m": 200.0
+    },
+    "40000": {
+     "h0_m": 1810.3467182654283,
+     "in_light": 0.7102141700603504,
+     "avg_illum": 0.6606886573966321,
+     "longest_dark_d": 19.125,
+     "earth_visible": 0.6153464010598106,
+     "horizon_median_dist_m": 200.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 24,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 2451.4999999999995,
+      "max_min": 8045.0,
+      "within_60min": 0.7083333333333334
+     },
+     "sunset": {
+      "n_a": 24,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 1337.4999999999995,
+      "max_min": 10580.0,
+      "within_60min": 0.6666666666666666
+     },
+     "all": {
+      "n": 48,
+      "median_min": 0.0,
+      "p90_min": 2193.5000000000027,
+      "max_min": 10580.0,
+      "within_60min": 0.6875
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 44,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 44,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 44,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 22,
+      "n_b": 22,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 44,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.07267757135699646,
+    "max_abs": 0.622252969195622
+   },
+   "obs10m_on_80m": {
+    "h0_m": 1809.9177466471497,
+    "in_light": 0.8765087581571072,
+    "avg_illum": 0.8420527108273249,
+    "longest_dark_d": 5.708333333333333,
+    "earth_visible": 0.6155671949364604,
+    "horizon_median_dist_m": 78533.50417758149
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 24,
+     "n_b": 24,
+     "median_min": 5.0,
+     "p90_min": 2052.4999999999986,
+     "max_min": 6010.0,
+     "within_60min": 0.8333333333333334
+    },
+    "sunset": {
+     "n_a": 24,
+     "n_b": 24,
+     "median_min": 10.0,
+     "p90_min": 11316.5,
+     "max_min": 11695.0,
+     "within_60min": 0.75
+    },
+    "all": {
+     "n": 48,
+     "median_min": 7.5,
+     "p90_min": 8774.000000000004,
+     "max_min": 11695.0,
+     "within_60min": 0.7916666666666666
+    }
+   },
+   "d20": {
+    "in_light": -0.031690054462489514,
+    "avg_illum": -0.030954326893179562,
+    "longest_dark_d": 0.33333333333333215,
+    "earth_visible": 1.8399489720821727e-05,
+    "h0_m": 0.42897161827863783
+   },
+   "d10m": {
+    "in_light": 0.13460453363426728,
+    "avg_illum": 0.15040972653751328,
+    "longest_dark_d": -13.083333333333336,
+    "earth_visible": 0.00023919336637057143
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.5491634365340268,
+     0.7334220597615426,
+     0.8618750306658162
+    ],
+    "in_light_20_min_med_max": [
+     0.21864113635248517,
+     0.6911584318728228,
+     0.8640523036161131
+    ],
+    "pointwise_abs_d_in_light_median": 0.03695230852264364,
+    "pointwise_abs_d_in_light_p90": 0.09403120553456647,
+    "pointwise_abs_d_in_light_max": 0.3305223001815416,
+    "mean_in_light_20_minus_80": -0.040300264652252005,
+    "best_in_light_20_minus_80": 0.0021772729502969046,
+    "pointwise_abs_d_longest_dark_d_median": 0.8333333333333321,
+    "shortest_longest_dark_d_80": 5.708333333333333,
+    "shortest_longest_dark_d_20": 5.708333333333333
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0038454933516509637,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0005887836710661842,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Malapert massif",
+   "lat": -85.964,
+   "lon": 357.681,
+   "kind": "crest",
+   "slope_deg_800m": 1.1692519660934446,
+   "km_from_pole": 122.43567368415145,
+   "by_radius": {
+    "0": {
+     "h0_m": 4990.368188123433,
+     "in_light": 0.6991744762278593,
+     "avg_illum": 0.6610822741170905,
+     "longest_dark_d": 16.625,
+     "earth_visible": 1.0,
+     "horizon_median_dist_m": 220.0
+    },
+    "2000": {
+     "h0_m": 4991.710982042355,
+     "in_light": 0.699750993572445,
+     "avg_illum": 0.6599326142989737,
+     "longest_dark_d": 16.5,
+     "earth_visible": 1.0,
+     "horizon_median_dist_m": 220.0
+    },
+    "5000": {
+     "h0_m": 4991.710982042355,
+     "in_light": 0.699750993572445,
+     "avg_illum": 0.6599326142989737,
+     "longest_dark_d": 16.5,
+     "earth_visible": 1.0,
+     "horizon_median_dist_m": 220.0
+    },
+    "10000": {
+     "h0_m": 4991.710982042355,
+     "in_light": 0.6996037976546784,
+     "avg_illum": 0.6597103983448064,
+     "longest_dark_d": 16.5,
+     "earth_visible": 1.0,
+     "horizon_median_dist_m": 220.0
+    },
+    "20000": {
+     "h0_m": 4991.710982042355,
+     "in_light": 0.6996037976546784,
+     "avg_illum": 0.6596949182238512,
+     "longest_dark_d": 16.5,
+     "earth_visible": 1.0,
+     "horizon_median_dist_m": 220.0
+    },
+    "40000": {
+     "h0_m": 4991.710982042355,
+     "in_light": 0.6996037976546784,
+     "avg_illum": 0.6596949182238512,
+     "longest_dark_d": 16.5,
+     "earth_visible": 1.0,
+     "horizon_median_dist_m": 220.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 20,
+      "n_b": 18,
+      "median_min": 195.0,
+      "p90_min": 1452.5000000000045,
+      "max_min": 5085.0,
+      "within_60min": 0.45
+     },
+     "sunset": {
+      "n_a": 20,
+      "n_b": 18,
+      "median_min": 250.0,
+      "p90_min": 841.000000000002,
+      "max_min": 2520.0,
+      "within_60min": 0.2
+     },
+     "all": {
+      "n": 40,
+      "median_min": 240.0,
+      "p90_min": 1232.5000000000014,
+      "max_min": 5085.0,
+      "within_60min": 0.325
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 36,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0636870203194082,
+    "max_abs": 0.42458069208780236
+   },
+   "obs10m_on_80m": {
+    "h0_m": 4990.368188123433,
+    "in_light": 0.8463765271576468,
+    "avg_illum": 0.8183520316049612,
+    "longest_dark_d": 11.041666666666666,
+    "earth_visible": 1.0,
+    "horizon_median_dist_m": 77597.6639164841
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 20,
+     "n_b": 18,
+     "median_min": 3470.0,
+     "p90_min": 41406.00000000006,
+     "max_min": 121985.0,
+     "within_60min": 0.4
+    },
+    "sunset": {
+     "n_a": 20,
+     "n_b": 18,
+     "median_min": 6207.5,
+     "p90_min": 39033.00000000006,
+     "max_min": 120310.0,
+     "within_60min": 0.15
+    },
+    "all": {
+     "n": 40,
+     "median_min": 3812.5,
+     "p90_min": 41283.00000000006,
+     "max_min": 121985.0,
+     "within_60min": 0.275
+    }
+   },
+   "d20": {
+    "in_light": 0.0004293214268190626,
+    "avg_illum": -0.0013873558932393504,
+    "longest_dark_d": -0.125,
+    "earth_visible": 0.0,
+    "h0_m": 1.3427939189214158
+   },
+   "d10m": {
+    "in_light": 0.14720205092978744,
+    "avg_illum": 0.15726975748787064,
+    "longest_dark_d": -5.583333333333334,
+    "earth_visible": 0.0
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.0,
+     0.5629691869878809,
+     0.8479036848044748
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.52877680192336,
+     0.8473578332760905
+    ],
+    "pointwise_abs_d_in_light_median": 0.019607722879152245,
+    "pointwise_abs_d_in_light_p90": 0.12960968549138913,
+    "pointwise_abs_d_in_light_max": 0.228080074579265,
+    "mean_in_light_20_minus_80": -0.029878017641480792,
+    "best_in_light_20_minus_80": -0.0005458515283842669,
+    "pointwise_abs_d_longest_dark_d_median": 0.375,
+    "shortest_longest_dark_d_80": 11.083333333333334,
+    "shortest_longest_dark_d_20": 11.125
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -0.0011039693832491926,
+     "d_longest_dark_d": 0.04166666666666785
+    },
+    "0.1": {
+     "d_in_light": -0.003011383150974045,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Nobile rim",
+   "lat": -85.2,
+   "lon": 31.0,
+   "kind": "crest",
+   "slope_deg_800m": 10.217636399734522,
+   "km_from_pole": 145.63727020813369,
+   "by_radius": {
+    "0": {
+     "h0_m": 5789.564079856898,
+     "in_light": 0.46575854962955693,
+     "avg_illum": 0.4574964720803124,
+     "longest_dark_d": 17.25,
+     "earth_visible": 0.9444764731858103,
+     "horizon_median_dist_m": 6030.0
+    },
+    "2000": {
+     "h0_m": 5789.791122199187,
+     "in_light": 0.46497350473480203,
+     "avg_illum": 0.4566842963404157,
+     "longest_dark_d": 17.25,
+     "earth_visible": 0.944537804818213,
+     "horizon_median_dist_m": 5870.0
+    },
+    "5000": {
+     "h0_m": 5789.791122199187,
+     "in_light": 0.46497350473480203,
+     "avg_illum": 0.4566842963404157,
+     "longest_dark_d": 17.25,
+     "earth_visible": 0.944537804818213,
+     "horizon_median_dist_m": 5880.0
+    },
+    "10000": {
+     "h0_m": 5789.791122199187,
+     "in_light": 0.4649367057553604,
+     "avg_illum": 0.4566560711936279,
+     "longest_dark_d": 17.25,
+     "earth_visible": 0.944537804818213,
+     "horizon_median_dist_m": 5920.0
+    },
+    "20000": {
+     "h0_m": 5789.791122199187,
+     "in_light": 0.4648201756537952,
+     "avg_illum": 0.45658913860025885,
+     "longest_dark_d": 17.25,
+     "earth_visible": 0.9445255384917325,
+     "horizon_median_dist_m": 5920.0
+    },
+    "40000": {
+     "h0_m": 5789.791122199187,
+     "in_light": 0.4648201756537952,
+     "avg_illum": 0.45658913860025885,
+     "longest_dark_d": 17.25,
+     "earth_visible": 0.9444274078798881,
+     "horizon_median_dist_m": 5920.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 20.0,
+      "p90_min": 85.0,
+      "max_min": 85.0,
+      "within_60min": 0.6666666666666666
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 5.0,
+      "p90_min": 79.00000000000003,
+      "max_min": 85.0,
+      "within_60min": 0.84
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 4.500000000000002,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 9.000000000000004,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 4.500000000000002,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 9.000000000000004,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 4.500000000000002,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 4.0000000000000036,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.00440557474536115,
+    "max_abs": 0.20847863924497378
+   },
+   "obs10m_on_80m": {
+    "h0_m": 5789.564079856898,
+    "in_light": 0.4700456307345076,
+    "avg_illum": 0.4614008621858002,
+    "longest_dark_d": 17.25,
+    "earth_visible": 0.9464206859329768,
+    "horizon_median_dist_m": 6360.0
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 12,
+     "n_b": 12,
+     "median_min": 70.0,
+     "p90_min": 294.5,
+     "max_min": 295.0,
+     "within_60min": 0.4166666666666667
+    },
+    "sunset": {
+     "n_a": 13,
+     "n_b": 13,
+     "median_min": 35.0,
+     "p90_min": 55.0,
+     "max_min": 55.0,
+     "within_60min": 1.0
+    },
+    "all": {
+     "n": 25,
+     "median_min": 45.0,
+     "p90_min": 290.0,
+     "max_min": 295.0,
+     "within_60min": 0.72
+    }
+   },
+   "d20": {
+    "in_light": -0.0009383739757617415,
+    "avg_illum": -0.0009073334800535626,
+    "longest_dark_d": 0.0,
+    "earth_visible": -4.906530592219127e-05,
+    "h0_m": 0.22704234228876885
+   },
+   "d10m": {
+    "in_light": 0.004287081104950685,
+    "avg_illum": 0.003904390105487765,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.001944212747166496
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.43968647269515726,
+     0.46575854962955693,
+     0.46760463176487904
+    ],
+    "in_light_20_min_med_max": [
+     0.4237831804131299,
+     0.46530469554977677,
+     0.46735930523526814
+    ],
+    "pointwise_abs_d_in_light_median": 0.0004415877532996104,
+    "pointwise_abs_d_in_light_p90": 0.0058473578332761235,
+    "pointwise_abs_d_in_light_max": 0.01590329228202736,
+    "mean_in_light_20_minus_80": -0.0018641061252527291,
+    "best_in_light_20_minus_80": -0.00024532652961090085,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 17.25,
+    "shortest_longest_dark_d_20": 17.25
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -0.00023919336637062694,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 6.133163240273909e-06,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Haworth rim crest",
+   "lat": -86.4739,
+   "lon": 2.3958,
+   "kind": "crest",
+   "slope_deg_800m": 3.342283377828179,
+   "km_from_pole": 106.95692566844919,
+   "by_radius": {
+    "0": {
+     "h0_m": 2663.10258754047,
+     "in_light": 0.48734115107207693,
+     "avg_illum": 0.4420767629115214,
+     "longest_dark_d": 13.625,
+     "earth_visible": 0.17577645846621853,
+     "horizon_median_dist_m": 60327.55635976673
+    },
+    "2000": {
+     "h0_m": 2664.12534594383,
+     "in_light": 0.4874638143368824,
+     "avg_illum": 0.4422586319557992,
+     "longest_dark_d": 13.625,
+     "earth_visible": 0.176168980913596,
+     "horizon_median_dist_m": 60327.55635976673
+    },
+    "5000": {
+     "h0_m": 2664.12534594383,
+     "in_light": 0.4874638143368824,
+     "avg_illum": 0.4422586319557992,
+     "longest_dark_d": 13.625,
+     "earth_visible": 0.176168980913596,
+     "horizon_median_dist_m": 60327.55635976673
+    },
+    "10000": {
+     "h0_m": 2664.1253459438294,
+     "in_light": 0.4874638143368824,
+     "avg_illum": 0.4422562156732809,
+     "longest_dark_d": 13.625,
+     "earth_visible": 0.176168980913596,
+     "horizon_median_dist_m": 60327.55635976673
+    },
+    "20000": {
+     "h0_m": 2664.1253459438294,
+     "in_light": 0.4874392816839213,
+     "avg_illum": 0.44222388723360306,
+     "longest_dark_d": 13.625,
+     "earth_visible": 0.17588685540454344,
+     "horizon_median_dist_m": 60327.55635976673
+    },
+    "40000": {
+     "h0_m": 2664.12534594383,
+     "in_light": 0.48743314852068104,
+     "avg_illum": 0.4422138332312219,
+     "longest_dark_d": 13.625,
+     "earth_visible": 0.17588685540454344,
+     "horizon_median_dist_m": 60327.55635976673
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 40,
+      "n_b": 40,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 39,
+      "n_b": 39,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 79,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 40,
+      "n_b": 40,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 39,
+      "n_b": 39,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 79,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 40,
+      "n_b": 40,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 39,
+      "n_b": 39,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 79,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 40,
+      "n_b": 40,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 39,
+      "n_b": 39,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 79,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 40,
+      "n_b": 40,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 39,
+      "n_b": 39,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 79,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0007773917176119305,
+    "max_abs": 0.014033487717650006
+   },
+   "obs10m_on_80m": {
+    "h0_m": 2663.10258754047,
+    "in_light": 0.48866591433197587,
+    "avg_illum": 0.44349843063391003,
+    "longest_dark_d": 13.625,
+    "earth_visible": 0.17902703498356312,
+    "horizon_median_dist_m": 60327.55635976673
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 40,
+     "n_b": 41,
+     "median_min": 5.0,
+     "p90_min": 10.500000000000007,
+     "max_min": 20.0,
+     "within_60min": 1.0
+    },
+    "sunset": {
+     "n_a": 39,
+     "n_b": 40,
+     "median_min": 5.0,
+     "p90_min": 15.0,
+     "max_min": 15.0,
+     "within_60min": 1.0
+    },
+    "all": {
+     "n": 79,
+     "median_min": 5.0,
+     "p90_min": 15.0,
+     "max_min": 20.0,
+     "within_60min": 1.0
+    }
+   },
+   "d20": {
+    "in_light": 9.199744860410863e-05,
+    "avg_illum": 0.0001370703197004497,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.0001103969383249026,
+    "h0_m": 1.0227584033600579
+   },
+   "d10m": {
+    "in_light": 0.0013247632598989423,
+    "avg_illum": 0.0014216677223886087,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.003250576517344589
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.41073794220106963,
+     0.460993081791865,
+     0.48886830871890485
+    ],
+    "in_light_20_min_med_max": [
+     0.3022177518276826,
+     0.4494872675531132,
+     0.4885432510671704
+    ],
+    "pointwise_abs_d_in_light_median": 0.006887542318826323,
+    "pointwise_abs_d_in_light_p90": 0.027929198763554285,
+    "pointwise_abs_d_in_light_max": 0.13383175506599287,
+    "mean_in_light_20_minus_80": -0.010137367836590583,
+    "best_in_light_20_minus_80": -0.00032505765173446166,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 13.625,
+    "shortest_longest_dark_d_20": 13.625
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -2.4532652961095636e-05,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Shackleton floor",
+   "lat": -89.67,
+   "lon": 129.2,
+   "kind": "floor",
+   "slope_deg_800m": 0.3286783779695404,
+   "km_from_pole": 10.006733302628795,
+   "by_radius": {
+    "0": {
+     "h0_m": -2786.8487302280787,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.0,
+     "horizon_median_dist_m": 9960.0
+    },
+    "2000": {
+     "h0_m": -2788.8070823697667,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.0,
+     "horizon_median_dist_m": 9960.0
+    },
+    "5000": {
+     "h0_m": -2788.8070823697667,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.0,
+     "horizon_median_dist_m": 9960.0
+    },
+    "10000": {
+     "h0_m": -2788.8070823697667,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.0,
+     "horizon_median_dist_m": 9970.0
+    },
+    "20000": {
+     "h0_m": -2788.8070823697667,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.0,
+     "horizon_median_dist_m": 9970.0
+    },
+    "40000": {
+     "h0_m": -2788.8070823697667,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.0,
+     "horizon_median_dist_m": 9970.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.02018686037344608,
+    "max_abs": 0.06311506529391764
+   },
+   "obs10m_on_80m": {
+    "h0_m": -2786.8487302280787,
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 6793.666666666667,
+    "earth_visible": 0.0,
+    "horizon_median_dist_m": 9960.0
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "sunset": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "all": {
+     "n": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    }
+   },
+   "d20": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.0,
+    "h0_m": -1.9583521416880103
+   },
+   "d10m": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.0
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "pointwise_abs_d_in_light_median": 0.0,
+    "pointwise_abs_d_in_light_p90": 0.0,
+    "pointwise_abs_d_in_light_max": 0.0,
+    "mean_in_light_20_minus_80": 0.0,
+    "best_in_light_20_minus_80": 0.0,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 6793.666666666667,
+    "shortest_longest_dark_d_20": 6793.666666666667
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Haworth floor",
+   "lat": -87.45,
+   "lon": 355.0,
+   "kind": "floor",
+   "slope_deg_800m": 4.715705743602973,
+   "km_from_pole": 77.33730965235769,
+   "by_radius": {
+    "0": {
+     "h0_m": -3316.020056346539,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.04405451155487954,
+     "horizon_median_dist_m": 25729.555547543125
+    },
+    "2000": {
+     "h0_m": -3315.5932476873195,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.04421397379912664,
+     "horizon_median_dist_m": 25729.555547543125
+    },
+    "5000": {
+     "h0_m": -3315.5932476873195,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.04421397379912664,
+     "horizon_median_dist_m": 25729.555547543125
+    },
+    "10000": {
+     "h0_m": -3315.5932476873195,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.04421397379912664,
+     "horizon_median_dist_m": 25729.555547543125
+    },
+    "20000": {
+     "h0_m": -3315.5932476873195,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.04421397379912664,
+     "horizon_median_dist_m": 25729.555547543125
+    },
+    "40000": {
+     "h0_m": -3315.5932476873195,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.04409131053432118,
+     "horizon_median_dist_m": 25678.199149244636
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.000999369324332644,
+    "max_abs": 0.05372919728054226
+   },
+   "obs10m_on_80m": {
+    "h0_m": -3316.020056346539,
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 6793.666666666667,
+    "earth_visible": 0.047967469702173596,
+    "horizon_median_dist_m": 25729.555547543125
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "sunset": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "all": {
+     "n": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    }
+   },
+   "d20": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": 3.6798979441636515e-05,
+    "h0_m": 0.4268086592196596
+   },
+   "d10m": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.003912958147294053
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "pointwise_abs_d_in_light_median": 0.0,
+    "pointwise_abs_d_in_light_p90": 0.0,
+    "pointwise_abs_d_in_light_max": 0.0,
+    "mean_in_light_20_minus_80": 0.0,
+    "best_in_light_20_minus_80": 0.0,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 6793.666666666667,
+    "shortest_longest_dark_d_20": 6793.666666666667
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Faustini floor",
+   "lat": -87.2,
+   "lon": 84.0,
+   "kind": "floor",
+   "slope_deg_800m": 3.5254303520378674,
+   "km_from_pole": 84.92228281406415,
+   "by_radius": {
+    "0": {
+     "h0_m": -2724.5122400789724,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.02536062999852804,
+     "horizon_median_dist_m": 20652.989100151906
+    },
+    "2000": {
+     "h0_m": -2723.4096602737914,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.02583901673126932,
+     "horizon_median_dist_m": 20652.989100151906
+    },
+    "5000": {
+     "h0_m": -2723.4096602737914,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.02583901673126932,
+     "horizon_median_dist_m": 20652.989100151906
+    },
+    "10000": {
+     "h0_m": -2723.4096602737914,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.02583901673126932,
+     "horizon_median_dist_m": 20652.989100151906
+    },
+    "20000": {
+     "h0_m": -2723.4096602737914,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.025734752956184683,
+     "horizon_median_dist_m": 20632.377334582892
+    },
+    "40000": {
+     "h0_m": -2723.4096602737914,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.025587557038418134,
+     "horizon_median_dist_m": 20632.377334582892
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.001400363129749227,
+    "max_abs": 0.006559449517476779
+   },
+   "obs10m_on_80m": {
+    "h0_m": -2724.5122400789724,
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 6793.666666666667,
+    "earth_visible": 0.029224522839899906,
+    "horizon_median_dist_m": 20652.989100151906
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "sunset": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "all": {
+     "n": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    }
+   },
+   "d20": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.000226927039890093,
+    "h0_m": 1.1025798051809943
+   },
+   "d10m": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.0038638928413718653
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "pointwise_abs_d_in_light_median": 0.0,
+    "pointwise_abs_d_in_light_p90": 0.0,
+    "pointwise_abs_d_in_light_max": 0.0,
+    "mean_in_light_20_minus_80": 0.0,
+    "best_in_light_20_minus_80": 0.0,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 6793.666666666667,
+    "shortest_longest_dark_d_20": 6793.666666666667
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Cabeus floor (LCROSS)",
+   "lat": -84.6796,
+   "lon": 311.2907,
+   "kind": "floor",
+   "slope_deg_800m": 0.4345561211348831,
+   "km_from_pole": 161.44838035874702,
+   "by_radius": {
+    "0": {
+     "h0_m": -3833.2423253473976,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.183835434963937,
+     "horizon_median_dist_m": 25094.929609874438
+    },
+    "2000": {
+     "h0_m": -3834.0738623110656,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.18373730435209262,
+     "horizon_median_dist_m": 25094.929609874438
+    },
+    "5000": {
+     "h0_m": -3834.0738623110656,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.18373730435209262,
+     "horizon_median_dist_m": 25044.83993001441
+    },
+    "10000": {
+     "h0_m": -3834.0738623110656,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.18373730435209262,
+     "horizon_median_dist_m": 25044.83993001441
+    },
+    "20000": {
+     "h0_m": -3834.0738623110656,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.18373730435209262,
+     "horizon_median_dist_m": 25044.83993001441
+    },
+    "40000": {
+     "h0_m": -3834.0738623110656,
+     "in_light": 0.0,
+     "avg_illum": 0.0,
+     "longest_dark_d": 6793.666666666667,
+     "earth_visible": 0.18371277169913156,
+     "horizon_median_dist_m": 25044.83993001441
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "sunset": {
+      "n_a": 0,
+      "n_b": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     },
+     "all": {
+      "n": 0,
+      "median_min": null,
+      "p90_min": null,
+      "max_min": null,
+      "within_60min": null
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0035275752252292847,
+    "max_abs": 0.4216673379528455
+   },
+   "obs10m_on_80m": {
+    "h0_m": -3833.2423253473976,
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 6793.666666666667,
+    "earth_visible": 0.18475540944997793,
+    "horizon_median_dist_m": 25473.7965898387
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "sunset": {
+     "n_a": 0,
+     "n_b": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    },
+    "all": {
+     "n": 0,
+     "median_min": null,
+     "p90_min": null,
+     "max_min": null,
+     "within_60min": null
+    }
+   },
+   "d20": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": -0.00012266326480545042,
+    "h0_m": -0.8315369636679861
+   },
+   "d10m": {
+    "in_light": 0.0,
+    "avg_illum": 0.0,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.0009199744860409198
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "pointwise_abs_d_in_light_median": 0.0,
+    "pointwise_abs_d_in_light_p90": 0.0,
+    "pointwise_abs_d_in_light_max": 0.0,
+    "mean_in_light_20_minus_80": 0.0,
+    "best_in_light_20_minus_80": 0.0,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 6793.666666666667,
+    "shortest_longest_dark_d_20": 6793.666666666667
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Plain 87.9S 251.6E",
+   "lat": -87.915,
+   "lon": 251.57,
+   "kind": "plain",
+   "slope_deg_800m": 0.6967125352812311,
+   "km_from_pole": 63.23116356046829,
+   "by_radius": {
+    "0": {
+     "h0_m": -798.507873478863,
+     "in_light": 0.3171397379912664,
+     "avg_illum": 0.2934045210665994,
+     "longest_dark_d": 22.5,
+     "earth_visible": 0.18378636965801481,
+     "horizon_median_dist_m": 6220.0
+    },
+    "2000": {
+     "h0_m": -799.0059910030288,
+     "in_light": 0.3160480349344978,
+     "avg_illum": 0.2903190881235628,
+     "longest_dark_d": 22.625,
+     "earth_visible": 0.18348584465924145,
+     "horizon_median_dist_m": 6200.0
+    },
+    "5000": {
+     "h0_m": -799.0059910030288,
+     "in_light": 0.3156984446298023,
+     "avg_illum": 0.29000029679628686,
+     "longest_dark_d": 22.625,
+     "earth_visible": 0.18348584465924145,
+     "horizon_median_dist_m": 6180.0
+    },
+    "10000": {
+     "h0_m": -799.0059910030288,
+     "in_light": 0.3154653844266719,
+     "avg_illum": 0.2899197646808476,
+     "longest_dark_d": 22.625,
+     "earth_visible": 0.18332024925175408,
+     "horizon_median_dist_m": 6210.0
+    },
+    "20000": {
+     "h0_m": -799.0059910030287,
+     "in_light": 0.3154592512634316,
+     "avg_illum": 0.2899178355145249,
+     "longest_dark_d": 22.625,
+     "earth_visible": 0.18307492272214318,
+     "horizon_median_dist_m": 6210.0
+    },
+    "40000": {
+     "h0_m": -799.0059910030287,
+     "in_light": 0.31544698493695106,
+     "avg_illum": 0.289903300752425,
+     "longest_dark_d": 22.625,
+     "earth_visible": 0.18307492272214318,
+     "horizon_median_dist_m": 6210.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 25,
+      "n_b": 25,
+      "median_min": 5.0,
+      "p90_min": 34.00000000000002,
+      "max_min": 95.0,
+      "within_60min": 0.96
+     },
+     "sunset": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 5.0,
+      "p90_min": 88.99999999999994,
+      "max_min": 160.0,
+      "within_60min": 0.875
+     },
+     "all": {
+      "n": 49,
+      "median_min": 5.0,
+      "p90_min": 40.0,
+      "max_min": 160.0,
+      "within_60min": 0.9183673469387755
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 25,
+      "n_b": 25,
+      "median_min": 5.0,
+      "p90_min": 15.0,
+      "max_min": 65.0,
+      "within_60min": 0.96
+     },
+     "sunset": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 2.5,
+      "p90_min": 10.0,
+      "max_min": 25.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 49,
+      "median_min": 5.0,
+      "p90_min": 11.000000000000014,
+      "max_min": 65.0,
+      "within_60min": 0.9795918367346939
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 25,
+      "n_b": 25,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 25.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 49,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 25.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 25,
+      "n_b": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 49,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 25,
+      "n_b": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 49,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.012195422183286064,
+    "max_abs": 0.3955790708248593
+   },
+   "obs10m_on_80m": {
+    "h0_m": -798.507873478863,
+    "in_light": 0.32544404101859575,
+    "avg_illum": 0.30201253178438664,
+    "longest_dark_d": 22.125,
+    "earth_visible": 0.18754599872430205,
+    "horizon_median_dist_m": 7980.0
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 25,
+     "n_b": 26,
+     "median_min": 25.0,
+     "p90_min": 218.0,
+     "max_min": 445.0,
+     "within_60min": 0.76
+    },
+    "sunset": {
+     "n_a": 24,
+     "n_b": 25,
+     "median_min": 55.0,
+     "p90_min": 208.99999999999994,
+     "max_min": 440.0,
+     "within_60min": 0.5833333333333334
+    },
+    "all": {
+     "n": 49,
+     "median_min": 35.0,
+     "p90_min": 222.00000000000003,
+     "max_min": 445.0,
+     "within_60min": 0.673469387755102
+    }
+   },
+   "d20": {
+    "in_light": -0.0016927530543153213,
+    "avg_illum": -0.003501220314174436,
+    "longest_dark_d": 0.125,
+    "earth_visible": -0.0007114469358716347,
+    "h0_m": -0.4981175241657638
+   },
+   "d10m": {
+    "in_light": 0.008304303027329374,
+    "avg_illum": 0.008608010717787218,
+    "longest_dark_d": -0.375,
+    "earth_visible": 0.00375962906628724
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.30611844364849616,
+     0.31595603748589374,
+     0.32150041705510035
+    ],
+    "in_light_20_min_med_max": [
+     0.25663608262597515,
+     0.3153856533045484,
+     0.3215985476669447
+    ],
+    "pointwise_abs_d_in_light_median": 0.000742112752073032,
+    "pointwise_abs_d_in_light_p90": 0.0038651194740199207,
+    "pointwise_abs_d_in_light_max": 0.05862690741376775,
+    "mean_in_light_20_minus_80": -0.002342993524380943,
+    "best_in_light_20_minus_80": 9.813061184432703e-05,
+    "pointwise_abs_d_longest_dark_d_median": 0.08333333333333215,
+    "shortest_longest_dark_d_80": 22.083333333333332,
+    "shortest_longest_dark_d_20": 22.083333333333332
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -4.293214268191736e-05,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": -3.0665816201369545e-05,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Plain 85.8S 141.3E",
+   "lat": -85.779,
+   "lon": 141.34,
+   "kind": "plain",
+   "slope_deg_800m": 0.9964534949906242,
+   "km_from_pole": 128.05278266689254,
+   "by_radius": {
+    "0": {
+     "h0_m": -2250.2522595205983,
+     "in_light": 0.4636180756587017,
+     "avg_illum": 0.4476043103138217,
+     "longest_dark_d": 18.5,
+     "earth_visible": 0.1790822334527256,
+     "horizon_median_dist_m": 1590.0
+    },
+    "2000": {
+     "h0_m": -2250.4850823928005,
+     "in_light": 0.45674893282959617,
+     "avg_illum": 0.44015652425940555,
+     "longest_dark_d": 18.666666666666668,
+     "earth_visible": 0.17877557529071195,
+     "horizon_median_dist_m": 840.0
+    },
+    "5000": {
+     "h0_m": -2250.4850823928005,
+     "in_light": 0.45674893282959617,
+     "avg_illum": 0.44015652425940555,
+     "longest_dark_d": 18.666666666666668,
+     "earth_visible": 0.17877557529071195,
+     "horizon_median_dist_m": 840.0
+    },
+    "10000": {
+     "h0_m": -2250.4850823928005,
+     "in_light": 0.45674893282959617,
+     "avg_illum": 0.44015652425940555,
+     "longest_dark_d": 18.666666666666668,
+     "earth_visible": 0.17817452529316521,
+     "horizon_median_dist_m": 840.0
+    },
+    "20000": {
+     "h0_m": -2250.4850823928005,
+     "in_light": 0.45674893282959617,
+     "avg_illum": 0.44015652425940555,
+     "longest_dark_d": 18.666666666666668,
+     "earth_visible": 0.17817452529316521,
+     "horizon_median_dist_m": 840.0
+    },
+    "40000": {
+     "h0_m": -2250.4850823928005,
+     "in_light": 0.45674893282959617,
+     "avg_illum": 0.44015652425940555,
+     "longest_dark_d": 18.666666666666668,
+     "earth_visible": 0.17817452529316521,
+     "horizon_median_dist_m": 840.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 50.0,
+      "p90_min": 124.00000000000003,
+      "max_min": 155.0,
+      "within_60min": 0.6666666666666666
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 245.0,
+      "p90_min": 317.0,
+      "max_min": 390.0,
+      "within_60min": 0.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 95.0,
+      "p90_min": 279.0,
+      "max_min": 390.0,
+      "within_60min": 0.32
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0361905515336054,
+    "max_abs": 0.4969252291113512
+   },
+   "obs10m_on_80m": {
+    "h0_m": -2250.2522595205983,
+    "in_light": 0.4829927383347235,
+    "avg_illum": 0.46875786721125273,
+    "longest_dark_d": 17.666666666666668,
+    "earth_visible": 0.18779745841715323,
+    "horizon_median_dist_m": 7880.0
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 12,
+     "n_b": 12,
+     "median_min": 550.0,
+     "p90_min": 830.0000000000001,
+     "max_min": 905.0,
+     "within_60min": 0.0
+    },
+    "sunset": {
+     "n_a": 13,
+     "n_b": 13,
+     "median_min": 235.0,
+     "p90_min": 504.0,
+     "max_min": 610.0,
+     "within_60min": 0.3076923076923077
+    },
+    "all": {
+     "n": 25,
+     "median_min": 465.0,
+     "p90_min": 590.0000000000001,
+     "max_min": 905.0,
+     "within_60min": 0.16
+    }
+   },
+   "d20": {
+    "in_light": -0.006869142829105557,
+    "avg_illum": -0.00744778605441615,
+    "longest_dark_d": 0.16666666666666785,
+    "earth_visible": -0.000907708159560372,
+    "h0_m": -0.23282287220217768
+   },
+   "d10m": {
+    "in_light": 0.01937466267602178,
+    "avg_illum": 0.021153556897431036,
+    "longest_dark_d": -0.8333333333333321,
+    "earth_visible": 0.008715224964427642
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.4408701732005299,
+     0.4657708159560375,
+     0.4790981796771503
+    ],
+    "in_light_20_min_med_max": [
+     0.4098608998577106,
+     0.4587544772091654,
+     0.47955203375693045
+    ],
+    "pointwise_abs_d_in_light_median": 0.006206761199156086,
+    "pointwise_abs_d_in_light_p90": 0.018843530739414215,
+    "pointwise_abs_d_in_light_max": 0.06040552475344685,
+    "mean_in_light_20_minus_80": -0.00893151284359478,
+    "best_in_light_20_minus_80": 0.00045385407978015824,
+    "pointwise_abs_d_longest_dark_d_median": 0.16666666666666785,
+    "shortest_longest_dark_d_80": 17.875,
+    "shortest_longest_dark_d_20": 17.916666666666668
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": 0.0007666454050341276,
+     "d_longest_dark_d": -0.0833333333333357
+    },
+    "0.1": {
+     "d_in_light": 0.000134929591286026,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Plain 86.6S 281.3E",
+   "lat": -86.638,
+   "lon": 281.31,
+   "kind": "plain",
+   "slope_deg_800m": 0.49734641985435696,
+   "km_from_pole": 101.97636540867065,
+   "by_radius": {
+    "0": {
+     "h0_m": -2373.329324093984,
+     "in_light": 0.2899575585103773,
+     "avg_illum": 0.26970373100009687,
+     "longest_dark_d": 24.75,
+     "earth_visible": 0.34588587409842503,
+     "horizon_median_dist_m": 8630.0
+    },
+    "2000": {
+     "h0_m": -2372.5542478940492,
+     "in_light": 0.29021515136646875,
+     "avg_illum": 0.26998347378322163,
+     "longest_dark_d": 24.75,
+     "earth_visible": 0.34603307001619155,
+     "horizon_median_dist_m": 6750.0
+    },
+    "5000": {
+     "h0_m": -2372.5542478940492,
+     "in_light": 0.2901844855502674,
+     "avg_illum": 0.26993936361236986,
+     "longest_dark_d": 24.75,
+     "earth_visible": 0.34559148226289194,
+     "horizon_median_dist_m": 6710.0
+    },
+    "10000": {
+     "h0_m": -2372.5542478940492,
+     "in_light": 0.29004342279574113,
+     "avg_illum": 0.26977897009130514,
+     "longest_dark_d": 24.75,
+     "earth_visible": 0.34559148226289194,
+     "horizon_median_dist_m": 6730.0
+    },
+    "20000": {
+     "h0_m": -2372.5542478940492,
+     "in_light": 0.2899820911633384,
+     "avg_illum": 0.2697183114661113,
+     "longest_dark_d": 24.75,
+     "earth_visible": 0.34559148226289194,
+     "horizon_median_dist_m": 6730.0
+    },
+    "40000": {
+     "h0_m": -2372.5542478940492,
+     "in_light": 0.2899759580000981,
+     "avg_illum": 0.26970714667313395,
+     "longest_dark_d": 24.75,
+     "earth_visible": 0.34559148226289194,
+     "horizon_median_dist_m": 6740.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 2.5,
+      "p90_min": 10.0,
+      "max_min": 20.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 23,
+      "n_b": 23,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 40.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 47,
+      "median_min": 0.0,
+      "p90_min": 10.0,
+      "max_min": 40.0,
+      "within_60min": 1.0
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 25,
+      "n_b": 24,
+      "median_min": 0.0,
+      "p90_min": 18.000000000000007,
+      "max_min": 110.0,
+      "within_60min": 0.96
+     },
+     "sunset": {
+      "n_a": 24,
+      "n_b": 23,
+      "median_min": 0.0,
+      "p90_min": 18.499999999999996,
+      "max_min": 630.0,
+      "within_60min": 0.9583333333333334
+     },
+     "all": {
+      "n": 49,
+      "median_min": 0.0,
+      "p90_min": 20.0,
+      "max_min": 630.0,
+      "within_60min": 0.9591836734693877
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 20.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 23,
+      "n_b": 23,
+      "median_min": 0.0,
+      "p90_min": 9.000000000000004,
+      "max_min": 50.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 47,
+      "median_min": 0.0,
+      "p90_min": 6.999999999999993,
+      "max_min": 50.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 15.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 23,
+      "n_b": 23,
+      "median_min": 0.0,
+      "p90_min": 4.0000000000000036,
+      "max_min": 10.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 47,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 15.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 24,
+      "n_b": 24,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 23,
+      "n_b": 23,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 47,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.001932476672711958,
+    "max_abs": 0.10310593052308675
+   },
+   "obs10m_on_80m": {
+    "h0_m": -2373.329324093984,
+    "in_light": 0.2953056768558952,
+    "avg_illum": 0.27505869947334893,
+    "longest_dark_d": 24.75,
+    "earth_visible": 0.3573855551739365,
+    "horizon_median_dist_m": 11341.39447983439
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 24,
+     "n_b": 22,
+     "median_min": 67.5,
+     "p90_min": 293.5,
+     "max_min": 2390.0,
+     "within_60min": 0.5
+    },
+    "sunset": {
+     "n_a": 23,
+     "n_b": 21,
+     "median_min": 10.0,
+     "p90_min": 133.00000000000006,
+     "max_min": 11935.0,
+     "within_60min": 0.8260869565217391
+    },
+    "all": {
+     "n": 47,
+     "median_min": 20.0,
+     "p90_min": 292.0,
+     "max_min": 11935.0,
+     "within_60min": 0.6595744680851063
+    }
+   },
+   "d20": {
+    "in_light": 1.8399489720821727e-05,
+    "avg_illum": 3.415673037077127e-06,
+    "longest_dark_d": 0.0,
+    "earth_visible": -0.0002943918355330921,
+    "h0_m": 0.7750761999345741
+   },
+   "d10m": {
+    "in_light": 0.005348118345517905,
+    "avg_illum": 0.005354968473252064,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.01149968107551147
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.25604729895490896,
+     0.28882292331092685,
+     0.29328173298660515
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.2880072125999706,
+     0.294851822776115
+    ],
+    "pointwise_abs_d_in_light_median": 0.00039865561061769306,
+    "pointwise_abs_d_in_light_p90": 0.00414479171777637,
+    "pointwise_abs_d_in_light_max": 0.25604729895490896,
+    "mean_in_light_20_minus_80": -0.013645537210026593,
+    "best_in_light_20_minus_80": 0.0015700897895098431,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 24.708333333333332,
+    "shortest_longest_dark_d_20": 24.708333333333332
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -3.0665816201314033e-05,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": -2.4532652961040124e-05,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Mons Mouton (IAU centre), 7 deg slope",
+   "lat": -84.6,
+   "lon": 31.0,
+   "kind": "slope",
+   "slope_deg_800m": 7.374865965706872,
+   "km_from_pole": 163.86740823866938,
+   "by_radius": {
+    "0": {
+     "h0_m": 5040.294700156084,
+     "in_light": 0.3302524409989696,
+     "avg_illum": 0.29990730051442827,
+     "longest_dark_d": 22.958333333333332,
+     "earth_visible": 0.6186889750257593,
+     "horizon_median_dist_m": 3460.0
+    },
+    "2000": {
+     "h0_m": 5041.03493645039,
+     "in_light": 0.331767332319317,
+     "avg_illum": 0.30128617951306963,
+     "longest_dark_d": 22.958333333333332,
+     "earth_visible": 0.6190446984936951,
+     "horizon_median_dist_m": 3440.0
+    },
+    "5000": {
+     "h0_m": 5041.03493645039,
+     "in_light": 0.331092684362887,
+     "avg_illum": 0.3006802685176979,
+     "longest_dark_d": 23.0,
+     "earth_visible": 0.6188607035964869,
+     "horizon_median_dist_m": 3440.0
+    },
+    "10000": {
+     "h0_m": 5041.03493645039,
+     "in_light": 0.330890289975958,
+     "avg_illum": 0.3004581442895894,
+     "longest_dark_d": 23.0,
+     "earth_visible": 0.6187196408419606,
+     "horizon_median_dist_m": 3440.0
+    },
+    "20000": {
+     "h0_m": 5041.03493645039,
+     "in_light": 0.33087189048623716,
+     "avg_illum": 0.300451499394486,
+     "longest_dark_d": 23.0,
+     "earth_visible": 0.6187196408419606,
+     "horizon_median_dist_m": 3440.0
+    },
+    "40000": {
+     "h0_m": 5041.034936450391,
+     "in_light": 0.33087189048623716,
+     "avg_illum": 0.300451499394493,
+     "longest_dark_d": 23.0,
+     "earth_visible": 0.6187196408419606,
+     "horizon_median_dist_m": 3440.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 17,
+      "n_b": 17,
+      "median_min": 20.0,
+      "p90_min": 50.0,
+      "max_min": 105.0,
+      "within_60min": 0.9411764705882353
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 18.000000000000007,
+      "max_min": 35.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 35,
+      "median_min": 10.0,
+      "p90_min": 48.00000000000001,
+      "max_min": 105.0,
+      "within_60min": 0.9714285714285714
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 17,
+      "n_b": 17,
+      "median_min": 0.0,
+      "p90_min": 25.000000000000007,
+      "max_min": 110.0,
+      "within_60min": 0.9411764705882353
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 10.0,
+      "p90_min": 38.00000000000001,
+      "max_min": 60.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 35,
+      "median_min": 5.0,
+      "p90_min": 38.00000000000001,
+      "max_min": 110.0,
+      "within_60min": 0.9714285714285714
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 17,
+      "n_b": 17,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 15.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 35,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 15.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 17,
+      "n_b": 17,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 35,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 17,
+      "n_b": 17,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 18,
+      "n_b": 18,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 35,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.006457574541314681,
+    "max_abs": 0.8419817755192431
+   },
+   "obs10m_on_80m": {
+    "h0_m": 5040.294700156084,
+    "in_light": 0.34928364653353616,
+    "avg_illum": 0.3193699407389813,
+    "longest_dark_d": 22.416666666666668,
+    "earth_visible": 0.6233624454148472,
+    "horizon_median_dist_m": 3520.0
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 17,
+     "n_b": 16,
+     "median_min": 495.0,
+     "p90_min": 869.0,
+     "max_min": 4370.0,
+     "within_60min": 0.0
+    },
+    "sunset": {
+     "n_a": 18,
+     "n_b": 17,
+     "median_min": 117.5,
+     "p90_min": 382.00000000000006,
+     "max_min": 3840.0,
+     "within_60min": 0.4444444444444444
+    },
+    "all": {
+     "n": 35,
+     "median_min": 285.0,
+     "p90_min": 757.0000000000003,
+     "max_min": 4370.0,
+     "within_60min": 0.22857142857142856
+    }
+   },
+   "d20": {
+    "in_light": 0.0006194494872675538,
+    "avg_illum": 0.000544198880064739,
+    "longest_dark_d": 0.04166666666666785,
+    "earth_visible": 3.0665816201369545e-05,
+    "h0_m": 0.7402362943066692
+   },
+   "d10m": {
+    "in_light": 0.019031205534566553,
+    "avg_illum": 0.01946264022455302,
+    "longest_dark_d": -0.5416666666666643,
+    "earth_visible": 0.0046734703890879414
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.27431799224768166,
+     0.31694347676757767,
+     0.3543005740640793
+    ],
+    "in_light_20_min_med_max": [
+     0.0,
+     0.30688508905353024,
+     0.3559503949757127
+    ],
+    "pointwise_abs_d_in_light_median": 0.0017172857072763614,
+    "pointwise_abs_d_in_light_p90": 0.07063809430351803,
+    "pointwise_abs_d_in_light_max": 0.3075720033364408,
+    "mean_in_light_20_minus_80": -0.017645486142055133,
+    "best_in_light_20_minus_80": 0.001649820911633404,
+    "pointwise_abs_d_longest_dark_d_median": 0.04166666666666785,
+    "shortest_longest_dark_d_80": 22.166666666666668,
+    "shortest_longest_dark_d_20": 22.166666666666668
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -9.813061184438254e-05,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 6.746479564295749e-05,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Slope 88.5S 160E, 16 deg",
+   "lat": -88.5,
+   "lon": 160.0,
+   "kind": "slope",
+   "slope_deg_800m": 16.277360474962077,
+   "km_from_pole": 45.48762372638483,
+   "by_radius": {
+    "0": {
+     "h0_m": -153.69770937187093,
+     "in_light": 0.08353981649575586,
+     "avg_illum": 0.07297921670499846,
+     "longest_dark_d": 88.45833333333333,
+     "earth_visible": 0.3535155291693244,
+     "horizon_median_dist_m": 4560.0
+    },
+    "2000": {
+     "h0_m": -153.3197236725997,
+     "in_light": 0.08358888180167803,
+     "avg_illum": 0.07301967942350904,
+     "longest_dark_d": 88.45833333333333,
+     "earth_visible": 0.3535645944752466,
+     "horizon_median_dist_m": 4560.0
+    },
+    "5000": {
+     "h0_m": -153.3197236725997,
+     "in_light": 0.08357048231195721,
+     "avg_illum": 0.07301966249482433,
+     "longest_dark_d": 88.45833333333333,
+     "earth_visible": 0.3535645944752466,
+     "horizon_median_dist_m": 4560.0
+    },
+    "10000": {
+     "h0_m": -153.31972367259962,
+     "in_light": 0.08346621853687258,
+     "avg_illum": 0.07295622535563527,
+     "longest_dark_d": 88.45833333333333,
+     "earth_visible": 0.3535645944752466,
+     "horizon_median_dist_m": 4560.0
+    },
+    "20000": {
+     "h0_m": -153.31972367259905,
+     "in_light": 0.08346008537363231,
+     "avg_illum": 0.07295100530649584,
+     "longest_dark_d": 88.45833333333333,
+     "earth_visible": 0.3535645944752466,
+     "horizon_median_dist_m": 4560.0
+    },
+    "40000": {
+     "h0_m": -153.31972367259888,
+     "in_light": 0.08341715323095039,
+     "avg_illum": 0.07290540634391132,
+     "longest_dark_d": 88.45833333333333,
+     "earth_visible": 0.3533989990677592,
+     "horizon_median_dist_m": 4560.0
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 11,
+      "n_b": 11,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 10,
+      "n_b": 10,
+      "median_min": 5.0,
+      "p90_min": 5.9999999999999964,
+      "max_min": 15.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 21,
+      "median_min": 5.0,
+      "p90_min": 5.0,
+      "max_min": 15.0,
+      "within_60min": 1.0
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 11,
+      "n_b": 11,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 10,
+      "n_b": 10,
+      "median_min": 5.0,
+      "p90_min": 15.499999999999998,
+      "max_min": 20.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 21,
+      "median_min": 5.0,
+      "p90_min": 5.0,
+      "max_min": 20.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 11,
+      "n_b": 11,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 10,
+      "n_b": 10,
+      "median_min": 5.0,
+      "p90_min": 15.499999999999998,
+      "max_min": 20.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 21,
+      "median_min": 5.0,
+      "p90_min": 5.0,
+      "max_min": 20.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 11,
+      "n_b": 11,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 10,
+      "n_b": 10,
+      "median_min": 0.0,
+      "p90_min": 0.4999999999999982,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 21,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 11,
+      "n_b": 11,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 10,
+      "n_b": 10,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 21,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0038722514593794166,
+    "max_abs": 0.1801021848636548
+   },
+   "obs10m_on_80m": {
+    "h0_m": -153.69770937187093,
+    "in_light": 0.08471125067464795,
+    "avg_illum": 0.0738613230380741,
+    "longest_dark_d": 88.45833333333333,
+    "earth_visible": 0.3544845689612875,
+    "horizon_median_dist_m": 4850.0
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 11,
+     "n_b": 12,
+     "median_min": 5.0,
+     "p90_min": 10.0,
+     "max_min": 10.0,
+     "within_60min": 1.0
+    },
+    "sunset": {
+     "n_a": 10,
+     "n_b": 11,
+     "median_min": 32.5,
+     "p90_min": 180.99999999999997,
+     "max_min": 235.0,
+     "within_60min": 0.7
+    },
+    "all": {
+     "n": 21,
+     "median_min": 10.0,
+     "p90_min": 140.0,
+     "max_min": 235.0,
+     "within_60min": 0.8571428571428571
+    }
+   },
+   "d20": {
+    "in_light": -0.0001226632648054643,
+    "avg_illum": -7.38103610871399e-05,
+    "longest_dark_d": 0.0,
+    "earth_visible": -0.00011653010156520427,
+    "h0_m": 0.3779856992720454
+   },
+   "d10m": {
+    "in_light": 0.0011714341788920946,
+    "avg_illum": 0.000882106333075644,
+    "longest_dark_d": 0.0,
+    "earth_visible": 0.0009690397919631111
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.0799212501839949,
+     0.08350301751631421,
+     0.09053162258966685
+    ],
+    "in_light_20_min_med_max": [
+     0.07991511702075463,
+     0.08353981649575586,
+     0.09047029095726412
+    ],
+    "pointwise_abs_d_in_light_median": 4.2932142681903485e-05,
+    "pointwise_abs_d_in_light_p90": 0.00015455571365487477,
+    "pointwise_abs_d_in_light_max": 0.00020852755016928515,
+    "mean_in_light_20_minus_80": -1.6271657576241716e-05,
+    "best_in_light_20_minus_80": -6.133163240272521e-05,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 88.20833333333333,
+    "shortest_longest_dark_d_20": 88.20833333333333
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -1.2266326480547818e-05,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "IM-2 Athena",
+   "lat": -84.7906,
+   "lon": 29.1957,
+   "kind": "landing",
+   "slope_deg_800m": 2.2755634165294403,
+   "km_from_pole": 158.07537300397863,
+   "by_radius": {
+    "0": {
+     "h0_m": 5321.501553305141,
+     "in_light": 0.46848167410823804,
+     "avg_illum": 0.4513418629695588,
+     "longest_dark_d": 17.208333333333332,
+     "earth_visible": 0.9318605564005692,
+     "horizon_median_dist_m": 12862.722874721807
+    },
+    "2000": {
+     "h0_m": 5321.905530307848,
+     "in_light": 0.4686104705362838,
+     "avg_illum": 0.4514379692906298,
+     "longest_dark_d": 17.208333333333332,
+     "earth_visible": 0.9322408125214661,
+     "horizon_median_dist_m": 12862.722874721807
+    },
+    "5000": {
+     "h0_m": 5321.905530307848,
+     "in_light": 0.4685859378833227,
+     "avg_illum": 0.4514245963382545,
+     "longest_dark_d": 17.208333333333332,
+     "earth_visible": 0.9322408125214661,
+     "horizon_median_dist_m": 12862.722874721807
+    },
+    "10000": {
+     "h0_m": 5321.905530307848,
+     "in_light": 0.46852460625091996,
+     "avg_illum": 0.45134790592814683,
+     "longest_dark_d": 17.208333333333332,
+     "earth_visible": 0.9318850890535303,
+     "horizon_median_dist_m": 12862.722874721807
+    },
+    "20000": {
+     "h0_m": 5321.905530307848,
+     "in_light": 0.46850007359795887,
+     "avg_illum": 0.4513277960107481,
+     "longest_dark_d": 17.208333333333332,
+     "earth_visible": 0.9311675089544184,
+     "horizon_median_dist_m": 12875.585597596528
+    },
+    "40000": {
+     "h0_m": 5321.905530307848,
+     "in_light": 0.4684878072714783,
+     "avg_illum": 0.45130932976547805,
+     "longest_dark_d": 17.208333333333332,
+     "earth_visible": 0.9311675089544184,
+     "horizon_median_dist_m": 12875.585597596528
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 16,
+      "n_b": 16,
+      "median_min": 12.5,
+      "p90_min": 22.5,
+      "max_min": 30.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 31,
+      "median_min": 0.0,
+      "p90_min": 20.0,
+      "max_min": 30.0,
+      "within_60min": 1.0
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 16,
+      "n_b": 16,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 25.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 31,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 25.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 16,
+      "n_b": 16,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 25.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 31,
+      "median_min": 0.0,
+      "p90_min": 5.0,
+      "max_min": 25.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 2.9999999999999982,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 16,
+      "n_b": 16,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 31,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 15,
+      "n_b": 15,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 16,
+      "n_b": 16,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 31,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0020220738483869294,
+    "max_abs": 0.04094204438445326
+   },
+   "obs10m_on_80m": {
+    "h0_m": 5321.501553305141,
+    "in_light": 0.4779022128452971,
+    "avg_illum": 0.4595823367772988,
+    "longest_dark_d": 16.958333333333332,
+    "earth_visible": 0.9387787645355968,
+    "horizon_median_dist_m": 14143.328742852802
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 15,
+     "n_b": 15,
+     "median_min": 10.0,
+     "p90_min": 56.0,
+     "max_min": 70.0,
+     "within_60min": 0.9333333333333333
+    },
+    "sunset": {
+     "n_a": 16,
+     "n_b": 16,
+     "median_min": 302.5,
+     "p90_min": 565.0,
+     "max_min": 570.0,
+     "within_60min": 0.0625
+    },
+    "all": {
+     "n": 31,
+     "median_min": 65.0,
+     "p90_min": 560.0,
+     "max_min": 570.0,
+     "within_60min": 0.4838709677419355
+    }
+   },
+   "d20": {
+    "in_light": 6.133163240273909e-06,
+    "avg_illum": -3.253320408075355e-05,
+    "longest_dark_d": 0.0,
+    "earth_visible": -0.0006930474461508407,
+    "h0_m": 0.403977002706597
+   },
+   "d10m": {
+    "in_light": 0.009420538737059059,
+    "avg_illum": 0.008240473807740012,
+    "longest_dark_d": -0.25,
+    "earth_visible": 0.006918208135027637
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.40937024679848877,
+     0.46759849860163877,
+     0.471425592463569
+    ],
+    "in_light_20_min_med_max": [
+     0.34851086796526176,
+     0.4667091899317992,
+     0.47351086796526176
+    ],
+    "pointwise_abs_d_in_light_median": 0.0009199744860409198,
+    "pointwise_abs_d_in_light_p90": 0.010046121387566876,
+    "pointwise_abs_d_in_light_max": 0.12059638879348411,
+    "mean_in_light_20_minus_80": -0.004424639194768321,
+    "best_in_light_20_minus_80": 0.0020852755016927405,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 17.083333333333332,
+    "shortest_longest_dark_d_20": 17.041666666666668
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -7.359795888328691e-05,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": -7.973112212356082e-05,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  },
+  {
+   "name": "Griffin-1 target",
+   "lat": -85.28,
+   "lon": 53.27,
+   "kind": "landing",
+   "slope_deg_800m": 7.300355737782793,
+   "km_from_pole": 143.20721148088,
+   "by_radius": {
+    "0": {
+     "h0_m": 915.4728547110744,
+     "in_light": 0.3565575781364997,
+     "avg_illum": 0.34518375502521764,
+     "longest_dark_d": 21.25,
+     "earth_visible": 0.2990469064324616,
+     "horizon_median_dist_m": 37760.24628641307
+    },
+    "2000": {
+     "h0_m": 915.4751912749833,
+     "in_light": 0.3565575781364997,
+     "avg_illum": 0.345183923116741,
+     "longest_dark_d": 21.25,
+     "earth_visible": 0.2990469064324616,
+     "horizon_median_dist_m": 37124.39646072894
+    },
+    "5000": {
+     "h0_m": 915.4751912749833,
+     "in_light": 0.3565575781364997,
+     "avg_illum": 0.345183923116741,
+     "longest_dark_d": 21.25,
+     "earth_visible": 0.2990469064324616,
+     "horizon_median_dist_m": 37124.39646072894
+    },
+    "10000": {
+     "h0_m": 915.4751912749833,
+     "in_light": 0.3565575781364997,
+     "avg_illum": 0.345183923116741,
+     "longest_dark_d": 21.25,
+     "earth_visible": 0.2990469064324616,
+     "horizon_median_dist_m": 37124.39646072894
+    },
+    "20000": {
+     "h0_m": 915.4751912749834,
+     "in_light": 0.35654531181001914,
+     "avg_illum": 0.3451805167525763,
+     "longest_dark_d": 21.25,
+     "earth_visible": 0.2990469064324616,
+     "horizon_median_dist_m": 37124.39646072894
+    },
+    "40000": {
+     "h0_m": 915.4751912749833,
+     "in_light": 0.3565023796673372,
+     "avg_illum": 0.3451458732242084,
+     "longest_dark_d": 21.25,
+     "earth_visible": 0.2989549089838575,
+     "horizon_median_dist_m": 37124.39646072894
+    }
+   },
+   "timing_vs_ref": {
+    "0": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "2000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "5000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "10000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 5.0,
+      "within_60min": 1.0
+     }
+    },
+    "20000": {
+     "sunrise": {
+      "n_a": 12,
+      "n_b": 12,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "sunset": {
+      "n_a": 13,
+      "n_b": 13,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     },
+     "all": {
+      "n": 25,
+      "median_min": 0.0,
+      "p90_min": 0.0,
+      "max_min": 0.0,
+      "within_60min": 1.0
+     }
+    }
+   },
+   "horizon_80_minus_20_deg": {
+    "median_abs": 0.0013125145573044672,
+    "max_abs": 0.6358206126488168
+   },
+   "obs10m_on_80m": {
+    "h0_m": 915.4728547110744,
+    "in_light": 0.3570727638486826,
+    "avg_illum": 0.3457575544859933,
+    "longest_dark_d": 21.208333333333332,
+    "earth_visible": 0.2997951523477749,
+    "horizon_median_dist_m": 38599.329002355735
+   },
+   "timing_10m_vs_2m_on_80m": {
+    "sunrise": {
+     "n_a": 12,
+     "n_b": 13,
+     "median_min": 5.0,
+     "p90_min": 19.5,
+     "max_min": 30.0,
+     "within_60min": 1.0
+    },
+    "sunset": {
+     "n_a": 13,
+     "n_b": 14,
+     "median_min": 10.0,
+     "p90_min": 10.0,
+     "max_min": 10.0,
+     "within_60min": 1.0
+    },
+    "all": {
+     "n": 25,
+     "median_min": 5.0,
+     "p90_min": 13.000000000000007,
+     "max_min": 30.0,
+     "within_60min": 1.0
+    }
+   },
+   "d20": {
+    "in_light": -5.519846916246518e-05,
+    "avg_illum": -3.7881801009220784e-05,
+    "longest_dark_d": 0.0,
+    "earth_visible": -9.199744860410863e-05,
+    "h0_m": 0.002336563908897915
+   },
+   "d10m": {
+    "in_light": 0.0005151857121828973,
+    "avg_illum": 0.0005737994607756813,
+    "longest_dark_d": -0.04166666666666785,
+    "earth_visible": 0.0007482459153132504
+   },
+   "lattice_49": {
+    "in_light_80_min_med_max": [
+     0.35559467150777685,
+     0.3564655806878956,
+     0.35712796231784505
+    ],
+    "in_light_20_min_med_max": [
+     0.3555824051812963,
+     0.3565085128305775,
+     0.3571892939502478
+    ],
+    "pointwise_abs_d_in_light_median": 2.4532652961095636e-05,
+    "pointwise_abs_d_in_light_p90": 7.35979588832425e-05,
+    "pointwise_abs_d_in_light_max": 0.0001410627545262444,
+    "mean_in_light_20_minus_80": 2.1653821236033988e-05,
+    "best_in_light_20_minus_80": 6.133163240273909e-05,
+    "pointwise_abs_d_longest_dark_d_median": 0.0,
+    "shortest_longest_dark_d_80": 21.208333333333332,
+    "shortest_longest_dark_d_20": 21.208333333333332
+   },
+   "rounding_5km_patch": {
+    "0.5": {
+     "d_in_light": -6.133163240273909e-06,
+     "d_longest_dark_d": 0.0
+    },
+    "0.1": {
+     "d_in_light": 0.0,
+     "d_longest_dark_d": 0.0
+    }
+   }
+  }
+ ],
+ "by_kind": {
+  "crest": {
+   "n": 7,
+   "max_abs_d_in_light": 0.6137333791276188,
+   "mean_abs_d_in_light": 0.10238702713311416,
+   "max_abs_d_longest_dark_d": 6764.5,
+   "max_abs_d_earth": 0.42128084981109865,
+   "median_event_shift_min_max_over_sites": 630.0,
+   "max_event_shift_min": 10580.0,
+   "max_abs_d_in_light_10m_observer": 0.2930732054364359,
+   "max_abs_d_longest_dark_d_10m_observer": 26.5,
+   "lattice_pointwise_abs_d_in_light_median_range": [
+    0.0004415877532996104,
+    0.05478141406211667
+   ],
+   "lattice_pointwise_abs_d_in_light_max": 0.664657033511604
+  },
+  "floor": {
+   "n": 4,
+   "max_abs_d_in_light": 0.0,
+   "mean_abs_d_in_light": 0.0,
+   "max_abs_d_longest_dark_d": 0.0,
+   "max_abs_d_earth": 0.000226927039890093,
+   "median_event_shift_min_max_over_sites": null,
+   "max_event_shift_min": null,
+   "max_abs_d_in_light_10m_observer": 0.0,
+   "max_abs_d_longest_dark_d_10m_observer": 0.0,
+   "lattice_pointwise_abs_d_in_light_median_range": [
+    0.0,
+    0.0
+   ],
+   "lattice_pointwise_abs_d_in_light_max": 0.0
+  },
+  "landing": {
+   "n": 2,
+   "max_abs_d_in_light": 5.519846916246518e-05,
+   "mean_abs_d_in_light": 3.0665816201369545e-05,
+   "max_abs_d_longest_dark_d": 0.0,
+   "max_abs_d_earth": 0.0006930474461508407,
+   "median_event_shift_min_max_over_sites": 0.0,
+   "max_event_shift_min": 30.0,
+   "max_abs_d_in_light_10m_observer": 0.009420538737059059,
+   "max_abs_d_longest_dark_d_10m_observer": 0.25,
+   "lattice_pointwise_abs_d_in_light_median_range": [
+    2.4532652961095636e-05,
+    0.0009199744860409198
+   ],
+   "lattice_pointwise_abs_d_in_light_max": 0.12059638879348411
+  },
+  "plain": {
+   "n": 3,
+   "max_abs_d_in_light": 0.006869142829105557,
+   "mean_abs_d_in_light": 0.0028600984577139,
+   "max_abs_d_longest_dark_d": 0.16666666666666785,
+   "max_abs_d_earth": 0.000907708159560372,
+   "median_event_shift_min_max_over_sites": 95.0,
+   "max_event_shift_min": 390.0,
+   "max_abs_d_in_light_10m_observer": 0.01937466267602178,
+   "max_abs_d_longest_dark_d_10m_observer": 0.8333333333333321,
+   "lattice_pointwise_abs_d_in_light_median_range": [
+    0.00039865561061769306,
+    0.006206761199156086
+   ],
+   "lattice_pointwise_abs_d_in_light_max": 0.25604729895490896
+  },
+  "slope": {
+   "n": 2,
+   "max_abs_d_in_light": 0.0006194494872675538,
+   "mean_abs_d_in_light": 0.00037105637603650904,
+   "max_abs_d_longest_dark_d": 0.04166666666666785,
+   "max_abs_d_earth": 0.00011653010156520427,
+   "median_event_shift_min_max_over_sites": 10.0,
+   "max_event_shift_min": 105.0,
+   "max_abs_d_in_light_10m_observer": 0.019031205534566553,
+   "max_abs_d_longest_dark_d_10m_observer": 0.5416666666666643,
+   "lattice_pointwise_abs_d_in_light_median_range": [
+    4.2932142681903485e-05,
+    0.0017172857072763614
+   ],
+   "lattice_pointwise_abs_d_in_light_max": 0.3075720033364408
+  }
+ },
+ "radius_residuals": {
+  "0": {
+   "max_abs_in_light_residual": 0.6137333791276188,
+   "rms_in_light_residual": 0.1457034595499384,
+   "max_abs_longest_dark_residual_d": 6764.5,
+   "n_sites_dark_residual_over_0p25d": 4,
+   "max_abs_earth_residual": 0.42128084981109865,
+   "worst_site_median_event_shift_min": 630.0,
+   "worst_site_p90_event_shift_min": 4620.0,
+   "worst_site_max_event_shift_min": 10580.0,
+   "events_within_60min_all_sites": 0.7890466531440162,
+   "patch_pixels_20m": 0
+  },
+  "2000": {
+   "max_abs_in_light_residual": 0.0008954418330798242,
+   "rms_in_light_residual": 0.0002716421319112351,
+   "max_abs_longest_dark_residual_d": 0.04166666666666785,
+   "n_sites_dark_residual_over_0p25d": 0,
+   "max_abs_earth_residual": 0.001073303567047712,
+   "worst_site_median_event_shift_min": 5.0,
+   "worst_site_p90_event_shift_min": 38.00000000000001,
+   "worst_site_max_event_shift_min": 630.0,
+   "events_within_60min_all_sites": 0.9917184265010351,
+   "patch_pixels_20m": 40000
+  },
+  "5000": {
+   "max_abs_in_light_residual": 0.00025145969285123027,
+   "rms_in_light_residual": 0.00011831866487302003,
+   "max_abs_longest_dark_residual_d": 0.041666666666666075,
+   "n_sites_dark_residual_over_0p25d": 0,
+   "max_abs_earth_residual": 0.001073303567047712,
+   "worst_site_median_event_shift_min": 5.0,
+   "worst_site_p90_event_shift_min": 6.999999999999993,
+   "worst_site_max_event_shift_min": 50.0,
+   "events_within_60min_all_sites": 1.0,
+   "patch_pixels_20m": 250000
+  },
+  "10000": {
+   "max_abs_in_light_residual": 0.00011653010156520427,
+   "rms_in_light_residual": 4.162224840027886e-05,
+   "max_abs_longest_dark_residual_d": 0.0,
+   "n_sites_dark_residual_over_0p25d": 0,
+   "max_abs_earth_residual": 0.0007175800991119363,
+   "worst_site_median_event_shift_min": 0.0,
+   "worst_site_p90_event_shift_min": 5.0,
+   "worst_site_max_event_shift_min": 15.0,
+   "events_within_60min_all_sites": 1.0,
+   "patch_pixels_20m": 1000000
+  },
+  "20000": {
+   "max_abs_in_light_residual": 6.7464795643013e-05,
+   "rms_in_light_residual": 2.1971224486254103e-05,
+   "max_abs_longest_dark_residual_d": 0.0,
+   "n_sites_dark_residual_over_0p25d": 0,
+   "max_abs_earth_residual": 0.00016559540748739554,
+   "worst_site_median_event_shift_min": 0.0,
+   "worst_site_p90_event_shift_min": 5.0,
+   "worst_site_max_event_shift_min": 10.0,
+   "events_within_60min_all_sites": 1.0,
+   "patch_pixels_20m": 4000000
+  }
+ },
+ "rounding_summary": {
+  "0.5": {
+   "max_abs_d_in_light": 0.013762818311172209,
+   "max_abs_d_longest_dark_d": 0.9166666666666661,
+   "worst_site": "Connecting ridge (repo point)"
+  },
+  "0.1": {
+   "max_abs_d_in_light": 0.003011383150974045,
+   "max_abs_d_longest_dark_d": 0.04166666666666696,
+   "worst_site": "Malapert massif"
+  }
+ },
+ "runtime_s": 128.93414902687073
+}

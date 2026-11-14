@@ -8,10 +8,12 @@ Reproduce every number in `docs/VALIDATION.md` (run from the repo root; all dete
 .venv/bin/python pipeline/validation/study_c_glaser.py       # ~4 min C: Glaser et al. 2014 connecting ridge
 .venv/bin/python pipeline/validation/study_d_missions.py     # ~10 s  D: IM-1 / IM-2 sunrise and sunset
 .venv/bin/python pipeline/validation/study_e_sensitivity.py  # ~20 s  E: 80 m GeoTIFF vs web tiles, step sizes
+.venv/bin/python pipeline/validation/study_f_glaser20.py     # ~7 min F: Glaser spots on 20 m terrain; position, definition, step, period
+.venv/bin/python pipeline/validation/study_g_20m_web.py      # ~4 min G: 80 m vs 20 m terrain at 18 polar points; patch radius
 .venv/bin/python -m pytest -p no:cacheprovider pipeline/validation -q   # ~10 s, reads results/*.json
 ```
 
-Needs `data/raw/lola/LDEM_80S_80MPP_ADJ.TIF`, `data/raw/layers/*.TIF`, `data/raw/kernels/` and the web tiles.
+Needs `data/raw/lola/LDEM_80S_80MPP_ADJ.TIF` (F and G also `LDEM_80S_20MPP_ADJ.TIF`, read in windows by `v20.py`), `data/raw/layers/*.TIF`, `data/raw/kernels/` and the web tiles.
 Results go to `results/*.json`; `_cache/` holds SPICE tables (safe to delete). `vlib.py` is the shared code
 (vectorised Sun/Earth directions, solar/Earth disc model, PGDA sampling); it imports
 `pipeline/terrain/horizon.py` and `pipeline/ephem/common.py` unchanged.

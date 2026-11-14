@@ -58,8 +58,10 @@ property search, product-comparison sites, sun-planning tools); see
   points); Earth visibility at r = 0.993. All tested permanently shadowed crater floors come
   out at exactly zero sunlight.
 - For the Shackleton connecting ridge we get 92.29% illumination at 2 m and 95.69% at 10 m;
-  **Gläser et al. (2014)** published 92.27% and 95.65%. Longest darkness matches at 10 m but
-  not at 2 m (9.4 days against their 4.6), which is discussed in `docs/VALIDATION.md`.
+  **Gläser et al. (2014)** published 92.27% and 95.65%. Longest darkness matches at 10 m. At
+  2 m the app's 80 m terrain gives about 9 days against their 4.6; on the 20 m LOLA terrain
+  they used, our method gives 4.67 days. The 80 m grid averages each cell and lowers the
+  crest by about a metre (`docs/VALIDATION.md`, follow-up section).
 - The total lunar eclipse of 14 March 2025 shows up as Earth covering the Sun at the Blue
   Ghost landing site.
 - Full method, tables and disagreements: [`docs/VALIDATION.md`](docs/VALIDATION.md).
@@ -78,6 +80,9 @@ property search, product-comparison sites, sun-planning tools); see
   the horizon can be wrong by a degree or more; rise and set times there are less certain.
 - On ridge crests the result is very sensitive to observer height: a mast a metre taller can
   halve the longest night.
+- The 80 m terrain is a per-cell average, so on crests and crater rims the longest night can be
+  off by days and a single point's sunlight share by several points. Off crests (floors,
+  slopes, plains, the two polar landing points tested) 20 m terrain changes almost nothing.
 - When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
 - The site finder works on cells about 300 m across and NASA's 18.6-year averages, so narrow
   ridge tops are blurred and its figures are a first cut; pin a spot for exact numbers. Inside

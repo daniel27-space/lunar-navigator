@@ -132,3 +132,52 @@ def test_e_web_tiles_close_to_full_resolution():
         assert abs(r["avg2026_hourly"] - r["avg2026_5min"]) < 0.001  # hourly step converged
         if "floor" in r["name"]:
             assert r["avg_tif"] == 0.0 and r["avg_tiles"] == 0.0
+
+
+# ---------------------------------------------------------------- F: 20 m terrain and the 2 m longest darkness
+def test_f_20m_terrain_reproduces_glaser_at_published_coordinates():
+    """On 20 m terrain the four published spots give the published numbers, including longest darkness at 2 m."""
+    f = result("study_f.json")
+    for row in f["a"]["spots"]:
+        if not row["published_height"]:
+            continue
+        pub = f["published"][row["name"]]
+        ours = row["by_radius"]["5000"]
+        assert abs(ours["longest_dark_d"] - pub["longest_dark_d"]) < 0.5      # measured 0.13, 0.05, 0.04, 0.00 d
+        assert abs(ours["longest_light_d"] - pub["longest_light_d"]) < 1.0    # measured <= 0.08 d
+        assert abs(ours["in_light"] - pub["in_light"]) < 0.01                 # measured <= 0.003
+        assert abs(ours["avg_illum"] - pub["avg_illum"]) < 0.01               # measured <= 0.004
+        # 2 km of 20 m data already gives the 40 km answer
+        assert abs(row["by_radius"]["2000"]["longest_dark_d"] - row["by_radius"]["40000"]["longest_dark_d"]) < 0.1
+    two = [r for r in f["a"]["spots"] if r["published_height"] and r["height_m"] == 2.0]
+    assert all(r["by_radius"]["0"]["longest_dark_d"] > 6.0 for r in two)      # 80 m terrain: 8.9 and 8.5 d
+
+
+def test_f_definition_step_and_period_do_not_explain_it():
+    f = result("study_f.json")
+    for row in f["c"]["period"]:                                              # 54 windows of 19 or 20 years
+        lo, hi = row["summary"]["longest_dark_d_range"]
+        assert hi - lo < 0.25
+    for row in f["c"]["time_step"]:                                           # 15 min to 6 h
+        vals = [x for k in ("15 min", "1 h", "2 h", "3 h", "6 h") for x in
+                (row["steps"][k]["longest_dark_d_min"], row["steps"][k]["longest_dark_d_max"])]
+        assert max(vals) - min(vals) < 0.3
+    for row in f["c"]["definition"]:                                          # stricter rules only lengthen darkness
+        assert row["centre"]["longest_dark_d"] >= row["any_part"]["longest_dark_d"]
+        assert row["half_disc"]["longest_dark_d"] >= row["any_part"]["longest_dark_d"]
+
+
+# ---------------------------------------------------------------- G: 20 m vs 80 m for the web app
+def test_g_20m_matters_on_crests_only_and_a_5km_patch_is_enough():
+    g = result("study_g.json")
+    for r in g["rows"]:
+        if r["kind"] == "floor":
+            assert r["by_radius"]["0"]["in_light"] == 0.0 and r["by_radius"]["40000"]["in_light"] == 0.0
+        if r["kind"] in ("landing", "slope", "plain"):
+            assert abs(r["d20"]["in_light"]) < 0.015 and abs(r["d20"]["longest_dark_d"]) < 0.5   # measured max 0.007, 0.17 d
+        # the best spot within 120 m is as sunny on either terrain (measured max difference 0.007)
+        assert abs(r["lattice_49"]["best_in_light_20_minus_80"]) < 0.02
+    assert max(abs(r["d20"]["in_light"]) for r in g["rows"] if r["kind"] == "crest") > 0.05
+    rr = g["radius_residuals"]["5000"]                                        # 5 km of 20 m data vs 40 km
+    assert rr["max_abs_in_light_residual"] < 0.002 and rr["max_abs_longest_dark_residual_d"] < 0.25
+    assert rr["events_within_60min_all_sites"] > 0.98 and rr["worst_site_max_event_shift_min"] <= 120

@@ -155,3 +155,150 @@ web-tile sunset; the rest are grazing events in one horizon only.
 
 Inside 85S the web tile is the same 80 m pixels rounded to 0.5 m; that alone moves crest averages
 by up to 1 point. Points here are tens of metres from those in A (Shackleton rim 0.55 vs 0.81).
+
+## Follow-up: 20 m terrain and the 2 m longest-darkness disagreement
+
+Measured 2026-11-14 with the 20 m LOLA south-pole model (`LDEM_80S_20MPP_ADJ.TIF`, now complete), read
+as a window around the observer with the 80 m model beyond it. Scripts: `study_f_glaser20.py` (7 min)
+and `study_g_20m_web.py` (4 min); results in `results/study_f.json` and `study_g.json`. This section
+replaces three earlier statements: "20 m model was not tested", "longest darkness at 2 m disagrees",
+and "one low obstacle in the 80 m surface joins two dark spells" (right idea, now measured).
+
+### 1. Why our longest darkness at 2 m was twice Gläser's
+
+**It was the 80 m terrain. On 20 m terrain the disagreement is gone.** At the published coordinates,
+19 years hourly from 2024-01-01, "in light" = any part of the Sun's disc visible:
+
+| Spot (observer) | Statistic | Published | Ours, 80 m terrain | Ours, 20 m terrain |
+|---|---|---|---|---|
+| 1 (2 m) | longest darkness | 4.58 d | 8.92 d | 4.71 d |
+| 1 (2 m) | time in light / average illumination | 92 % / 88.1 % | 91.14 % / 86.75 % | 91.73 % / 87.75 % |
+| 1 (2 m) | longest unbroken light | 233.87 d | 231.96 d | 233.79 d |
+| 2 (2 m) | longest darkness | 4.62 d | 8.54 d | 4.67 d |
+| 2 (2 m) | time in light / average illumination | 92.27 % / 87.9 % | 91.82 % / 87.10 % | 92.16 % / 87.87 % |
+| 2 (2 m) | longest unbroken light | 233.87 d | 233.58 d | 233.88 d |
+| 3 (10 m) | longest darkness | 3.08 d | 3.08 d | 3.04 d |
+| 3 (10 m) | time in light / average illumination | 95.6 % / 92.5 % | 95.62 % / 92.52 % | 95.65 % / 92.55 % |
+| 4 (10 m) | longest darkness | 3.17 d | 3.12 d | 3.17 d |
+| 4 (10 m) | time in light / average illumination | 95.65 % / 91.9 % | 95.68 % / 91.68 % | 95.68 % / 91.80 % |
+| 3, 4 (10 m) | longest unbroken light | 262.42 d | 262.29 d | 262.38 d |
+
+What is left at 2 m: 0.05 d (about one hourly step) at spot 2 and 0.13 d at spot 1; time in light is
+0.11 and 0.27 points below the published figures. That is the residual; it is not explained further.
+
+**The mechanism.** The 80 m model is the mean height of each 80 m cell, which shaves the top off a
+narrow crest. Under spot 2 the 20 m ground is 1.12 m higher than the 80 m ground. The record dark
+spell on 80 m terrain runs 9 to 18 March 2030 (8.54 days). During it the top of the Sun passes 0.01
+to 0.14 degrees *below* a horizon made by ground 140 to 420 m away. On 20 m terrain the same top
+edge is 0.01 to 0.17 degrees *above* the horizon for 26 hours, which cuts the spell into 2.83 and
+4.62 days. Raising the observer on 80 m terrain by those 1.12 m and changing nothing else gives
+4.42 days; so the cause is the observer's own ground height, not distant terrain. This also explains
+why 10 m always agreed: at 10 m one metre of ground no longer matters.
+
+**What was tested, and what each factor does** (spot 2 at 2 m unless stated):
+
+| Factor | Result | Closes the gap? |
+|---|---|---|
+| 20 m terrain near the observer | 8.54 d becomes 4.67 d. Same answer with 20 m data out to 2, 5, 10 or 40 km and with 0.25 degree azimuth steps; a 100 km window with ray steps half as long changes the four spots by at most 0.04 d | **Yes** |
+| Exact position, 80 m terrain | 20 m lattice within 200 m of the spots (333 points): shortest value 6.0 d. Within 30 m: 8.4 to 12.2 d. No point reproduces 4.62 | No |
+| Exact position, 20 m terrain | Within 10 m of spot 2 (5 m lattice, 13 points): 4.67 to 4.75 d, in light 91.8 to 92.2 %. Within 30 m: 4.5 to 11.8 d (median 4.9). Within 30 m of spot 1: 4.5 to 21.2 d (median 6.1) | Position matters a great deal, but the published coordinates already match |
+| Meaning of "dark" | Any part of the disc hidden / upper limb against the nearest stored azimuth: 4.67 d both. At least a tenth of the disc: 4.83 d. Half the disc or the centre: 9.62 d (20 m terrain) | No. Stricter rules only lengthen darkness, on either terrain |
+| Time step | 15 min: 4.66 d; 1, 2, 3, 6 h: 4.62 to 4.75 d (80 m terrain: 8.50 to 8.75 d) | No |
+| Period | All 54 windows of 19 or 20 years starting 1 January 2005 to 2031: 4.67 d every time (80 m: 8.54 to 8.58 d). Single years: 4.50 to 4.67 d | No. Any window of 19 years contains the worst case |
+| Height measured from a smoothed surface | Averaging the ground over 30 / 60 / 100 m lowers the observer by 0.4 / 1.1 / 2.1 m (20 m terrain) and gives 4.79 / 11.7 / 83 d | No. It makes it worse |
+
+**Is there a point within their positional precision that reproduces all their numbers?** Yes, on
+20 m terrain: the published coordinates themselves (table above). Their coordinates are given to
+0.0001 degrees (3 m in latitude) on a 20 m grid. Within 10 m of spot 2, 3 of 13 lattice points match
+both the 2 m time in light (within 0.2 points) and the longest darkness (within 0.25 d); within 10 m
+of spots 3 and 4, all 26 match the 10 m figures. On 80 m terrain no point within 30 m of either 2 m
+spot matches. The 2 m and 10 m numbers belong to different spots about 400 m apart, so no single point is
+expected to give all four.
+
+**What the paper states, and what was not verified.** The EPSC abstract (EPSC2014-136, read in full)
+says: 20 m DTM, horizon every 0.5 degrees of azimuth, Sun treated as a disc, 1 hour steps, 19 years
+(20 in the figure captions), no start date; it also lists longest light per spot, used above. The
+Icarus paper itself is behind a paywall and was not read, so its exact period and darkness rule are
+not known; the tests above show neither would change the answer. Their DTM was their own
+co-registration of LOLA tracks (Gläser et al. 2013), not the file used here; the close match suggests
+the two agree on this crest to well under a metre, but that was not checked directly.
+
+### 2. Is 20 m terrain worth shipping for the south pole?
+
+18 points, observer at 2 m, 18.6 years hourly for the averages, all of 2026 at 5-minute steps for
+sunrise and sunset times. "20 m" = 20 m data within 40 km of the observer, 80 m beyond.
+
+| Point | Type | In light, 80 m | In light, 20 m | Longest darkness, 80 m to 20 m (d) | Earth visible, 80 m to 20 m | Sunrise shift, median / largest (min) | Sunset shift, median / largest (min) |
+|---|---|---|---|---|---|---|---|
+| Shackleton rim | crest | 61.37 % | 0.00 % | 29.2 to never lit | 53.79 to 11.66 % | no events on 20 m | no events on 20 m |
+| Connecting ridge (Gläser spot 2) | crest | 91.73 % | 92.08 % | 8.54 to 4.67 | 58.32 to 58.33 % | 3 / 4365 | 5 / 670 |
+| Connecting ridge (repo point) | crest | 81.13 % | 74.50 % | 9.75 to 12.79 | 51.49 to 49.99 % | 1568 / 4885 | 185 / 8665 |
+| de Gerlache rim | crest | 74.19 % | 71.02 % | 18.79 to 19.12 | 61.53 to 61.53 % | 0 / 8045 | 0 / 10580 |
+| Malapert massif | crest | 69.92 % | 69.96 % | 16.62 to 16.50 | 100 to 100 % | 195 / 5085 | 250 / 2520 |
+| Nobile rim | crest | 46.58 % | 46.48 % | 17.25 to 17.25 | 94.45 to 94.44 % | 20 / 85 | 0 / 5 |
+| Haworth rim crest | crest | 48.73 % | 48.74 % | 13.62 to 13.62 | 17.58 to 17.59 % | 0 / 5 | 0 / 5 |
+| Shackleton, Haworth, Faustini, Cabeus floors | floor | 0 % | 0 % | never lit | change at most 0.02 points | none | none |
+| Plain 87.9S 251.6E | plain | 31.71 % | 31.54 % | 22.50 to 22.62 | 18.38 to 18.31 % | 5 / 95 | 5 / 160 |
+| Plain 85.8S 141.3E | plain | 46.36 % | 45.67 % | 18.50 to 18.67 | 17.91 to 17.82 % | 50 / 155 | 245 / 390 |
+| Plain 86.6S 281.3E | plain | 29.00 % | 29.00 % | 24.75 to 24.75 | 34.59 to 34.56 % | 3 / 20 | 0 / 40 |
+| Mons Mouton (IAU centre), 7 degree slope | slope | 33.03 % | 33.09 % | 22.96 to 23.00 | 61.87 to 61.87 % | 20 / 105 | 0 / 35 |
+| Slope 88.5S 160E, 16 degrees | slope | 8.35 % | 8.34 % | 88.46 to 88.46 | 35.35 to 35.34 % | 0 / 5 | 5 / 15 |
+| IM-2 Athena | landing | 46.85 % | 46.85 % | 17.21 to 17.21 | 93.19 to 93.12 % | 0 / 5 | 13 / 30 |
+| Griffin-1 target | landing | 35.66 % | 35.65 % | 21.25 to 21.25 | 29.90 to 29.90 % | 0 / 5 | 0 / 0 |
+
+Largest shifts of days are grazing events that exist on one terrain only (as in section E).
+
+**Where it matters.**
+
+- **Crater floors: not at all.** **Slopes, plains, the two landing points:** time in light changes by
+  at most 0.7 points, longest darkness by at most 0.17 d, median event time by 0 to 20 minutes (one
+  plain: 50 and 245 minutes, largest 6.5 hours). At IM-2 and Griffin-1 the change is 0.01 points and
+  at most 30 minutes. The 20 m model does not resolve the small crater Athena stopped in.
+- **Crests: a lot, point by point.** At the listed coordinates time in light moves by 0.0 to 6.6
+  points, and at the Shackleton rim coordinate from 61 % to never lit: on 20 m terrain that
+  coordinate falls in a pit about 60 m wide and roughly 10 m deep that the 80 m model averages away.
+  Over a 7 by 7 lattice (40 m spacing) around each crest point the typical change at a given point
+  is 2 to 5.5 points on the five crests near the pole (largest 23 to 66), 0.04 to 0.7 on Nobile and Haworth.
+- **But the best spot is as good on either terrain.** The sunniest lattice point within 120 m differs
+  by at most 0.7 points between 80 m and 20 m on all 18 points. 20 m terrain changes *which* 20 m
+  square is the good one and how long its worst night is (connecting ridge 8.5 to 4.7 d), not how
+  good the crest is.
+- **Small pits appear on 20 m terrain** even on plains: one lattice point near Plain 86.6S goes from
+  25.6 % to never lit, one near IM-2 loses 12 points.
+
+**Compared with other effects.** Raising the observer from 2 m to 10 m on 80 m terrain adds 0.1 to
+29 points on crests (13 to 15 on three of them) and 0.05 to 1.9 points elsewhere, and shortens the
+longest darkness by up to 26 days. So away from crests observer height matters several times more
+than 20 m terrain; on crests the two are the same size, and both come from the same cause: a metre
+of ground under or near the observer. The Question 1 disagreement (3.9 days of longest darkness, with
+time in light changing by only 0.3 points) is a typical crest effect, not an outlier.
+
+**How much 20 m data is needed.** Difference from the 40 km reference, worst of the 18 points:
+
+| 20 m data within | Time in light | Longest darkness | Earth visible | Events within 60 min of reference | Largest event shift | Pixels |
+|---|---|---|---|---|---|---|
+| none (80 m only) | 61 points | never lit vs 29 d | 42 points | 78.9 % | 7.3 days | 0 |
+| 2 km | 0.09 points | 0.04 d | 0.11 points | 99.2 % | 630 min | 200 x 200 |
+| 5 km | 0.03 points | 0.04 d | 0.11 points | 100 % | 50 min | 500 x 500 |
+| 10 km | 0.01 points | 0.00 d | 0.07 points | 100 % | 15 min | 1000 x 1000 |
+| 20 km | 0.01 points | 0.00 d | 0.02 points | 100 % | 10 min | 2000 x 2000 |
+
+Two kilometres already gives the averages; five kilometres also gives every event time within an
+hour. The terrain that sets a crest's horizon is 40 to 500 m away.
+
+**Height rounding matters at 20 m.** Rounding a 5 km 20 m patch to 0.5 m, as the current web tiles
+do, moves time in light by up to 1.4 points and longest darkness by up to 0.9 d (connecting ridge
+repo point). Rounding to 0.1 m: 0.3 points and 0.04 d.
+
+**Recommendation.** Do not ship 20 m data for the whole polar cap (16 times the pixels of the 80 m
+tile for no change on floors, slopes and plains). Ship small 20 m patches, 5 km in radius (about
+500 by 500 pixels, heights to 0.1 m), for crest and rim sites where users look for near-permanent
+light: connecting ridge, Shackleton rim, de Gerlache rim, Malapert. The ray march already steps
+20 m out to 10 km, so the browser does no extra work. Not needed for IM-2 or Griffin-1. Wherever
+the app shows a crest value from 80 m terrain it should say that the value is for an 80 m cell
+average and that longest darkness can be off by days.
+
+**Not verified.** The Icarus paper's full text. Whether the pits in the 20 m model are real craters
+or interpolation artefacts between LOLA tracks (no image check was made). The 20 m windows were not
+run through the web tile encoder or the browser code; only the Python reference was used. The radius
+table uses a square window, so "5 km" means at least 5 km in every direction.
