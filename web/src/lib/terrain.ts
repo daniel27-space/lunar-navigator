@@ -101,3 +101,20 @@ export function terrainTier(t: Terrain, latDeg: number, lonDeg: number): Terrain
   }
   return 'none'
 }
+
+/** Surface slope in degrees at a point, by central differences on the finest tile there. */
+export function slopeAt(t: Terrain, latDeg: number, lonDeg: number): number {
+  const [x, y] = spProject(latDeg, lonDeg, t.radiusM)
+  for (let k = t.levels.length - 1; k >= 0; k--) {
+    const l = t.levels[k]
+    const d = l.pixel
+    const hx = sampleLevel(l, x + d, y) - sampleLevel(l, x - d, y)
+    const hy = sampleLevel(l, x, y + d) - sampleLevel(l, x, y - d)
+    if (Number.isNaN(hx) || Number.isNaN(hy)) continue
+    // Stereographic map distance is stretched by 2 / (1 + sin|lat|) relative to the ground.
+    const scale = 2 / (1 + Math.sin(Math.abs(latDeg) * (Math.PI / 180)))
+    const ground = (2 * d) / scale
+    return Math.atan(Math.hypot(hx, hy) / ground) * (180 / Math.PI)
+  }
+  return NaN
+}

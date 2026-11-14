@@ -1,6 +1,17 @@
 import { create } from 'zustand'
 
-export type LayerMode = 'natural' | 'elevation' | 'slope' | 'sunavg' | 'earthavg' | 'psr'
+export type LayerMode = 'natural' | 'elevation' | 'slope' | 'sunavg' | 'earthavg' | 'psr' | 'filter'
+
+/** Mission constraints for the site filter layer. */
+export interface SiteFilter {
+  maxSlopeDeg: number
+  /** minimum long-term share of time in sunlight, 0..1 */
+  minSunAvg: number
+  /** minimum long-term share of time with Earth in view, 0..1 */
+  minEarthAvg: number
+  /** also require sunlight at the selected time */
+  litNow: boolean
+}
 
 /** Where the camera should go. `seq` changes on every request so repeats still animate. */
 export type ViewGoal =
@@ -23,6 +34,8 @@ interface State {
   /** simulated seconds per real second */
   rate: number
   layer: LayerMode
+  filter: SiteFilter
+  setFilter: (f: Partial<SiteFilter>) => void
   pins: Pin[]
   activePin: number | null
   view: ViewGoal
@@ -44,6 +57,8 @@ export const useStore = create<State>((set) => ({
   playing: false,
   rate: 6 * 3600,
   layer: 'natural',
+  filter: { maxSlopeDeg: 10, minSunAvg: 0.4, minEarthAvg: 0.4, litNow: false },
+  setFilter: (f) => set((s) => ({ filter: { ...s.filter, ...f } })),
   pins: [],
   activePin: null,
   view: { kind: 'pole', seq: 0 },

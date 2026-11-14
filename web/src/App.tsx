@@ -77,6 +77,11 @@ const LAYERS: { label: string; value: LayerMode; legend: string; ramp?: string; 
     legend: 'Blue areas never see the Sun: cold enough for water ice to survive. NASA GSFC LOLA.',
   },
   {
+    label: 'Site filter',
+    value: 'filter',
+    legend: 'Green areas meet every constraint. Slope from LOLA 80 m; long-term sunlight and Earth view from NASA GSFC.',
+  },
+  {
     label: 'Elevation',
     value: 'elevation',
     legend: 'Height relative to the 1737.4 km reference sphere (LOLA).',
@@ -196,6 +201,8 @@ export default function App() {
   const addPin = useStore((s) => s.addPin)
   const activePin = useStore((s) => s.activePin)
   const goTo = useStore((s) => s.goTo)
+  const filter = useStore((s) => s.filter)
+  const setFilter = useStore((s) => s.setFilter)
 
   const sun = useMemo(() => {
     if (!ephem) return { dir: [1, 0, 0] as Vec3, rad: 0.00465 }
@@ -236,7 +243,7 @@ export default function App() {
         <color attach="background" args={['#000']} />
         <Globe sunDir={sun.dir} cutKm={terrain ? terrain.levels[0].xMax / 1000 : 0} dataBase={BASE} onPick={pick} />
         {terrain && (
-          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} dataBase={BASE} onPick={pick} />
+          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} onPick={pick} />
         )}
         <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
         <PinMarkers />
@@ -286,6 +293,26 @@ export default function App() {
             <span>{current.ends![0]}</span>
             <i style={{ background: current.ramp }} />
             <span>{current.ends![1]}</span>
+          </div>
+        )}
+        {layer === 'filter' && (
+          <div className="filter">
+            <label>
+              <span>Slope at most {filter.maxSlopeDeg}°</span>
+              <input type="range" min={2} max={30} step={1} value={filter.maxSlopeDeg} onChange={(e) => setFilter({ maxSlopeDeg: Number(e.target.value) })} />
+            </label>
+            <label>
+              <span>Sunlit at least {Math.round(filter.minSunAvg * 100)}% of the time</span>
+              <input type="range" min={0} max={0.9} step={0.05} value={filter.minSunAvg} onChange={(e) => setFilter({ minSunAvg: Number(e.target.value) })} />
+            </label>
+            <label>
+              <span>Earth in view at least {Math.round(filter.minEarthAvg * 100)}% of the time</span>
+              <input type="range" min={0} max={1} step={0.05} value={filter.minEarthAvg} onChange={(e) => setFilter({ minEarthAvg: Number(e.target.value) })} />
+            </label>
+            <label className="check">
+              <input type="checkbox" checked={filter.litNow} onChange={(e) => setFilter({ litNow: e.target.checked })} />
+              <span>Also in sunlight at the selected time</span>
+            </label>
           </div>
         )}
         <p>{current.legend}</p>

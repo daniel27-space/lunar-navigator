@@ -322,3 +322,25 @@ button.on {
   padding: 6px 8px;
   color-scheme: dark;
 }
+
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #e8eaee;
+}
+.filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.filter label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+}
+.filter input[type='range'] {
+  accent-color: #4fc38a;
+}

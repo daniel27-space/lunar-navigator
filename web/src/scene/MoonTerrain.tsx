@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { latLonOf, spDirection, type Vec3 } from '../lib/geo'
 import { sampleXY, type Level, type Terrain } from '../lib/terrain'
-import type { LayerMode } from '../store'
+import type { LayerMode, SiteFilter } from '../store'
 
 const GRID = 768
 
@@ -88,8 +88,12 @@ uniform float uPix1;
 uniform float uR;     // km
 uniform vec3 uSun;    // unit, body-fixed, towards the Sun
 uniform float uSunRad; // angular radius, radians
-uniform int uMode;    // 0 natural, 1 elevation, 2 slope, 3 avg sunlight, 4 avg Earth, 5 PSR
+uniform int uMode;    // 0 natural, 1 elevation, 2 slope, 3 avg sunlight, 4 avg Earth, 5 PSR, 6 site filter
 uniform sampler2D uOverlay; // 8-bit layer on the L0 grid
+uniform sampler2D uSunAvg;
+uniform sampler2D uEarthAvg;
+uniform vec3 uCrit;    // max slope deg, min average sunlight 0..1, min average Earth view 0..1
+uniform float uLitNow; // 1 = must be sunlit at the selected time
 varying vec2 vXY;
 
 vec2 uvOf(vec2 xy, vec4 ext) {
@@ -195,6 +199,15 @@ void main() {
     float f = clamp(ov * 255.0 / 250.0, 0.0, 1.0);
     vec3 base = uMode == 3 ? sunRamp(f) : earthRamp(f);
     col = ov > 0.99 ? vec3(0.05) : base * relief;
+  } else if (uMode == 6) {
+    // Site filter: green where every enabled constraint is met.
+    float slopeDeg = degrees(acos(clamp(dot(n, up), -1.0, 1.0)));
+    float sa = texture2D(uSunAvg, uv0).r * 255.0 / 250.0;
+    float ea = texture2D(uEarthAvg, uv0).r * 255.0 / 250.0;
+    bool pass = slopeDeg <= uCrit.x && sa >= uCrit.y && ea >= uCrit.z && (uLitNow < 0.5 || lit > 0.5);
+    float relief = 0.35 + 0.65 * (1.0 - exp(-direct * 6.0));
+    float g = mix(0.6, relief, 0.6);
+    col = pass ? vec3(0.16, 0.80, 0.42) * g * 1.3 : vec3(0.20, 0.20, 0.23) * g;
   } else {
     float relief = 0.45 + 0.55 * (1.0 - exp(-direct * 6.0));
     float lightMask = mix(0.55, 1.0, lit);
@@ -206,7 +219,7 @@ void main() {
   gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
 }`
 
-const MODE: Record<LayerMode, number> = { natural: 0, elevation: 1, slope: 2, sunavg: 3, earthavg: 4, psr: 5 }
+const MODE: Record<LayerMode, number> = { natural: 0, elevation: 1, slope: 2, sunavg: 3, earthavg: 4, psr: 5, filter: 6 }
 const OVERLAY_FILE: Partial<Record<LayerMode, string>> = {
   sunavg: 'sun_avg.png',
   earthavg: 'earth_avg.png',
@@ -235,12 +248,13 @@ interface Props {
   /** Sun angular radius in radians */
   sunRad: number
   layer: LayerMode
+  filter: SiteFilter
   /** URL prefix of the data folder */
   dataBase: string
   onPick: (lat: number, lon: number) => void
 }
 
-export function MoonTerrain({ terrain, sunDir, sunRad, layer, dataBase, onPick }: Props) {
+export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, onPick }: Props) {
   const gl = useThree((s) => s.gl)
   const geometry = useMemo(() => buildGeometry(terrain), [terrain])
   const material = useMemo(() => {
@@ -262,6 +276,10 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, dataBase, onPick }
         uSunRad: { value: 0.00465 },
         uMode: { value: 0 },
         uOverlay: { value: blankOverlay },
+        uSunAvg: { value: blankOverlay },
+        uEarthAvg: { value: blankOverlay },
+        uCrit: { value: new THREE.Vector3(10, 0, 0) },
+        uLitNow: { value: 0 },
       },
     })
   }, [terrain, gl])
@@ -281,6 +299,12 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, dataBase, onPick }
   material.uniforms.uMode.value = MODE[layer]
   const file = OVERLAY_FILE[layer]
   material.uniforms.uOverlay.value = file ? overlayTexture(dataBase, file) : blankOverlay
+  if (layer === 'filter') {
+    material.uniforms.uSunAvg.value = overlayTexture(dataBase, 'sun_avg.png')
+    material.uniforms.uEarthAvg.value = overlayTexture(dataBase, 'earth_avg.png')
+    material.uniforms.uCrit.value.set(filter.maxSlopeDeg, filter.minSunAvg, filter.minEarthAvg)
+    material.uniforms.uLitNow.value = filter.litNow ? 1 : 0
+  }
 
   const handleClick = (ev: ThreeEvent<MouseEvent>) => {
     if (ev.delta > 4) return // it was a drag, not a click

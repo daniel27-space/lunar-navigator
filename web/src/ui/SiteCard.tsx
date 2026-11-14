@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { computeHorizon, discVisibleFraction, horizonAt } from '../lib/horizon'
-import { terrainTier, type Terrain } from '../lib/terrain'
+import { slopeAt, terrainTier, type Terrain } from '../lib/terrain'
 import {
   computeSeries,
   DEFAULT_CRITERIA,
@@ -165,6 +165,7 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
   const setActivePin = useStore((s) => s.setActivePin)
   const hM = Number.isNaN(pin.hM) ? 0 : pin.hM
 
+  const slope = useMemo(() => slopeAt(terrain, pin.lat, pin.lon), [terrain, pin.lat, pin.lon])
   const horizon = useMemo(() => computeHorizon(terrain, pin.lat, pin.lon), [terrain, pin.lat, pin.lon])
 
   // The analysis window only moves when the clock leaves it, so playback stays smooth.
@@ -189,7 +190,7 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
       <header>
         <strong>{pin.label}</strong>
         <span className="muted">
-          {fmtLat(pin.lat)} {fmtLon(pin.lon)} · {hM.toFixed(0)} m
+          {fmtLat(pin.lat)} {fmtLon(pin.lon)} · {hM.toFixed(0)} m{Number.isNaN(slope) ? '' : ` · slope ${slope.toFixed(1)}°`}
         </span>
         <button
           onClick={(e) => {
