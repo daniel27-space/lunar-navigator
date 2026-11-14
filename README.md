@@ -65,6 +65,9 @@ property search, product-comparison sites, sun-planning tools); see
 - The total lunar eclipse of 14 March 2025 shows up as Earth covering the Sun at the Blue
   Ghost landing site.
 - Full method, tables and disagreements: [`docs/VALIDATION.md`](docs/VALIDATION.md).
+- With the 20 m ridge patch, the browser code itself gives a longest night of 4.67 days at
+  Gläser's spot 2 (published 4.62), and 9.25 days without it
+  (`web/src/lib/crest.real.test.ts`).
 - Run the checks: `cd web && npm test` and
   `.venv/bin/python -m pytest -p no:cacheprovider pipeline`.
 
@@ -81,7 +84,10 @@ property search, product-comparison sites, sun-planning tools); see
 - On ridge crests the result is very sensitive to observer height: a mast a metre taller can
   halve the longest night.
 - The 80 m terrain is a per-cell average, so on crests and crater rims the longest night can be
-  off by days and a single point's sunlight share by several points. Off crests (floors,
+  off by days and a single point's sunlight share by several points. Four such places (the
+  Shackleton-de Gerlache connecting ridge, Shackleton rim, de Gerlache rim, Malapert massif)
+  have 20 m terrain within 5 km, listed under "Crests and rims" in the site menu; other crests
+  still use 80 m. Off crests (floors,
   slopes, plains, the two polar landing points tested) 20 m terrain changes almost nothing.
 - When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
 - The site finder works on cells about 300 m across and NASA's 18.6-year averages, so narrow
@@ -100,6 +106,7 @@ property search, product-comparison sites, sun-planning tools); see
 | Planetary and lunar ephemeris DE440 (`de440s.bsp`), lunar orientation (`moon_pa_de440_200625.bpc`, `moon_de440_250416.tf`), `naif0012.tls`, `pck00011.tpc` | NASA JPL NAIF generic kernels, https://naif.jpl.nasa.gov/pub/naif/generic_kernels/ |
 | South pole elevation `LDEM_80S_80MPP_ADJ.TIF` (LOLA, 80 m) | NASA GSFC PGDA product 78, https://pgda.gsfc.nasa.gov/products/78 |
 | Average sunlight, average Earth visibility, permanently shadowed regions (`AVGVISIB_75S_120M_201608.TIF`, `AVGVISIB_75S_120M_201608_EARTH.TIF`, `LPSR_75S_120M_201608.TIF`) | NASA GSFC PGDA product 69, https://pgda.gsfc.nasa.gov/products/69 (Mazarico et al. 2011) |
+| 20 m terrain for four crests and rims, `LDEM_80S_20MPP_ADJ.TIF` (LOLA) | NASA GSFC PGDA product 78, https://pgda.gsfc.nasa.gov/products/78 |
 | JPL Horizons, used as the independent check on Sun and Earth angles | https://ssd.jpl.nasa.gov/horizons/ |
 | Whole-Moon colour map (LROC WAC) and whole-Moon elevation `ldem_16.tif` (LOLA, 16 pixels per degree), CGI Moon Kit | NASA's Scientific Visualization Studio, https://svs.gsfc.nasa.gov/4720 |
 | 80 m terrain around mission sites: SLDEM2015 (LOLA + Kaguya, 512 pixels per degree) between 60°S and 60°N; LOLA polar grids `LDEM_60S_60M`, `LDEM_60N_60M` beyond | NASA PDS LOLA node, https://imbrium.mit.edu/DATA/SLDEM2015/ and https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/ (also linked from NASA GSFC PGDA product 54); exact file per site in `web/public/data/patches/patches.json` |

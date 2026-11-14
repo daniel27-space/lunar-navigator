@@ -1,8 +1,9 @@
 // Loads the published data files from disk for tests (the browser fetches the same files).
 import { existsSync, readFileSync } from 'node:fs'
 import { PNG } from 'pngjs'
+import type { Ephem } from './ephem'
 import type { GlobalDem } from './globalDem'
-import { decodeHeights, patchTerrain, POLAR_FRAME, type PatchIndex, type Terrain } from './terrain'
+import { decodeHeights, decodePatch, patchTerrain, POLAR_FRAME, type PatchIndex, type Terrain } from './terrain'
 
 const data = new URL('../../public/data/', import.meta.url)
 
@@ -43,7 +44,9 @@ export function readPatchIndex(): PatchIndex | null {
 export function readPatch(index: PatchIndex, id: string): Terrain {
   const entry = index.patches.find((p) => p.id === id)
   if (!entry) throw new Error(`no patch ${id}`)
-  return patchTerrain(index, entry, heights(new URL(`patches/${entry.file}`, data)).h)
+  const png = PNG.sync.read(readFileSync(new URL(`patches/${entry.file}`, data)))
+  const rgba = new Uint8ClampedArray(png.data.buffer, png.data.byteOffset, png.data.length)
+  return patchTerrain(index, entry, decodePatch(index, entry, rgba))
 }
 
 export interface HorizonVector {
@@ -59,4 +62,21 @@ export interface HorizonVector {
 export function readVectors(path: string): HorizonVector[] | null {
   const file = new URL(path, data)
   return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null
+}
+
+export function readEphem(): Ephem {
+  const meta = JSON.parse(readFileSync(new URL('ephem/ephem.json', data), 'utf8'))
+  const bin = readFileSync(new URL('ephem/ephem.bin', data))
+  return {
+    t0Ms: Date.parse(meta.t0_utc),
+    stepS: meta.step_s,
+    count: meta.count,
+    data: new Float32Array(bin.buffer, bin.byteOffset, bin.byteLength / 4),
+    kernels: meta.kernels,
+  }
+}
+
+export function readJson<T>(path: string): T | null {
+  const file = new URL(path, data)
+  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as T) : null
 }

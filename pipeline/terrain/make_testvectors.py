@@ -9,6 +9,9 @@ Default run (.venv/bin/python pipeline/terrain/make_testvectors.py):
       relative to the tiles-only vectors kept in
       pipeline/patches/horizon_testvectors_tiles_only_before_chain.json
 
+With --patches-only only patch_testvectors.json and the "patch_points" part of the report are
+rewritten (the six polar vectors are left alone).
+
 With --study it instead runs the older comparison of the tiles-only horizon against the
 full-resolution GeoTIFF and writes pipeline/terrain/testvector_report.json (it does not
 touch the vector files).
@@ -48,6 +51,15 @@ PATCH_POINTS = [
     ("10 km east of Apollo 11 site", None, None, "apollo-11"),
     ("Whole-Moon map only 30N 100W", 30.0, -100.0, None),
 ]
+# 20 m crest patches (kind "crest20" in patches.json), appended after PATCH_POINTS: an observer
+# at the centre of each (coordinates read from patches.json), then Glaser spot 2.
+CREST_CENTRES = [
+    ("Connecting ridge 20 m patch centre", "connecting-ridge"),
+    ("Shackleton rim 20 m patch centre", "shackleton-rim"),
+    ("de Gerlache rim 20 m patch centre", "de-gerlache-rim"),
+    ("Malapert massif 20 m patch centre", "malapert-massif"),
+]
+CREST_POINTS = [("Glaser spot 2 on the connecting ridge", -89.4399, 222.8524, "connecting-ridge")]
 PATCH_DIR = hz.DEFAULT_PATCH_DIR
 OLD_VECTORS = hz.REPO / "pipeline" / "patches" / "horizon_testvectors_tiles_only_before_chain.json"
 CHAIN_REPORT = hz.REPO / "pipeline" / "patches" / "testvector_chain_report.json"
@@ -74,9 +86,28 @@ def _vector(name, lat, lon, patch_id=None, with_patch_field=False):
     return v, e, d, lev
 
 
-def main():
+def patch_points():
+    """PATCH_POINTS, then the crest patch centres and CREST_POINTS: (name, lat, lon, patch id)."""
+    pts = []
+    for name, lat, lon, pid in PATCH_POINTS:
+        if lat is None:
+            lat, lon = destination(APOLLO_11[0], APOLLO_11[1], 90.0, 10000.0)
+            lat, lon = round(lat, 6), round(lon, 6)
+        pts.append((name, lat, lon, pid))
+    entries = {p["id"]: p for p in json.loads((PATCH_DIR / "patches.json").read_text())["patches"]}
+    for name, pid in CREST_CENTRES:
+        pts.append((name, entries[pid]["lat"], entries[pid]["lon"], pid))
+    return pts + CREST_POINTS
+
+
+def main(patches_only=False):
     """Vectors from the lookup chain (see module docstring)."""
     level_names = ["patch", "L1", "L0", "whole-Moon map"]
+    out = hz.DEFAULT_TILE_DIR / "horizon_testvectors.json"
+    if patches_only:
+        report = json.loads(CHAIN_REPORT.read_text())
+        _patch_part(report, level_names, out)
+        return
     old = {v["name"]: v for v in json.loads(OLD_VECTORS.read_text())} if OLD_VECTORS.exists() else {}
     vectors, rows = [], []
     for name, lat, lon in POINTS:
@@ -96,14 +127,18 @@ def main():
                 "surface_h_change_m": v["surface_h_m"] - old[name]["surface_h_m"],
             }
         rows.append(row)
-    out = hz.DEFAULT_TILE_DIR / "horizon_testvectors.json"
     out.write_text(json.dumps(vectors, separators=(",", ":")) + "\n")
+    report = {"scheme": {"ds_min_m": hz.DS_MIN_M, "growth": hz.GROWTH, "max_range_m": hz.MAX_RANGE_M,
+                         "samples_per_ray": int(len(hz.step_schedule())), "az_step_deg": AZ_STEP,
+                         "observer_height_m": OBS_H, "elev_decimals": DECIMALS},
+              "polar_points_chain_without_patch": rows}
+    _patch_part(report, level_names, out)
 
+
+def _patch_part(report, level_names, out):
+    """Write patch_testvectors.json and the patch part of the chain report."""
     pvectors, prows = [], []
-    for name, lat, lon, pid in PATCH_POINTS:
-        if lat is None:
-            lat, lon = destination(APOLLO_11[0], APOLLO_11[1], 90.0, 10000.0)
-            lat, lon = round(lat, 6), round(lon, 6)
+    for name, lat, lon, pid in patch_points():
         v, e, d, lev = _vector(name, lat, lon, pid, with_patch_field=True)
         pvectors.append(v)
         _, lev0 = hz.height_chain(lat, lon, hz.load_patch(pid) if pid else None, return_level=True)
@@ -114,11 +149,8 @@ def main():
     pout = PATCH_DIR / "patch_testvectors.json"
     pout.write_text(json.dumps(pvectors, separators=(",", ":")) + "\n")
 
-    report = {"scheme": {"ds_min_m": hz.DS_MIN_M, "growth": hz.GROWTH, "max_range_m": hz.MAX_RANGE_M,
-                         "samples_per_ray": int(len(hz.step_schedule())), "az_step_deg": AZ_STEP,
-                         "observer_height_m": OBS_H, "elev_decimals": DECIMALS},
-              "polar_points_chain_without_patch": rows, "patch_points": prows,
-              "bytes": {out.name: out.stat().st_size, pout.name: pout.stat().st_size}}
+    report["patch_points"] = prows
+    report["bytes"] = {out.name: out.stat().st_size, pout.name: pout.stat().st_size}
     CHAIN_REPORT.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 
@@ -184,4 +216,4 @@ def study():
 
 
 if __name__ == "__main__":
-    study() if "--study" in sys.argv[1:] else main()
+    study() if "--study" in sys.argv[1:] else main(patches_only="--patches-only" in sys.argv[1:])

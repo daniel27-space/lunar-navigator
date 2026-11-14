@@ -1,0 +1,44 @@
+{
+ "point": {
+  "name": "Glaser spot 2 (connecting ridge)",
+  "lat": -89.4399,
+  "lon": 222.8524,
+  "observer_height_m": 2.0
+ },
+ "period": {
+  "start_utc": "2024-01-01T00:00:00Z",
+  "end_utc": "2036-01-01T00:00:00Z",
+  "end_inclusive": false,
+  "step_s": 3600,
+  "samples": 105192
+ },
+ "rule": "in light = any part of the solar disc above the terrain horizon (visible disc fraction > 0); dark otherwise. Each sample stands for one step (1 hour): longest darkness = longest run of consecutive dark samples x 1 h / 24; share in light = lit samples / all samples.",
+ "disc_model": "pipeline/validation/vlib.py site_series: Sun as a disc of radius 695700 km seen from the observer (ground height from the lookup chain + 2 m), cut into 24 vertical strips, each compared with the horizon linearly interpolated between the 0.5 degree azimuths. Sun position: SPICE, Moon-centred MOON_ME, LT+S, then observer-relative.",
+ "earth_eclipses_considered": false,
+ "horizon": {
+  "az_step_deg": 0.5,
+  "function": "pipeline/terrain/horizon.py horizon_chain"
+ },
+ "cases": {
+  "with_patch": {
+   "terrain": "lookup chain with the web-encoded 20 m patch connecting-ridge, then web tiles L1, L0, whole-Moon map",
+   "patch": "connecting-ridge",
+   "surface_h_m": 1958.604,
+   "longest_darkness_days": 4.666667,
+   "longest_darkness_hours": 112,
+   "share_in_light": 0.918634,
+   "lit_samples": 96633,
+   "azimuths_set_by_patch": 445
+  },
+  "without_patch": {
+   "terrain": "lookup chain without a patch: web tiles L1, L0, whole-Moon map",
+   "patch": null,
+   "surface_h_m": 1957.662,
+   "longest_darkness_days": 9.25,
+   "longest_darkness_hours": 222,
+   "share_in_light": 0.913701,
+   "lit_samples": 96114,
+   "azimuths_set_by_patch": 0
+  }
+ }
+}

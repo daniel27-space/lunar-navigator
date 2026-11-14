@@ -360,9 +360,11 @@ def main(only=None):
     patches = choose_patches(missions)
     OUT.mkdir(parents=True, exist_ok=True)
     meta_path = OUT / "patches.json"
-    old = {}
+    old, other_kinds = {}, []
     if meta_path.exists():
         old = {p["id"]: p for p in json.loads(meta_path.read_text())["patches"]}
+        # entries of another kind (20 m crest patches, build_crest_patches.py) are kept as they are
+        other_kinds = [p for p in old.values() if "kind" in p]
     entries, failed = [], []
     for p in patches:
         if only and p["id"] not in only:
@@ -390,7 +392,7 @@ def main(only=None):
               f"{entries[-1]['min_m']} .. {entries[-1]['max_m']} m", flush=True)
     order = {p["id"]: i for i, p in enumerate(patches)}
     entries.sort(key=lambda e: order[e["id"]])
-    meta = {"radius_m": 1737400, "size": SIZE, "pixel_m": int(PIXEL_M), "patches": entries}
+    meta = {"radius_m": 1737400, "size": SIZE, "pixel_m": int(PIXEL_M), "patches": entries + other_kinds}
     meta_path.write_text(json.dumps(meta, indent=1) + "\n")
     total = sum((OUT / e["file"]).stat().st_size for e in entries)
     print(f"{len(entries)} patches, {total} bytes of PNG; {stats['requests']} requests, "

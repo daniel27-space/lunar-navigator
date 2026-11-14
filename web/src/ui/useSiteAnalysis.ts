@@ -25,7 +25,7 @@ export const DAY = 86400000
 export const WINDOW_DAYS = 60
 const STEP_MS = 20 * 60000
 
-export type Tier = 'patch' | 'fine' | 'coarse' | 'global' | 'none'
+export type Tier = 'crest' | 'patch' | 'fine' | 'coarse' | 'global' | 'none'
 
 export interface SiteAnalysis {
   pin: Pin
@@ -76,7 +76,7 @@ export function useSiteAnalysis(
     }
     const s = patch ? slopeAt(patch, lat, lon) : NaN
     const polarTier = terrainTier(terrain, lat, lon)
-    const tier: Tier = patch ? 'patch' : polarTier !== 'none' ? polarTier : global ? 'global' : 'none'
+    const tier: Tier = patch?.kind === 'crest20' ? 'crest' : patch ? 'patch' : polarTier !== 'none' ? polarTier : global ? 'global' : 'none'
     return { hM: Number.isNaN(h) ? 0 : h, horizon, slope: Number.isNaN(s) ? slopeAt(terrain, lat, lon) : s, tier }
   }, [has, lat, lon, source, patch, terrain, global])
 

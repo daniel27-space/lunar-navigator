@@ -88,6 +88,17 @@ height is the first of these that has data:
      then the bilinear grid sample above with x_min = -30720, y_max = +30720,
      pixel = 80 (768 x 768). Outside the pixel-centre box, or any of the four
      pixels nodata: not covered.
+     A patches.json entry may override the grid and the height encoding
+     (20 m crest patches): with S = entry "size" (default: file-level "size"),
+     P = entry "pixel_m" (default: file-level "pixel_m"), x_min = -S*P/2,
+     y_max = +S*P/2, pixel = P (crest patches: S = 512, P = 20, +/-5120 m).
+     Heights: raw = R*256 + G; raw 0 = nodata; otherwise
+         h = raw * height_scale_m + height_offset_m      (defaults 0.5, -10000)
+     evaluated in float64 and then stored as float32 (JS: a Float32Array
+     element, or Math.fround). With the defaults every height is a multiple
+     of 0.5 m and exact; with 0.1 m steps the float32 rounding (up to 6e-5 m
+     at 1 km height) is part of the reference and must be reproduced, because
+     a sample 20 m from the observer turns 1e-4 m into 3e-4 degrees.
   2. south-pole tile L1, then L0 (grid sample above). If q_z >= 0 (northern
      hemisphere or equator) the tiles are not covered and the stereographic x, y
      is not computed, so nothing divides by zero at the north pole.
@@ -502,18 +513,34 @@ class Patch:
         self.frame = np.array([[-so, co, 0.0], [-sl * co, -sl * so, cl], [cl * co, cl * so, sl]])
 
 
+def decode_patch_rgb(rgb, height_scale_m=0.5, height_offset_m=-10000.0) -> np.ndarray:
+    """uint8 (H, W, 3) -> float32 metres per the contract: raw = R*256 + G, raw 0 -> NaN,
+    h = raw * height_scale_m + height_offset_m in float64, then rounded to float32."""
+    raw = rgb[..., 0].astype(np.int64) * 256 + rgb[..., 1]
+    h = (raw.astype(np.float64) * float(height_scale_m) + float(height_offset_m)).astype(np.float32)
+    h[raw == 0] = np.nan
+    return h
+
+
 def load_patch(patch_id, patch_dir=DEFAULT_PATCH_DIR) -> Patch:
-    """The patch `patch_id` from patches.json (id of the patch, not of a mission it serves)."""
+    """The patch `patch_id` from patches.json (id of the patch, not of a mission it serves).
+    Per-entry "size", "pixel_m", "height_scale_m", "height_offset_m" override the file-level
+    size and pixel and the default encoding (0.5, -10000): the 20 m crest patches."""
     key = ("patch", str(patch_dir), patch_id)
     if key not in _cache:
-        from build_tiles import decode_height_png
+        from PIL import Image
 
         patch_dir = Path(patch_dir)
         meta = json.loads((patch_dir / "patches.json").read_text())
         entry = next(p for p in meta["patches"] if p["id"] == patch_id)
-        h = decode_height_png(patch_dir / entry["file"])
-        assert h.shape == (meta["size"], meta["size"])
-        _cache[key] = Patch(h, entry["lat"], entry["lon"], meta["pixel_m"], patch_id)
+        size = entry.get("size", meta["size"])
+        pixel_m = entry.get("pixel_m", meta["pixel_m"])
+        with Image.open(patch_dir / entry["file"]) as im:
+            assert im.mode == "RGB", im.mode
+            h = decode_patch_rgb(np.asarray(im), entry.get("height_scale_m", 0.5),
+                                 entry.get("height_offset_m", -10000.0))
+        assert h.shape == (size, size)
+        _cache[key] = Patch(h, entry["lat"], entry["lon"], pixel_m, patch_id)
     return _cache[key]
 
 

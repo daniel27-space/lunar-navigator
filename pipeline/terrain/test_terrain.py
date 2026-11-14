@@ -434,3 +434,90 @@ def test_chain_whole_moon_sampler_matches_globe_pipeline():
         h, lev = hz.height_chain(lat, lon, grids=(l0, l1, g), return_level=True)
         assert lev == 3
         assert h == pytest.approx(gd.sample(ref, lat, lon), abs=0.02), (lat, lon)
+
+
+# --------------------------------------------------------------------------
+# 20 m crest patches: per-entry size, pixel and height encoding in patches.json
+# --------------------------------------------------------------------------
+def test_decode_patch_rgb_default_is_the_tile_encoding():
+    rng = np.random.default_rng(11)
+    rgb = np.zeros((40, 40, 3), np.uint8)
+    rgb[..., :2] = rng.integers(0, 256, (40, 40, 2))
+    rgb[0, 0] = 0
+    a, b = hz.decode_patch_rgb(rgb), bt.decode_height(rgb)
+    assert a.dtype == np.float32 and np.isnan(a[0, 0])
+    assert np.array_equal(a, b, equal_nan=True)
+
+
+def test_decode_patch_rgb_with_scale_and_offset():
+    rgb = np.zeros((1, 4, 3), np.uint8)
+    rgb[0, 1] = (0, 1, 0)
+    rgb[0, 2] = (4, 210, 0)                                   # raw 1234
+    rgb[0, 3] = (255, 255, 0)
+    h = hz.decode_patch_rgb(rgb, 0.1, 739.0)
+    assert np.isnan(h[0, 0])
+    # float64 arithmetic, then rounded to float32
+    assert h[0, 1] == np.float32(1 * 0.1 + 739.0) and h[0, 2] == np.float32(1234 * 0.1 + 739.0)
+    assert h[0, 3] == np.float32(65535 * 0.1 + 739.0)
+    assert abs(float(h[0, 2]) - 862.4) < 1e-4
+
+
+def _write_patch_dir(tmp_path, entries, arrays):
+    from PIL import Image
+
+    for e, rgb in zip(entries, arrays):
+        Image.fromarray(rgb, "RGB").save(tmp_path / e["file"])
+    (tmp_path / "patches.json").write_text(json.dumps(
+        {"radius_m": 1737400, "size": 768, "pixel_m": 80, "patches": entries}))
+
+
+def test_load_patch_honours_per_entry_overrides(tmp_path):
+    crest = np.zeros((512, 512, 3), np.uint8)
+    crest[..., 0], crest[..., 1] = 39, 16                     # raw 10000 -> 1000 m at 0.1 m, offset 0
+    crest[:128, :, 0], crest[:128, :, 1] = 78, 32             # north quarter: raw 20000 -> 2000 m
+    crest[300, 300] = 0
+    site = np.zeros((768, 768, 3), np.uint8)
+    site[..., 0], site[..., 1] = 78, 32                       # raw 20000 -> 0 m with the defaults
+    _write_patch_dir(tmp_path, [
+        {"id": "c", "lat": -89.0, "lon": 30.0, "file": "c.png", "size": 512, "pixel_m": 20,
+         "height_scale_m": 0.1, "height_offset_m": 0.0},
+        {"id": "s", "lat": 10.0, "lon": 30.0, "file": "s.png"}], [crest, site])
+    c = hz.load_patch("c", tmp_path)
+    assert c.data.shape == (512, 512) and c.pixel_m == 20.0 and c.half_m == 5120.0
+    assert c.data[200, 200] == 1000.0 and c.data[0, 0] == 2000.0 and np.isnan(c.data[300, 300])
+    s = hz.load_patch("s", tmp_path)
+    assert s.data.shape == (768, 768) and s.pixel_m == 80.0 and s.half_m == 30720.0
+    assert np.all(s.data == 0.0)
+    # the chain uses the 20 m grid: covered to +/-5120 m of the centre, tiles beyond
+    grids = _flat_grids(h_tiles=500.0, h_global=-200.0)
+    assert hz.height_chain(-89.0, 30.0, patch=c, grids=grids, return_level=True) == (1000.0, 0)
+    assert hz.height_chain(*destination(-89.0, 30.0, 0.0, 5000.0), patch=c, grids=grids,
+                           return_level=True) == (2000.0, 0)
+    assert hz.height_chain(*destination(-89.0, 30.0, 0.0, 5200.0), patch=c, grids=grids,
+                           return_level=True) == (500.0, 1)
+    assert hz.height_chain(*destination(-89.0, 30.0, 90.0, 5200.0), patch=c, grids=grids,
+                           return_level=True) == (500.0, 1)
+    # mesa edge between rows 127 and 128: full height at the centre of row 127, y = 2570 m
+    elev, dist, h0, lev = hz.horizon_chain(-89.0, 30.0, 2.0, 90.0, patch=c, grids=grids,
+                                           return_details=True)
+    assert h0 == 1000.0 and lev[0] == 0
+    assert elev[0] == pytest.approx(curved_elevation_deg(2000.0, 2570.0, 1002.0), abs=0.2)
+    assert elev[0] > 20.0 and np.all(elev[1:] < 0.0)
+
+
+def test_chain_with_20m_patch_matches_two_level_kernel():
+    # a 20 m patch centred on the pole is an axis-aligned grid in the south polar projection
+    # (E = +Y, N = +X, U = -Z at lon 0), so the chain must reproduce horizon() with that grid
+    # as the fine level: same samples, same numbers
+    rng = np.random.default_rng(4)
+    data = (1000.0 + rng.normal(0, 30.0, (512, 512))).astype(np.float32)
+    patch = hz.Patch(data, -90.0, 0.0, pixel_m=20.0)
+    assert patch.half_m == 5120.0
+    l0, l1, g = _flat_grids(h_tiles=900.0)
+    hi = hz.Grid(data, -5120.0, 5120.0, 20.0)
+    for lat, lon in [(-89.95, 10.0), (-89.9, 200.0), (-89.99, -75.0)]:
+        a = hz.horizon(l1, lat, lon, 2.0, 5.0, hi=hi, max_range_m=100000.0)
+        b, _d, _h0, lev = hz.horizon_chain(lat, lon, 2.0, 5.0, patch=patch, max_range_m=100000.0,
+                                           grids=(l0, l1, g), return_details=True)
+        assert np.allclose(a, b, atol=1e-9)
+        assert (lev == 0).any()

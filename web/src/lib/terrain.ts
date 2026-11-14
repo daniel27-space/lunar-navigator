@@ -32,6 +32,10 @@ export interface Terrain {
   frame: Frame
   /** patch id, absent for the south-pole tiles */
   id?: string
+  /** 'crest20' for a 20 m crest patch */
+  kind?: string
+  /** false when the patch is used for numbers only and not drawn in 3D */
+  render?: boolean
 }
 
 export async function decodePng(url: string): Promise<ImageData> {
@@ -46,12 +50,12 @@ export async function decodePng(url: string): Promise<ImageData> {
   return ctx.getImageData(0, 0, bmp.width, bmp.height)
 }
 
-/** h_m = (R*256 + G) * 0.5 - 10000. Raw value 0 marks no data. */
-export function decodeHeights(rgba: Uint8ClampedArray, n: number): Float32Array {
+/** h_m = (R*256 + G) * scale + offset (0.5 and -10000 unless a patch says otherwise). Raw value 0 marks no data. */
+export function decodeHeights(rgba: Uint8ClampedArray, n: number, scale = 0.5, offset = -10000): Float32Array {
   const h = new Float32Array(n)
   for (let i = 0; i < n; i++) {
     const raw = rgba[i * 4] * 256 + rgba[i * 4 + 1]
-    h[i] = raw === 0 ? NaN : raw * 0.5 - 10000
+    h[i] = raw === 0 ? NaN : raw * scale + offset
   }
   return h
 }
@@ -81,6 +85,16 @@ export interface PatchEntry {
   file: string
   sites: string[]
   source: string
+  /** shown to the user for patches that are not tied to a mission */
+  name?: string
+  /** 'crest20' for a 20 m crest patch */
+  kind?: string
+  render?: boolean
+  /** per-patch overrides of the file-level grid and the default height encoding */
+  size?: number
+  pixel_m?: number
+  height_scale_m?: number
+  height_offset_m?: number
 }
 export interface PatchIndex {
   radiusM: number
@@ -102,33 +116,53 @@ export function patchFrame(latDeg: number, lonDeg: number): Frame {
   return { ax: f.e, ay: f.n, up: f.u }
 }
 
+const sizeOf = (index: PatchIndex, e: PatchEntry) => e.size ?? index.size
+const pixelOf = (index: PatchIndex, e: PatchEntry) => e.pixel_m ?? index.pixelM
+
 export function patchTerrain(index: PatchIndex, entry: PatchEntry, h: Float32Array): Terrain {
-  const half = (index.size * index.pixelM) / 2
+  const size = sizeOf(index, entry)
+  const pixel = pixelOf(index, entry)
+  const half = (size * pixel) / 2
   return {
     radiusM: index.radiusM,
-    levels: [{ size: index.size, xMin: -half, xMax: half, yMin: -half, yMax: half, pixel: index.pixelM, h }],
+    levels: [{ size, xMin: -half, xMax: half, yMin: -half, yMax: half, pixel, h }],
     frame: patchFrame(entry.lat, entry.lon),
     id: entry.id,
+    kind: entry.kind,
+    render: entry.render,
   }
+}
+
+/** Heights of a patch image, using the entry's own encoding if it has one. */
+export function decodePatch(index: PatchIndex, entry: PatchEntry, rgba: Uint8ClampedArray): Float32Array {
+  const size = sizeOf(index, entry)
+  return decodeHeights(rgba, size * size, entry.height_scale_m ?? 0.5, entry.height_offset_m ?? -10000)
 }
 
 export async function loadPatch(base: string, index: PatchIndex, entry: PatchEntry): Promise<Terrain> {
   const img = await decodePng(`${base}patches/${entry.file}`)
-  return patchTerrain(index, entry, decodeHeights(img.data, index.size * index.size))
+  return patchTerrain(index, entry, decodePatch(index, entry, img.data))
 }
 
-/** The patch whose map contains (lat, lon), keeping `marginM` clear of its edge; the nearest centre wins. */
-export function patchCovering(index: PatchIndex, latDeg: number, lonDeg: number, marginM = 2000): PatchEntry | null {
+/**
+ * The patch whose map contains (lat, lon), keeping clear of its edge (2 km, or 30 % of the
+ * half-width for a small patch). The finest patch wins, then the nearest centre.
+ */
+export function patchCovering(index: PatchIndex, latDeg: number, lonDeg: number): PatchEntry | null {
   const d = upVector(latDeg, lonDeg)
-  const half = (index.size * index.pixelM) / 2 - marginM
   let best: PatchEntry | null = null
   let bestC = 0
+  let bestPixel = Infinity
   for (const p of index.patches) {
+    const pixel = pixelOf(index, p)
+    const full = (sizeOf(index, p) * pixel) / 2
+    const half = full - Math.min(2000, full * 0.3)
     const f = patchFrame(p.lat, p.lon)
     const xy = frameProject(f, d[0], d[1], d[2], index.radiusM)
     if (!xy || Math.abs(xy[0]) > half || Math.abs(xy[1]) > half) continue
     const c = d[0] * f.up[0] + d[1] * f.up[1] + d[2] * f.up[2]
-    if (c > bestC) {
+    if (pixel < bestPixel || (pixel === bestPixel && c > bestC)) {
+      bestPixel = pixel
       bestC = c
       best = p
     }

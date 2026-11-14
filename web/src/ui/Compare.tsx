@@ -257,7 +257,7 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             <tr>
               <td>Terrain used</td>
               {sites.map((a) => (
-                <td key={a.pin.id}>{a.tier === 'fine' || a.tier === 'patch' ? '80 m' : a.tier === 'coarse' ? '300 m' : a.tier === 'global' ? '2.7 km' : 'none'}</td>
+                <td key={a.pin.id}>{a.tier === 'crest' ? '20 m' : a.tier === 'fine' || a.tier === 'patch' ? '80 m' : a.tier === 'coarse' ? '300 m' : a.tier === 'global' ? '2.7 km' : 'none'}</td>
               ))}
             </tr>
           </tbody>

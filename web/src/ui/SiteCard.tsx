@@ -11,6 +11,7 @@ const fmtDur = (h: number | null) =>
 const pct = (v: number) => `${Math.round(v * 100)}%`
 
 const TIER_NOTE = {
+  crest: 'Horizon from LOLA 20 m terrain within about 5 km of this point, and 80 m terrain beyond.',
   patch: 'Horizon from 80 m terrain within about 30 km of this site, and the whole-Moon map (2.7 km pixels) beyond.',
   fine: 'Horizon from LOLA 80 m terrain.',
   coarse: 'Horizon from LOLA terrain at about 300 m: rise and set times are less certain here.',

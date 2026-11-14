@@ -116,3 +116,25 @@ of another patch's centre shares that patch.
 **Horizon with this lookup.** Same march as before (same step schedule, 300 km, observer
 height, elevation formula). Because step 3 never fails, a ray no longer stops at the edge of
 the detailed data: it carries on over the whole-Moon map to 300 km.
+
+### 20 m crest patches (same folder, same `patches.json`)
+
+Crests and crater rims near the pole need finer terrain than the 80 m tiles
+(`docs/VALIDATION.md`, follow-up section). These patches use the same site-stereographic
+projection and pixel registration, with per-entry overrides in `patches.json`:
+
+    { "id": "connecting-ridge", "name": "Shackleton-de Gerlache connecting ridge",
+      "kind": "crest20", "render": false,
+      "lat": ..., "lon": ..., "file": "connecting-ridge.png", "sites": [],
+      "size": 512, "pixel_m": 20, "height_scale_m": 0.1, "height_offset_m": -1234.0,
+      "source": "...", "nodata_fraction": 0.0, "min_m": ..., "max_m": ... }
+
+- `size`, `pixel_m`: override the file-level values (512 pixels of 20 m: x and y from -5120 m
+  to +5120 m).
+- Heights: `h_m = (R*256 + G) * height_scale_m + height_offset_m`, B = 0, raw 0 = no data.
+  With 0.1 m steps the range is 6553 m, so each patch carries its own offset (a whole number
+  of metres below its lowest height). Entries without these two fields use 0.5 and -10000.
+- `kind: "crest20"` marks them; `name` is shown to the user; `render: false` means the patch
+  is used for numbers only (the 3D view keeps the 80 m surface there).
+- Lookup order is unchanged: this patch first, then the south-pole tiles L1 and L0, then the
+  whole-Moon map. So a horizon uses 20 m terrain out to about 5 km and 80 m beyond.

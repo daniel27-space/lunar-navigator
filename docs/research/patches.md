@@ -58,3 +58,42 @@ Effect of the whole-Moon fallback on the six polar vectors (old values kept in
 "Near DEM edge 81S" changes on 130 of 720 azimuths, by up to +1.52 degrees (azimuth 31: -2.62
 to -1.10, set by whole-Moon terrain 112 km away). The chain can only raise a horizon relative
 to tiles-only, never lower it.
+
+## 20 m crest patches (2026-11-14)
+
+`pipeline/patches/build_crest_patches.py` adds four 512 x 512 patches of 20 m pixels (kind
+`crest20` in `patches.json`, contract section "20 m crest patches"), resampled bilinearly from
+the local `data/raw/lola/LDEM_80S_20MPP_ADJ.TIF` (PGDA product 78; only a window is read).
+`build_patches.py` keeps these entries when it rewrites `patches.json`.
+
+| id | centre (lat, lon) | PNG bytes | heights (m) | offset (m) | no data |
+|---|---|---|---|---|---|
+| connecting-ridge | -89.44715, -137.151498 (midway between Gläser spots 2 and 4) | 271684 | 740.1 to 1958.9 | 739 | 0 |
+| shackleton-rim | -89.78, -155.7 | 280318 | -1795.3 to 1737.8 | -1797 | 0 |
+| de-gerlache-rim | -88.67, -68.2 | 269992 | -108.6 to 1814.8 | -110 | 0 |
+| malapert-massif | -85.964, -2.319 | 260403 | 2870.3 to 4993.0 | 2869 | 0 |
+
+- Heights are `raw * 0.1 + offset`, the offset one whole metre below the floor of the lowest
+  height (lowest raw value 10 to 20, never 0). The reference decodes in float64 and stores
+  float32 (`horizon.decode_patch_rgb`); the browser must do the same (Float32Array), because
+  1e-4 m at a sample 20 m away is 3e-4 degrees of horizon.
+- Against the source: at pixel centres the patch equals the bilinear source sample to 0.05 m
+  (the rounding). Sampled between pixel centres (a second interpolation, on a grid rotated
+  against the source grid) the difference is 0.05 to 0.06 m median, 0.48 to 0.53 m at the 99th
+  percentile, 2.0 m worst, mean under 0.004 m (20000 random points per patch).
+- Against the 80 m tile L1 (4 x 4 block means): mean difference -0.6 to +0.3 m, RMS 2.5 to
+  3.4 m, correlation above 0.9999; every flip, rotation or one-cell shift fits worse.
+- All four Gläser spots are within 240 m of the connecting-ridge centre (4.9 km to the nearest edge).
+- The named Shackleton rim point (-89.78, 204.3 E) sits in a pit about 100 m wide and 10 m deep
+  in the 20 m data (ground 1729.0 m, 4.4 m below the 80 m tile; the rim around it is 1735 to
+  1738 m). From 2 m the horizon there is +1.8 degrees or more on every azimuth with the patch,
+  down to -1.3 degrees without it. This is the data, not a defect of the patch.
+- `patch_testvectors.json` has five more entries (the four centres and Gläser spot 2); the
+  first six are unchanged. `make_testvectors.py --patches-only` rewrites only that file.
+- `crest_reference.json` (`build_crest_patches.py --reference`): Gläser spot 2 at 2 m, hourly
+  2024-01-01 to 2036-01-01, any part of the disc, no Earth eclipses. With the web-encoded patch:
+  longest darkness 4.667 d (112 h), 91.86 % of the time in light. Web tiles only: 9.25 d
+  (222 h), 91.37 %. The study's figures (`docs/VALIDATION.md`, 19 years, GeoTIFF terrain) are
+  4.67 d on 20 m and 8.54 d on 80 m: the patch reproduces the 20 m result; the tiles-only
+  figure is 0.71 d longer than the 80 m GeoTIFF figure (tiles are rounded to 0.5 m; not
+  investigated further).

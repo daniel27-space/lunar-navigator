@@ -334,8 +334,11 @@ export default function App() {
   const [patches, setPatches] = useState<Record<string, Terrain>>({})
   const patchIdFor = useCallback(
     (lat: number, lon: number) => {
-      if (!patchIndex || !terrain || terrainTier(terrain, lat, lon) === 'fine') return null
-      return patchCovering(patchIndex, lat, lon)?.id ?? null
+      if (!patchIndex || !terrain) return null
+      const entry = patchCovering(patchIndex, lat, lon)
+      // Inside the 80 m south-pole tile only a finer (20 m crest) patch adds anything.
+      if (!entry || (entry.kind !== 'crest20' && terrainTier(terrain, lat, lon) === 'fine')) return null
+      return entry.id
     },
     [patchIndex, terrain],
   )
@@ -363,7 +366,7 @@ export default function App() {
     const ids = new Set<string>()
     for (const p of pins) {
       const id = patchIdFor(p.lat, p.lon)
-      if (id && patches[id]) ids.add(id)
+      if (id && patches[id] && patches[id].render !== false) ids.add(id)
     }
     return [...ids].map((id) => patches[id])
   }, [pins, patchIdFor, patches])
@@ -445,9 +448,14 @@ export default function App() {
           onChange={(e) => {
             const m = missions.find((x) => x.id === e.target.value)
             if (m) selectMission(m)
+            const place = patchIndex?.patches.find((x) => `place:${x.id}` === e.target.value)
+            if (place) {
+              pick(place.lat, place.lon, place.name ?? place.id)
+              goTo({ kind: 'site', lat: place.lat, lon: place.lon, hM: elevation(place.lat, place.lon) })
+            }
           }}
         >
-          <option value="">Go to a mission site…</option>
+          <option value="">Go to a mission site or place…</option>
           {(['landed', 'crashed', 'planned'] as const).map((st) => (
             <optgroup key={st} label={st === 'landed' ? 'Landed' : st === 'crashed' ? 'Lost on landing' : 'Planned (target area)'}>
               {missions
@@ -459,6 +467,17 @@ export default function App() {
                 ))}
             </optgroup>
           ))}
+          {patchIndex?.patches.some((x) => x.kind === 'crest20') && (
+            <optgroup label="Crests and rims (20 m terrain)">
+              {patchIndex.patches
+                .filter((x) => x.kind === 'crest20')
+                .map((x) => (
+                  <option key={x.id} value={`place:${x.id}`}>
+                    {x.name ?? x.id}
+                  </option>
+                ))}
+            </optgroup>
+          )}
         </select>
         <div className="layers" role="group" aria-label="Map layer">
           {LAYERS.map((l) => (

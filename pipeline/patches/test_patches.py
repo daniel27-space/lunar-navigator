@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "terrain"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "globe"))
 import build_patches as bp  # noqa: E402
+import build_crest_patches as bc  # noqa: E402
 import build_tiles as bt  # noqa: E402
 import horizon as hz  # noqa: E402
 
@@ -28,8 +29,21 @@ def _meta():
     return json.loads(META.read_text())
 
 
+def _site_patches():
+    """The 80 m mission-site patches (everything that is not a 20 m crest patch)."""
+    return [p for p in _meta()["patches"] if p.get("kind") != bc.KIND]
+
+
+def _crest_patches():
+    return [p for p in _meta()["patches"] if p.get("kind") == bc.KIND]
+
+
 def _patch_ids():
-    return [p["id"] for p in _meta()["patches"]] if META.exists() else []
+    return [p["id"] for p in _site_patches()] if META.exists() else []
+
+
+def _crest_ids():
+    return [p["id"] for p in _crest_patches()] if META.exists() else []
 
 
 @pytest.fixture(scope="module")
@@ -147,26 +161,29 @@ def test_every_mission_is_covered_once():
     missions = json.loads(bp.MISSIONS.read_text())
     meta = _meta()
     assert meta["radius_m"] == 1737400 and meta["size"] == 768 and meta["pixel_m"] == 80
-    served = [s for p in meta["patches"] for s in p["sites"]]
+    site = _site_patches()                                                # 20 m crest patches serve no mission
+    assert len(site) == 34 and meta["patches"][:34] == site
+    assert all(p["sites"] == [] for p in _crest_patches())
+    served = [s for p in site for s in p["sites"]]
     assert len(served) == len(set(served))
-    by_site = {s: p for p in meta["patches"] for s in p["sites"]}
+    by_site = {s: p for p in site for s in p["sites"]}
     for m in missions:
         if bp.in_l1(m["lat"], m["lon"]):
             assert m["id"] not in by_site
             continue
         p = by_site[m["id"]]
         assert bp.great_circle_km(m["lat"], m["lon"], p["lat"], p["lon"]) <= bp.SHARE_KM
-    centres = [(p["lat"], p["lon"]) for p in meta["patches"]]
+    centres = [(p["lat"], p["lon"]) for p in site]
     for i, a in enumerate(centres):                                       # no redundant patch
         for b in centres[:i]:
             assert bp.great_circle_km(*a, *b) > bp.SHARE_KM
-    for p in meta["patches"]:
+    for p in site:
         assert p["id"] == p["sites"][0] and p["file"] == p["id"] + ".png"
         assert "http" in p["source"]
         assert not bp.in_l1(p["lat"], p["lon"])
-    assert meta["patches"] == [
+    assert site == [
         {**p, **{k: q[k] for k in ("id", "lat", "lon", "sites")}}
-        for p, q in zip(meta["patches"], bp.choose_patches(missions))]
+        for p, q in zip(site, bp.choose_patches(missions))]
 
 
 # --------------------------------------------------------------------------
@@ -401,8 +418,10 @@ def test_multipart_range_parser():
 @pytest.mark.skipif(not (bp.OUT / "patch_testvectors.json").exists(), reason="vectors not built")
 def test_patch_testvectors_reproduce():
     vec = json.loads((bp.OUT / "patch_testvectors.json").read_text())
-    assert [v["patch"] for v in vec] == ["apollo-17", "apollo-15", "im-1-odysseus", "chandrayaan-3",
-                                         "apollo-11", None]
+    assert [v["patch"] for v in vec][:6] == ["apollo-17", "apollo-15", "im-1-odysseus", "chandrayaan-3",
+                                             "apollo-11", None]
+    assert [v["patch"] for v in vec][6:] == ["connecting-ridge", "shackleton-rim", "de-gerlache-rim",
+                                             "malapert-massif", "connecting-ridge"]
     for v in vec:
         assert {"name", "lat", "lon", "observer_height_m", "az_step_deg", "elev_deg", "patch"} <= set(v)
         assert v["observer_height_m"] == 2.0 and v["az_step_deg"] == 0.5 and len(v["elev_deg"]) == 720
@@ -432,3 +451,280 @@ def test_apollo_15_horizon_shows_hadley_delta_to_the_south():
     assert 150 <= k <= 200 and 10.0 < e[k] < 20.0                         # about 3.5 km at about 15 km
     assert lev[k] == 0 and 8e3 < d[k] < 25e3
     assert e[250:300].max() < 3.0                                         # mare to the west
+
+
+# --------------------------------------------------------------------------
+# 20 m crest patches (docs/DATA_CONTRACT.md, "20 m crest patches")
+# --------------------------------------------------------------------------
+needs_tif20 = pytest.mark.skipif(not bc.TIF_20M.exists(), reason="20 m south-pole GeoTIFF not downloaded")
+CREST_IDS = ["connecting-ridge", "shackleton-rim", "de-gerlache-rim", "malapert-massif"]
+
+
+def _crest(pid):
+    entry = next(p for p in _meta()["patches"] if p["id"] == pid)
+    return entry, bc.load_crest_png(bp.OUT / entry["file"], entry["height_offset_m"],
+                                    entry["height_scale_m"]).astype(np.float64)
+
+
+def test_crest_grid_registration():
+    x, y = bc.pixel_centres()
+    assert x.shape == (512, 512)
+    assert x[0, 0] == -5110.0 and y[0, 0] == 5110.0                       # row 0 north, column 0 west
+    assert x[0, -1] == 5110.0 and y[-1, 0] == -5110.0
+    assert bc.pixel_of(-5110.0, 5110.0) == (0.0, 0.0) and bc.pixel_of(0.0, 0.0) == (255.5, 255.5)
+
+
+def test_crest_encoding_roundtrip(tmp_path):
+    # (a) 0.1 m steps with a per-patch whole-metre offset; raw 0 = no data; B = 0
+    rng = np.random.default_rng(8)
+    for lo, hi in [(740.13, 1958.92), (-1795.27, 1737.8), (-4000.0, 2552.0), (10.04, 10.06)]:
+        h = rng.uniform(lo, hi, (64, 64))
+        h[0, 0], h[0, 1], h[3, 5] = lo, hi, np.nan
+        off = bc.choose_offset(h)
+        assert off == math.floor(lo) - 1 and off == int(off)
+        rgb = bc.encode_height(h, off)
+        assert tuple(rgb[3, 5]) == (0, 0, 0) and not rgb[..., 2].any()
+        raw = rgb[..., 0].astype(int) * 256 + rgb[..., 1]
+        assert (raw == 0).sum() == 1 and 10 <= raw[0, 0] <= 20            # lowest height is never raw 0
+        path = tmp_path / "c.png"
+        bt.write_png(path, rgb)
+        dec = bc.load_crest_png(path, off)
+        assert dec.dtype == np.float32
+        assert np.isnan(dec[3, 5]) and np.isnan(dec).sum() == 1
+        ok = ~np.isnan(h)
+        # half a step, plus the float32 storage of the decoded value (6e-5 m at 1 km, 2.5e-4 at 4 km)
+        assert np.max(np.abs(dec[ok] - h[ok])) <= 0.05 + 3e-4
+        assert np.array_equal(dec[ok], (raw[ok] * 0.1 + off).astype(np.float32))
+        assert bc.encode_height(dec.astype(np.float64), off).tobytes() == rgb.tobytes()   # decode -> encode exact
+    # the range of 0.1 m steps is 6553 m: a patch with more relief cannot be encoded
+    with pytest.raises(ValueError):
+        bc.encode_height(np.array([[0.0, 6553.6]]), -1.0)
+    assert bc.encode_height(np.array([[0.0, 6552.5]]), -1.0)[0, 1].tolist() == [255, 255, 0]
+
+
+def test_crest_list_and_glaser_spots():
+    cl = bc.crest_list()
+    assert [c["id"] for c in cl] == CREST_IDS
+    assert [(c["lat"], c["lon"]) for c in cl[1:]] == [(-89.78, -155.7), (-88.67, -68.2), (-85.964, -2.319)]
+    assert all(-180.0 < c["lon"] <= 180.0 for c in cl)
+    # the connecting-ridge centre is midway between Glaser spots 2 and 4
+    s2, s4 = bc.GLASER_SPOTS[1], bc.GLASER_SPOTS[3]
+    assert s2[1:] == (-89.4399, 222.8524) and s4[1:] == (-89.4544, 222.8445)
+    d2 = bp.great_circle_km(cl[0]["lat"], cl[0]["lon"], *s2[1:])
+    d4 = bp.great_circle_km(cl[0]["lat"], cl[0]["lon"], *s4[1:])
+    assert d2 == pytest.approx(d4, abs=1e-3) and d2 + d4 == pytest.approx(
+        bp.great_circle_km(*s2[1:], *s4[1:]), abs=1e-3)
+    # (d) all four spots are inside the patch with at least 1.5 km to its edge
+    fr = bp.frame(cl[0]["lat"], cl[0]["lon"])
+    for _name, lat, lon in bc.GLASER_SPOTS:
+        x, y = bp.site_forward(bp.unit(lat, lon), fr)
+        assert max(abs(float(x)), abs(float(y))) <= bc.HALF_M - 1500.0
+        assert max(abs(float(x)), abs(float(y))) < 1000.0                 # in fact within 1 km of the centre
+
+
+def test_glaser_spots_are_the_ones_of_study_f():
+    pytest.importorskip("spiceypy")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "validation"))
+    import study_f_glaser20 as sf
+
+    assert [(n, la, lo) for n, la, lo, _h in sf.SPOTS] == bc.GLASER_SPOTS
+
+
+@needs_patches
+def test_crest_entries_match_contract():
+    meta = _meta()
+    assert (meta["radius_m"], meta["size"], meta["pixel_m"]) == (1737400, 768, 80)   # file level unchanged
+    crest = _crest_patches()
+    assert [p["id"] for p in crest] == CREST_IDS and meta["patches"][34:] == crest
+    names = ["Shackleton-de Gerlache connecting ridge", "Shackleton rim", "de Gerlache rim", "Malapert massif"]
+    for p, c, name in zip(crest, bc.crest_list(), names):
+        assert list(p) == ["id", "name", "kind", "render", "lat", "lon", "file", "sites", "size", "pixel_m",
+                           "height_scale_m", "height_offset_m", "source", "nodata_fraction", "min_m", "max_m"]
+        assert p["name"] == name and p["kind"] == "crest20" and p["render"] is False and p["sites"] == []
+        assert (p["lat"], p["lon"]) == (c["lat"], c["lon"]) and p["file"] == p["id"] + ".png"
+        assert (p["size"], p["pixel_m"], p["height_scale_m"]) == (512, 20, 0.1)
+        assert p["height_offset_m"] == int(p["height_offset_m"])
+        assert 1.0 <= p["min_m"] - p["height_offset_m"] < 2.0 + 1e-9      # offset: a whole metre below the lowest height
+        assert "LDEM_80S_20MPP_ADJ.TIF" in p["source"] and "http" in p["source"]
+    for p in _site_patches():                                            # the 80 m entries carry no overrides
+        assert not {"kind", "name", "render", "size", "pixel_m", "height_scale_m", "height_offset_m"} & set(p)
+
+
+@needs_patches
+@pytest.mark.parametrize("pid", CREST_IDS)
+def test_crest_file_is_plain_png_matching_meta(pid):
+    from PIL import Image
+
+    entry, h = _crest(pid)
+    path = bp.OUT / entry["file"]
+    chunks, ihdr = bt.png_chunks(path)
+    assert ihdr == {"width": 512, "height": 512, "bit_depth": 8, "color_type": 2, "interlace": 0}
+    assert {c for c, _ in chunks} <= {"IHDR", "IDAT", "IEND"}             # no alpha, no profile
+    rgb = np.asarray(Image.open(path))
+    assert not rgb[..., 2].any()
+    raw = rgb[..., 0].astype(int) * 256 + rgb[..., 1]
+    assert np.array_equal(np.isnan(h), raw == 0)
+    assert entry["nodata_fraction"] == pytest.approx(float((raw == 0).mean()), abs=1e-6)
+    assert entry["nodata_fraction"] == 0.0
+    assert entry["min_m"] == pytest.approx(float(np.nanmin(h)), abs=1e-3)
+    assert entry["max_m"] == pytest.approx(float(np.nanmax(h)), abs=1e-3)
+    assert bc.encode_height(h, entry["height_offset_m"]).tobytes() == rgb.tobytes()
+    # the Python reference loads exactly these heights, on the 20 m grid
+    p = hz.load_patch(pid)
+    assert p.data.shape == (512, 512) and p.pixel_m == 20.0 and p.half_m == 5120.0
+    assert (p.lat0, p.lon0) == (entry["lat"], entry["lon"])
+    assert np.array_equal(p.data, h.astype(np.float32), equal_nan=True)
+
+
+@needs_patches
+@needs_tif20
+@pytest.mark.parametrize("pid", CREST_IDS)
+def test_crest_patch_agrees_with_20m_source(pid):
+    # (b) Independent direction: random points -> lat/lon -> the source file (located with PROJ
+    # from the file's own CRS, read as a window) against the patch sampled through its own
+    # forward projection.
+    import rasterio
+    from rasterio.crs import CRS
+    from rasterio.warp import transform
+    from rasterio.windows import Window
+
+    entry, h = _crest(pid)
+    fr = bp.frame(entry["lat"], entry["lon"])
+    rng = np.random.default_rng(CREST_IDS.index(pid))
+
+    def source_at(lat, lon):
+        with rasterio.open(bc.TIF_20M) as ds:
+            xs, ys = transform(CRS.from_proj4(f"+proj=longlat +R={R} +no_defs"), ds.crs, list(lon), list(lat))
+            xs, ys = np.array(xs), np.array(ys)
+            t = ds.transform
+            c0, r0 = int((xs.min() - t.c) / 20.0) - 2, int((t.f - ys.max()) / 20.0) - 2
+            c1, r1 = int((xs.max() - t.c) / 20.0) + 3, int((t.f - ys.min()) / 20.0) + 3
+            win = ds.read(1, window=Window(c0, r0, c1 - c0, r1 - r0))
+            x_min, y_max = t.c + c0 * 20.0, t.f - r0 * 20.0
+        return bp.bilinear(win, (xs - x_min) / 20.0 - 0.5, (y_max - ys) / 20.0 - 0.5)
+
+    # 1. at 400 random pixel centres the patch IS the bilinear source sample rounded to 0.1 m:
+    #    0.05 m of rounding (+ float32 storage and the PROJ/formula difference, well under 0.01 m)
+    rows, cols = rng.integers(0, 512, 400), rng.integers(0, 512, 400)
+    x, y = bc.pixel_centres()
+    lat, lon = bp.unit_to_latlon(bp.site_inverse(x[rows, cols], y[rows, cols], fr))
+    d = h[rows, cols] - source_at(lat, lon)
+    assert np.all(np.isfinite(d)) and np.max(np.abs(d)) <= 0.06
+
+    # 2. at 400 random points anywhere inside (between pixel centres) the patch is interpolated a
+    #    second time, on a grid rotated against the source grid. Bilinear interpolation is exact on
+    #    a plane, so the extra difference is set by how much the ground curves within one 20 m
+    #    cell: at most h^2/4 * |second derivative| per interpolation. Measured over the four
+    #    patches with 20000 points each (docs/research/patches.md): median 0.05 to 0.06 m, 99th
+    #    percentile 0.48 to 0.53 m, worst 2.0 m. Tolerances: 0.06 m rounding + about twice that.
+    px = rng.uniform(-5100.0, 5100.0, 400)
+    py = rng.uniform(-5100.0, 5100.0, 400)
+    lat, lon = bp.unit_to_latlon(bp.site_inverse(px, py, fr))
+    got = bp.bilinear(h, *bc.pixel_of(px, py))
+    d = got - source_at(lat, lon)
+    assert np.all(np.isfinite(d))
+    assert np.median(np.abs(d)) <= 0.06 + 0.06
+    assert np.percentile(np.abs(d), 99) <= 0.06 + 1.0
+    assert np.max(np.abs(d)) <= 0.06 + 2.5
+    assert abs(float(d.mean())) < 0.03                                    # no bias
+
+
+@needs_patches
+@pytest.mark.parametrize("pid", CREST_IDS)
+def test_crest_patch_agrees_with_80m_tile(pid):
+    # (c) the same ground in the 80 m web tile L1: catches a misplaced, flipped or rotated patch
+    if not (hz.DEFAULT_TILE_DIR / "sp_meta.json").exists():
+        pytest.skip("tiles not built")
+    entry, h = _crest(pid)
+    _l0, l1 = hz.load_tile_grids()
+    x, y = bc.pixel_centres()
+    sl = slice(2, None, 4)                                                # every 4th pixel = 80 m
+    lat, lon = bp.unit_to_latlon(bp.site_inverse(x[sl, sl], y[sl, sl], bp.frame(entry["lat"], entry["lon"])))
+    tx, ty = hz.latlon_to_xy(lat, lon)
+    t = bp.bilinear(l1.data, (tx - l1.x_min) / l1.pixel_m - 0.5, (l1.y_max - ty) / l1.pixel_m - 0.5)
+    assert np.all(np.isfinite(t))
+    # compare like with like: the mean of each 4 x 4 block of 20 m pixels (an 80 m cell)
+    hb = h.reshape(128, 4, 128, 4).mean(axis=(1, 3))
+    d = hb - t
+    assert abs(float(d.mean())) < 2.0
+    assert float(np.sqrt(np.mean(d ** 2))) < 6.0
+    r = _corr(hb, t)
+    assert r > 0.99, r
+    for name, alt in [("north-south flip", hb[::-1]), ("east-west flip", hb[:, ::-1]),
+                      ("transpose", hb.T), ("rotate 180", hb[::-1, ::-1]),
+                      ("rotate 90", np.rot90(hb)), ("rotate 270", np.rot90(hb, 3))]:
+        assert _corr(alt, t) < r - 0.05, name
+    # a patch shifted by one 80 m cell in any direction fits worse than the real one
+    rms0 = float(np.sqrt(np.mean((hb[1:-1, 1:-1] - t[1:-1, 1:-1]) ** 2)))
+    for di, dj in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+        sh = np.roll(hb, (di, dj), axis=(0, 1))[1:-1, 1:-1]
+        assert float(np.sqrt(np.mean((sh - t[1:-1, 1:-1]) ** 2))) > rms0, (di, dj)
+
+
+@needs_patches
+@needs_tif20
+def test_crest_rebuild_is_identical():
+    from PIL import Image
+
+    for c in bc.crest_list():
+        entry, rgb = bc.entry_for(c, bc.build_crest(c["lat"], c["lon"]))
+        assert entry == next(p for p in _meta()["patches"] if p["id"] == c["id"])
+        assert rgb.tobytes() == np.asarray(Image.open(bp.OUT / entry["file"])).tobytes()
+
+
+@needs_patches
+def test_existing_site_patches_still_load():
+    # (e) the 34 80 m patches load through the reference exactly as before the crest patches
+    site = _site_patches()
+    assert len(site) == 34
+    for entry in site:
+        p = hz.load_patch(entry["id"])
+        assert p.data.shape == (768, 768) and p.pixel_m == 80.0 and p.half_m == 30720.0
+        assert np.array_equal(p.data, bp.load_patch_png(bp.OUT / entry["file"]), equal_nan=True)
+
+
+@needs_patches
+@pytest.mark.skipif(not (bp.OUT / "patch_testvectors.json").exists(), reason="vectors not built")
+def test_crest_testvectors():
+    vec = json.loads((bp.OUT / "patch_testvectors.json").read_text())[6:]
+    assert len(vec) == 5
+    entries = {p["id"]: p for p in _crest_patches()}
+    for v, pid in zip(vec[:4], CREST_IDS):                                # the patch centres
+        assert v["patch"] == pid and (v["lat"], v["lon"]) == (entries[pid]["lat"], entries[pid]["lon"])
+    spot = vec[4]
+    assert (spot["lat"], spot["lon"], spot["patch"]) == (-89.4399, 222.8524, "connecting-ridge")
+    for v in vec:
+        patch = hz.load_patch(v["patch"])
+        e, d, h0, lev = hz.horizon_chain(v["lat"], v["lon"], 2.0, 0.5, patch=patch, return_details=True)
+        # near the observer the skyline is 20 m ground from the patch; beyond 5 km it is the tiles
+        assert np.all(lev[d <= 5000.0] == 0) and np.all(lev[d > 7300.0] != 0)
+        assert (lev == 0).sum() > 360
+    # under spot 2 the 20 m ground is about 1.1 m above the 80 m ground (docs/VALIDATION.md)
+    h80 = hz.height_chain(spot["lat"], spot["lon"])
+    assert 0.8 < spot["surface_h_m"] - h80 < 1.5
+
+
+@needs_patches
+@pytest.mark.skipif(not (bp.OUT / "crest_reference.json").exists(), reason="reference not built")
+def test_crest_reference_reproduces(capsys):
+    ref = json.loads((bp.OUT / "crest_reference.json").read_text())
+    assert ref["point"] == {"name": "Glaser spot 2 (connecting ridge)", "lat": -89.4399, "lon": 222.8524,
+                            "observer_height_m": 2.0}
+    assert ref["period"] == {"start_utc": "2024-01-01T00:00:00Z", "end_utc": "2036-01-01T00:00:00Z",
+                             "end_inclusive": False, "step_s": 3600, "samples": 105192}
+    assert ref["earth_eclipses_considered"] is False and "any part of the solar disc" in ref["rule"]
+    w, wo = ref["cases"]["with_patch"], ref["cases"]["without_patch"]
+    assert w["patch"] == "connecting-ridge" and wo["patch"] is None
+    # the 20 m patch roughly halves the longest darkness (docs/VALIDATION.md: 8.54 d -> 4.67 d)
+    assert w["longest_darkness_days"] < 0.6 * wo["longest_darkness_days"]
+    assert w["share_in_light"] > wo["share_in_light"]
+    pytest.importorskip("spiceypy")
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "validation"))
+    import vlib
+
+    if not (vlib.CACHE_DIR / "2024-01-01T000000Z_166554_3600.npz").exists():
+        pytest.skip("ephemeris cache of study F not present")
+    before = (bp.OUT / "crest_reference.json").read_bytes()               # reference() must rewrite the same bytes
+    bc.reference()
+    capsys.readouterr()
+    assert (bp.OUT / "crest_reference.json").read_bytes() == before

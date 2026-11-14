@@ -244,10 +244,90 @@
         "L0": 0,
         "whole-Moon map": 720
       }
+    },
+    {
+      "name": "Connecting ridge 20 m patch centre",
+      "lat": -89.44715,
+      "lon": -137.151498,
+      "patch": "connecting-ridge",
+      "surface_h_m": 1953.1,
+      "observer_height_from": "patch",
+      "horizon_min_deg": -2.188512030386436,
+      "horizon_max_deg": 1.238082104766853,
+      "azimuths_set_by": {
+        "patch": 619,
+        "L1": 101,
+        "L0": 0,
+        "whole-Moon map": 0
+      }
+    },
+    {
+      "name": "Shackleton rim 20 m patch centre",
+      "lat": -89.78,
+      "lon": -155.7,
+      "patch": "shackleton-rim",
+      "surface_h_m": 1729.025,
+      "observer_height_from": "patch",
+      "horizon_min_deg": 1.7668395874383593,
+      "horizon_max_deg": 6.653979819982477,
+      "azimuths_set_by": {
+        "patch": 720,
+        "L1": 0,
+        "L0": 0,
+        "whole-Moon map": 0
+      }
+    },
+    {
+      "name": "de Gerlache rim 20 m patch centre",
+      "lat": -88.67,
+      "lon": -68.2,
+      "patch": "de-gerlache-rim",
+      "surface_h_m": 1810.275,
+      "observer_height_from": "patch",
+      "horizon_min_deg": -2.2274199895152345,
+      "horizon_max_deg": 0.906207606475926,
+      "azimuths_set_by": {
+        "patch": 430,
+        "L1": 290,
+        "L0": 0,
+        "whole-Moon map": 0
+      }
+    },
+    {
+      "name": "Malapert massif 20 m patch centre",
+      "lat": -85.964,
+      "lon": -2.319,
+      "patch": "malapert-massif",
+      "surface_h_m": 4991.6,
+      "observer_height_from": "patch",
+      "horizon_min_deg": -3.6834227758382183,
+      "horizon_max_deg": 0.9390163594736801,
+      "azimuths_set_by": {
+        "patch": 455,
+        "L1": 113,
+        "L0": 152,
+        "whole-Moon map": 0
+      }
+    },
+    {
+      "name": "Glaser spot 2 on the connecting ridge",
+      "lat": -89.4399,
+      "lon": 222.8524,
+      "patch": "connecting-ridge",
+      "surface_h_m": 1958.604,
+      "observer_height_from": "patch",
+      "horizon_min_deg": -2.7839714863509295,
+      "horizon_max_deg": -0.5539383431726099,
+      "azimuths_set_by": {
+        "patch": 445,
+        "L1": 275,
+        "L0": 0,
+        "whole-Moon map": 0
+      }
     }
   ],
   "bytes": {
     "horizon_testvectors.json": 41866,
-    "patch_testvectors.json": 40174
+    "patch_testvectors.json": 75442
   }
 }
