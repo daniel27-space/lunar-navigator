@@ -56,7 +56,10 @@ regions, elevation and slope.
 
 ## Known limits
 
-- Terrain data covers 80°S to 90°S. North of that the app uses a smooth-sphere horizon and says so.
+- Detailed terrain covers 80°S to 90°S. North of that the globe shows relief from a whole-Moon
+  elevation map (about 2.7 km per pixel, slope lighting only, no cast shadows) and a pinned
+  point gets its height from that map, but its horizon is still a smooth sphere and the card
+  says so.
 - Inside about 84.6°S the browser uses 80 m terrain. Outside it uses about 300 m terrain, where
   the horizon can be wrong by a degree or more; rise and set times there are less certain.
 - Points close to 80°S are missing part of their northern horizon.
@@ -65,8 +68,8 @@ regions, elevation and slope.
 - When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
 - Planned missions are placed at the centre of their announced target feature, not at a landing
   point.
-- In the 3D view the outer 50 km of the terrain data (roughly 80°S to 81.7°S) fades into the
-  smooth globe, so relief and shadows look weaker there. The numbers on a site card always use
+- In the 3D view the outer 50 km of the detailed terrain (roughly 80°S to 81.7°S) fades into
+  the coarser whole-Moon relief, so shadows look weaker there. The numbers on a site card always use
   the full terrain data.
 
 ## NASA data and resources
@@ -77,7 +80,7 @@ regions, elevation and slope.
 | South pole elevation `LDEM_80S_80MPP_ADJ.TIF` (LOLA, 80 m) | NASA GSFC PGDA product 78, https://pgda.gsfc.nasa.gov/products/78 |
 | Average sunlight, average Earth visibility, permanently shadowed regions (`AVGVISIB_75S_120M_201608.TIF`, `AVGVISIB_75S_120M_201608_EARTH.TIF`, `LPSR_75S_120M_201608.TIF`) | NASA GSFC PGDA product 69, https://pgda.gsfc.nasa.gov/products/69 (Mazarico et al. 2011) |
 | JPL Horizons, used as the independent check on Sun and Earth angles | https://ssd.jpl.nasa.gov/horizons/ |
-| Whole-Moon colour map (LROC WAC), CGI Moon Kit | NASA's Scientific Visualization Studio, https://svs.gsfc.nasa.gov/4720 |
+| Whole-Moon colour map (LROC WAC) and whole-Moon elevation `ldem_16.tif` (LOLA, 16 pixels per degree), CGI Moon Kit | NASA's Scientific Visualization Studio, https://svs.gsfc.nasa.gov/4720 |
 | Landing and impact site coordinates | NASA NSSDCA, https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html (per-site sources in `web/public/data/missions.json`) |
 
 ## References

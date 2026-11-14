@@ -18,7 +18,7 @@ export interface Terrain {
   levels: Level[]
 }
 
-async function decodePng(url: string): Promise<ImageData> {
+export async function decodePng(url: string): Promise<ImageData> {
   const blob = await (await fetch(url)).blob()
   const bmp = await createImageBitmap(blob, {
     colorSpaceConversion: 'none',

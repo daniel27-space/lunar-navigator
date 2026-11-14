@@ -4,6 +4,7 @@
 // the whole sunlit disc is in view, as a real camera would be set).
 import { useEffect, useState } from 'react'
 import * as THREE from 'three'
+import { loadGlobalDem, type GlobalDem } from '../lib/globalDem'
 import { R_KM } from '../lib/geo'
 
 export interface GlobeMap {
@@ -40,14 +41,56 @@ export function useGlobeMap(dataBase: string): GlobeMap | null {
   return map
 }
 
+export interface GlobeRelief {
+  dem: GlobalDem
+  /** elevation in km, half-float, row 0 = south so it shares the colour map's coordinates */
+  tex: THREE.DataTexture
+}
+
+/** Loads the whole-Moon elevation once. Null until it arrives; the globe is smooth until then. */
+export function useGlobeRelief(dataBase: string): GlobeRelief | null {
+  const [relief, setRelief] = useState<GlobeRelief | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    let tex: THREE.DataTexture | null = null
+    loadGlobalDem(dataBase)
+      .then((dem) => {
+        if (cancelled) return
+        const data = new Uint16Array(dem.width * dem.height)
+        for (let y = 0; y < dem.height; y++) {
+          const src = (dem.height - 1 - y) * dem.width
+          for (let x = 0; x < dem.width; x++) data[y * dem.width + x] = THREE.DataUtils.toHalfFloat(dem.h[src + x] / 1000)
+        }
+        tex = new THREE.DataTexture(data, dem.width, dem.height, THREE.RedFormat, THREE.HalfFloatType)
+        tex.minFilter = tex.magFilter = THREE.LinearFilter
+        tex.wrapS = THREE.RepeatWrapping
+        tex.wrapT = THREE.ClampToEdgeWrapping
+        tex.needsUpdate = true
+        setRelief({ dem, tex })
+      })
+      .catch(() => setRelief(null))
+    return () => {
+      cancelled = true
+      tex?.dispose()
+    }
+  }, [dataBase])
+  return relief
+}
+
 export const shadingUniforms = () => ({
+  uDem: { value: null as THREE.Texture | null },
+  uHasDem: { value: 0 },
+  uDemPx: { value: new THREE.Vector2(1 / 4096, 1 / 2048) },
   uMap: { value: null as THREE.Texture | null },
   uHasMap: { value: 0 },
   uLonLeft: { value: -Math.PI },
   uExpo: { value: EXPO_NEAR },
 })
 
-export function applyGlobeMap(u: ReturnType<typeof shadingUniforms>, map: GlobeMap | null) {
+export function applyGlobeMap(u: ReturnType<typeof shadingUniforms>, map: GlobeMap | null, relief: GlobeRelief | null) {
+  u.uDem.value = relief ? relief.tex : null
+  u.uHasDem.value = relief ? 1 : 0
+  if (relief) u.uDemPx.value.set(1 / relief.dem.width, 1 / relief.dem.height)
   u.uMap.value = map ? map.tex : null
   u.uHasMap.value = map ? 1 : 0
   if (map) u.uLonLeft.value = map.lonLeftRad
@@ -71,12 +114,40 @@ uniform sampler2D uMap;
 uniform float uHasMap;
 uniform float uLonLeft;   // radians, longitude at the left edge of the texture
 uniform float uExpo;
-vec3 albedoAt(vec3 d) {
+uniform sampler2D uDem;   // whole-Moon elevation, km
+uniform float uHasDem;
+uniform vec2 uDemPx;      // one pixel in texture coordinates
+vec2 lonLatUv(vec3 d) {
   float lon = atan(d.y, d.x);
   float lat = asin(clamp(d.z, -1.0, 1.0));
-  vec2 uv = vec2(fract((lon - uLonLeft) / 6.283185307179586), lat / 3.141592653589793 + 0.5);
+  return vec2(fract((lon - uLonLeft) / 6.283185307179586), lat / 3.141592653589793 + 0.5);
+}
+vec3 albedoAt(vec3 d) {
   // The JPEG is sRGB-encoded; work in linear light.
-  return mix(vec3(0.4), pow(texture2D(uMap, uv).rgb, vec3(2.2)), uHasMap);
+  return mix(vec3(0.4), pow(texture2D(uMap, lonLatUv(d)).rgb, vec3(2.2)), uHasMap);
+}
+// Surface normal of the whole-Moon elevation map at direction d, at true scale (no exaggeration).
+vec3 globeNormal(vec3 d) {
+  if (uHasDem < 0.5 || abs(d.z) > 0.9995) return d;
+  float c = sqrt(1.0 - d.z * d.z); // cos(latitude)
+  vec2 uv = lonLatUv(d);
+  // Step one pixel north-south; east-west, widen the step towards the poles so both steps
+  // cover about the same ground distance.
+  float du = min(uDemPx.x / c, 0.01);
+  float dv = uDemPx.y;
+  float hE = texture2D(uDem, uv + vec2(du, 0.0)).r - texture2D(uDem, uv - vec2(du, 0.0)).r;
+  float hN = texture2D(uDem, uv + vec2(0.0, dv)).r - texture2D(uDem, uv - vec2(0.0, dv)).r;
+  const float R = 1737.4;
+  float slopeE = hE / (2.0 * du * 6.283185307179586 * R * c);
+  float slopeN = hN / (2.0 * dv * 3.141592653589793 * R);
+  vec3 east = normalize(vec3(-d.y, d.x, 0.0));
+  vec3 north = cross(d, east);
+  return normalize(d - slopeE * east - slopeN * north);
+}
+// Direct sunlight (0..1) on the globe at direction d: slope lighting from the elevation map,
+// cut off where the smooth Moon itself hides the Sun. The map casts no shadows.
+float globeDirect(vec3 d, vec3 sun) {
+  return max(dot(globeNormal(d), sun), 0.0) * smoothstep(-0.01, 0.03, dot(d, sun));
 }
 vec3 tone(vec3 albedo, float direct) {
   return 1.0 - exp(-albedo * direct * uExpo) + albedo * 0.03;

@@ -8,7 +8,8 @@ import { Globe } from './scene/Globe'
 import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
 import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
-import { useGlobeMap } from './scene/shading'
+import { globalHeightAt } from './lib/globalDem'
+import { useGlobeMap, useGlobeRelief } from './scene/shading'
 import { useStore, type LayerMode } from './store'
 import { SiteCard } from './ui/SiteCard'
 import './App.css'
@@ -196,6 +197,7 @@ export default function App() {
   const { ephem, terrain, error, missions } = useData()
   useClock(ephem)
   const globeMap = useGlobeMap(BASE)
+  const globeRelief = useGlobeRelief(BASE)
   const tMs = useStore((s) => s.tMs)
   const layer = useStore((s) => s.layer)
   const setLayer = useStore((s) => s.setLayer)
@@ -215,9 +217,11 @@ export default function App() {
   const elevation = useCallback(
     (lat: number, lon: number) => {
       const h = terrain ? heightAt(terrain, lat, lon) : NaN
-      return Number.isNaN(h) ? 0 : h
+      if (!Number.isNaN(h)) return h
+      // Outside the south-pole tiles: the whole-Moon map (about 2.7 km per pixel).
+      return globeRelief ? globalHeightAt(globeRelief.dem, lat, lon) : 0
     },
-    [terrain],
+    [terrain, globeRelief],
   )
   const pick = useCallback(
     (lat: number, lon: number, label?: string) => addPin({ lat, lon, hM: elevation(lat, lon), label }),
@@ -243,9 +247,9 @@ export default function App() {
     <div className="app">
       <Canvas camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }} gl={{ antialias: true }} dpr={[1, 2]}>
         <color attach="background" args={['#000']} />
-        <Globe sunDir={sun.dir} cutKm={terrain ? terrain.levels[0].xMax / 1000 : 0} map={globeMap} onPick={pick} />
+        <Globe sunDir={sun.dir} cutKm={terrain ? terrain.levels[0].xMax / 1000 : 0} map={globeMap} relief={globeRelief} onPick={pick} />
         {terrain && (
-          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} onPick={pick} />
+          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} relief={globeRelief} onPick={pick} />
         )}
         <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
         <PinMarkers />

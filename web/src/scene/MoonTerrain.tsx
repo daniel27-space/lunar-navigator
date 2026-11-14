@@ -8,7 +8,7 @@ import { latLonOf, spDirection, type Vec3 } from '../lib/geo'
 import { sampleXY, type Level, type Terrain } from '../lib/terrain'
 import type { LayerMode, SiteFilter } from '../store'
 import { CUT_INSET_KM } from './Globe'
-import { applyGlobeMap, exposureFor, SHADING_GLSL, shadingUniforms, type GlobeMap } from './shading'
+import { applyGlobeMap, exposureFor, SHADING_GLSL, shadingUniforms, type GlobeMap, type GlobeRelief } from './shading'
 
 const GRID = 768
 /**
@@ -239,7 +239,7 @@ void main() {
   // Fade into the smooth globe's shading at the edge of the terrain data.
   float m = length(vXY);
   float w = smoothstep(uEdge - uFade, uEdge - 2.0, m);
-  col = mix(col, tone(albedo, max(dot(up, uSun), 0.0)), w);
+  if (w > 0.0) col = mix(col, tone(albedo, globeDirect(up, uSun)), w);
   gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
 }`
 
@@ -276,10 +276,11 @@ interface Props {
   /** URL prefix of the data folder */
   dataBase: string
   map: GlobeMap | null
+  relief: GlobeRelief | null
   onPick: (lat: number, lon: number) => void
 }
 
-export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, map, onPick }: Props) {
+export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, map, relief, onPick }: Props) {
   const gl = useThree((s) => s.gl)
   const geometry = useMemo(() => buildGeometry(terrain), [terrain])
   const material = useMemo(() => {
@@ -322,7 +323,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
     [geometry, material],
   )
 
-  applyGlobeMap(material.uniforms as never, map)
+  applyGlobeMap(material.uniforms as never, map, relief)
   material.uniforms.uSun.value.set(sunDir[0], sunDir[1], sunDir[2])
   material.uniforms.uSunRad.value = sunRad
   material.uniforms.uMode.value = MODE[layer]

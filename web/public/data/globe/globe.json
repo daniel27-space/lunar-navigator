@@ -1,8 +1,15 @@
 {
-  "files": { "color_4k": "moon_color_4k.jpg", "color_2k": "moon_color_2k.jpg" },
+  "files": {
+    "color_4k": "moon_color_4k.jpg",
+    "color_2k": "moon_color_2k.jpg"
+  },
   "width": 4096,
   "height": 2048,
-  "fallback": { "file": "moon_color_2k.jpg", "width": 2048, "height": 1024 },
+  "fallback": {
+    "file": "moon_color_2k.jpg",
+    "width": 2048,
+    "height": 1024
+  },
   "projection": "equirectangular (simple cylindrical), planetocentric lon/lat, east-positive longitude",
   "lon_left_deg": -180,
   "lon_centre_deg": 0,
@@ -12,5 +19,17 @@
   "pixel_to_lonlat": "lon = -180 + 360*(x+0.5)/width; lat = 90 - 180*(y+0.5)/height",
   "credit": "NASA's Scientific Visualization Studio",
   "source_url": "https://svs.gsfc.nasa.gov/4720",
-  "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_4k.tif"
+  "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_poles_4k.tif",
+  "dem": {
+    "file": "moon_dem_4k.png",
+    "width": 4096,
+    "height": 2048,
+    "encoding": "h_m = (R*256 + G) * 0.5 - 10000",
+    "quantum_m": 8.0,
+    "radius_m": 1737400.0,
+    "min_m": -9040.0,
+    "max_m": 10632.0,
+    "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_16.tif",
+    "credit": "NASA's Scientific Visualization Studio / LOLA Science Team"
+  }
 }

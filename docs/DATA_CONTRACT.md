@@ -63,3 +63,16 @@ Reference horizons from the Python implementation so the browser implementation 
 
 `[{ "site", "lat", "lon", "h_m", "utc", "sun_az", "sun_el", "earth_az", "earth_el",
 "source": "JPL Horizons" }]` — used by the web unit tests.
+
+## Whole-Moon elevation (`web/public/data/globe/moon_dem_4k.png`)
+
+Built by `pipeline/globe/build_global_dem.py` from NASA SVS CGI Moon Kit `ldem_16.tif` (LOLA).
+
+- 4096 x 2048, simple cylindrical, planetocentric, east-positive. Pixel centres:
+  `lon = -180 + 360 (x + 0.5) / W`, `lat = 90 - 180 (y + 0.5) / H` (row 0 is north).
+- Height encoding is the same as the south-pole tiles: `h_m = (R*256 + G) * 0.5 - 10000`,
+  relative to the 1737.4 km sphere. Heights are rounded to 8 m. There is no missing data.
+- Listed in `globe.json` under `dem`. Used for globe lighting and for the height of pinned
+  points outside the south-pole tiles, never for horizons.
+- Checks: `pipeline/globe/test_globe.py` (against the source and against the polar LOLA tile)
+  and `web/src/lib/globalDem.test.ts` (browser lookup against the Python values).
