@@ -151,7 +151,30 @@ interface Move {
   to: Pose
 }
 
-export function Rig() {
+/** The camera is kept at least this far above the ground beneath it, km. */
+export const CLEARANCE_KM = 0.06
+
+/**
+ * The camera position moved straight up, if needed, so that it is at least `CLEARANCE_KM`
+ * above the ground beneath it. `surfaceKm` is the surface's distance from the Moon's centre
+ * under that position.
+ */
+export function aboveGround(position: THREE.Vector3, surfaceKm: number): THREE.Vector3 {
+  const least = surfaceKm + CLEARANCE_KM
+  return position.length() < least ? position.clone().setLength(least) : position
+}
+
+/** Near clipping distance for a camera this high above the ground: close enough not to cut into it. */
+export function nearFor(heightKm: number): number {
+  return Math.min(Math.max(heightKm * 0.2, 0.01), 1)
+}
+
+interface RigProps {
+  /** elevation in metres above the 1737.4 km sphere at a latitude and longitude */
+  elevation?: (lat: number, lon: number) => number
+}
+
+export function Rig({ elevation }: RigProps) {
   const camera = useThree((s) => s.camera)
   const gl = useThree((s) => s.gl)
   const controls = useRef<OrbitControlsImpl>(null)
@@ -228,6 +251,30 @@ export function Rig() {
     }
   }, [gl, camera])
 
+  // Free roam: after the controls have moved the camera, lift it clear of the ground if it has
+  // gone into it, and bring the near clipping distance in as it gets low, so the ground close
+  // to the camera is not cut away.
+  useFrame(() => {
+    if (move.current) return
+    const p = camera.position
+    const lat = Math.asin(Math.min(Math.max(p.z / p.length(), -1), 1)) * (180 / Math.PI)
+    const lon = Math.atan2(p.y, p.x) * (180 / Math.PI)
+    const surface = R_KM + (elevation ? elevation(lat, lon) : 0) / 1000
+    const lifted = aboveGround(p, surface)
+    if (lifted !== p) {
+      p.copy(lifted)
+      camera.lookAt(controls.current ? controls.current.target : new THREE.Vector3())
+      invalidate()
+    }
+    const cam = camera as THREE.PerspectiveCamera
+    const near = nearFor(p.length() - surface)
+    if (Math.abs(near - cam.near) > cam.near * 0.05) {
+      cam.near = near
+      cam.updateProjectionMatrix()
+      invalidate()
+    }
+  })
+
   useFrame((_, dt) => {
     const m = move.current
     if (!m) return
@@ -261,6 +308,9 @@ export function Rig() {
       ref={controls}
       target={ctl.target}
       minDistance={ctl.minDistance}
+      // Over the surface the camera cannot swing below the level of the point it looks at
+      // (it would be looking up through the ground). Looking at the whole Moon there is no such limit.
+      maxPolarAngle={ctl.target.every((v) => Math.abs(v) < 1) ? Math.PI : (87 * Math.PI) / 180}
       maxDistance={9000}
       enableDamping
       dampingFactor={0.08}

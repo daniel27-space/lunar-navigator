@@ -3,7 +3,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { R_KM } from '../lib/geo'
-import { APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
+import { aboveGround, CLEARANCE_KM, nearFor, APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
 
 const cameraAt = (pos: number[], up: number[]) => {
   const c = new THREE.PerspectiveCamera()
@@ -180,5 +180,26 @@ describe('camera moves', () => {
     cam.position.applyQuaternion(q)
     expect(cam.position.length()).toBeCloseTo(d, 6)
     expect(target.length()).toBe(0)
+  })
+
+  it('lifts a camera that has gone into the ground straight up to just above it', () => {
+    const surface = R_KM - 1.9 // a mare floor 1.9 km below the reference sphere
+    const under = new THREE.Vector3(300, -400, -1650).setLength(surface - 0.5)
+    const lifted = aboveGround(under, surface)
+    expect(lifted.length()).toBeCloseTo(surface + CLEARANCE_KM, 9)
+    // straight up: same direction from the Moon's centre
+    expect(lifted.clone().normalize().distanceTo(under.clone().normalize())).toBeLessThan(1e-12)
+    // a camera already clear of the ground is left exactly where it is
+    const clear = new THREE.Vector3(300, -400, -1650).setLength(surface + 2)
+    expect(aboveGround(clear, surface)).toBe(clear)
+  })
+
+  it('brings the near clipping distance in as the camera gets low, within fixed limits', () => {
+    expect(nearFor(0.06)).toBeCloseTo(0.012, 9)
+    expect(nearFor(0.001)).toBe(0.01)
+    expect(nearFor(2)).toBeCloseTo(0.4, 9)
+    expect(nearFor(350)).toBe(1)
+    // never further than the camera's own height above the ground
+    for (const h of [0.06, 0.5, 3, 40]) expect(nearFor(h)).toBeLessThan(h)
   })
 })

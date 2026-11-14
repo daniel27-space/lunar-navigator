@@ -29,6 +29,8 @@ import {
  * area reads as a cap rather than a square tile.
  */
 const FADE_SHARE = 0.165
+/** How far the skirt at a terrain's edge hangs below it, km. */
+const SKIRT_KM = 6
 const fadeKmOf = (t: Terrain) => Math.max((t.levels[0].xMax / 1000) * FADE_SHARE, 4)
 
 /** 0 inside, rising to 1 where the globe takes over. x, y, edge and fade in km. */
@@ -85,9 +87,43 @@ function buildGeometry(t: Terrain, global: GlobalDem | null, GRID: number): THRE
       index.push(a, c, b, b, c, d)
     }
   }
+  // A skirt: a wall hanging down from the outer edge. The globe around this terrain is a much
+  // coarser mesh of the same heights, so where it happens to sit lower than this edge there
+  // would be an open gap to look through; the skirt closes it. It takes the edge's own shading
+  // (a point just inside the edge), which there is the globe's.
+  const rim: number[] = []
+  for (let i = 0; i < GRID; i++) rim.push(i) // top row, left to right
+  for (let j = 0; j < GRID; j++) rim.push(j * n + GRID) // right column, downwards
+  for (let i = GRID; i > 0; i--) rim.push(GRID * n + i) // bottom row, right to left
+  for (let j = GRID; j > 0; j--) rim.push(j * n) // left column, upwards
+  const total = n * n + rim.length
+  const pos2 = new Float32Array(total * 3)
+  const xy2 = new Float32Array(total * 2)
+  pos2.set(pos)
+  xy2.set(xy)
+  const inset = l0.pixel / 1000 / 2
+  const clampIn = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo + inset), hi - inset)
+  rim.forEach((v, m) => {
+    const k = n * n + m
+    const r = Math.hypot(pos[v * 3], pos[v * 3 + 1], pos[v * 3 + 2])
+    const s = (r - SKIRT_KM) / r
+    pos2[k * 3] = pos[v * 3] * s
+    pos2[k * 3 + 1] = pos[v * 3 + 1] * s
+    pos2[k * 3 + 2] = pos[v * 3 + 2] * s
+    xy2[k * 2] = clampIn(xy[v * 2], l0.xMin / 1000, l0.xMax / 1000)
+    xy2[k * 2 + 1] = clampIn(xy[v * 2 + 1], l0.yMin / 1000, l0.yMax / 1000)
+  })
+  for (let m = 0; m < rim.length; m++) {
+    const a = rim[m]
+    const b = rim[(m + 1) % rim.length]
+    if (!(valid[a] && valid[b])) continue
+    const a2 = n * n + m
+    const b2 = n * n + ((m + 1) % rim.length)
+    index.push(a, a2, b, b, a2, b2)
+  }
   const g = new THREE.BufferGeometry()
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
-  g.setAttribute('aXY', new THREE.BufferAttribute(xy, 2))
+  g.setAttribute('position', new THREE.BufferAttribute(pos2, 3))
+  g.setAttribute('aXY', new THREE.BufferAttribute(xy2, 2))
   g.setIndex(index)
   g.computeBoundingSphere()
   return g

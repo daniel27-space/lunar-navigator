@@ -729,7 +729,7 @@ export default function App() {
           {bodies && <SkyBodies sun={bodies.sun} earth={bodies.earth} tMs={tMs} />}
           <PinMarkers elevation={elevation} />
           {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} />}
-          <Rig />
+          <Rig elevation={elevation} />
         </Canvas>
       </div>
 
