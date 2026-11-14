@@ -118,6 +118,26 @@ export function earthOrientation(north: THREE.Vector3, p: THREE.Vector3, faceLon
   return tilt.multiply(spin)
 }
 
+/**
+ * Longitude on Earth (degrees east, -180..180) that faces the Moon at a UTC time: the point
+ * with the Moon overhead. It moves west by about 14.5 degrees an hour as the Earth turns.
+ * From the Moon's low-precision position (main terms only), good to about a degree, which is
+ * far finer than anyone can see on a disc this small.
+ */
+export function subLunarLonDeg(tMs: number): number {
+  const d = tMs / 86400000 - 10957.5 // days since 2000-01-01 12:00 UTC
+  const R = Math.PI / 180
+  const meanLon = 218.316 + 13.176396 * d
+  const anomaly = (134.963 + 13.064993 * d) * R
+  const node = (93.272 + 13.22935 * d) * R
+  const lon = (meanLon + 6.289 * Math.sin(anomaly)) * R
+  const lat = 5.128 * Math.sin(node) * R
+  const tilt = 23.439 * R
+  const rightAscension = Math.atan2(Math.sin(lon) * Math.cos(tilt) - Math.tan(lat) * Math.sin(tilt), Math.cos(lon)) / R
+  const greenwich = 280.46061837 + 360.98564736629 * d
+  return ((((rightAscension - greenwich + 180) % 360) + 360) % 360) - 180
+}
+
 export const EARTH_VERTEX = /* glsl */ `
 varying vec2 vUv;
 varying vec3 vN;

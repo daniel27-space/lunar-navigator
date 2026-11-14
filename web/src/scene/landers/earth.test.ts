@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { earthColour, earthOrientation, landAt } from './earth'
+import { earthColour, earthOrientation, landAt, subLunarLonDeg } from './earth'
 
 describe('Earth in the mission view', () => {
   it('has land and sea where they are', () => {
@@ -53,5 +53,29 @@ describe('Earth in the mission view', () => {
     // It lies in the plane of the axis and the viewer, on the viewer's side.
     const inPlane = toViewer.clone().addScaledVector(north, -toViewer.dot(north)).normalize()
     expect(out.distanceTo(inPlane)).toBeLessThan(1e-9)
+  })
+
+  it('faces the Moon with the right side of the Earth', () => {
+    // At a total lunar eclipse the Moon is opposite the Sun, so the place with the Moon overhead
+    // is the place where it is midnight: 180 degrees from where it is noon.
+    const noonLon = (t: number) => {
+      const hours = (t % 86400000) / 3600000
+      return -15 * (hours - 12)
+    }
+    const apart = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180)
+    for (const utc of ['2025-03-14T06:59:00Z', '2026-03-03T11:34:00Z', '2028-12-31T16:52:00Z']) {
+      const t = Date.parse(utc)
+      // within 6 degrees: the equation of time alone moves noon by up to 4
+      expect(apart(subLunarLonDeg(t), noonLon(t) + 180), utc).toBeLessThan(6)
+    }
+  })
+
+  it('turns west by about 14.5 degrees an hour, once round in about 24 h 50 min', () => {
+    const t = Date.parse('2026-11-14T00:00:00Z')
+    const step = ((subLunarLonDeg(t) - subLunarLonDeg(t + 3600000) + 540) % 360) - 180
+    expect(step).toBeGreaterThan(14.2)
+    expect(step).toBeLessThan(14.8)
+    const lap = 24.84 * 3600000
+    expect(Math.abs(((subLunarLonDeg(t + lap) - subLunarLonDeg(t) + 540) % 360) - 180)).toBeLessThan(1.5)
   })
 })

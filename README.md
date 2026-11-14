@@ -99,8 +99,8 @@ property search, product-comparison sites, sun-planning tools); see
   the whole-Moon map beyond, so a peak further away than that can be underestimated. The four
   polar landers also have 20 m terrain within 5 km; the 20 m product does not exist elsewhere.
 - In the mission view the skyline, the Sun and the Earth are real for that site and time (the
-  discs are drawn at twice their size). Earth's phase is real; the face it shows and its
-  clouds are not. IM-1 and IM-2 are shown tipped over on ground made for them. The ground near the craft is generated, in three
+  discs are drawn at twice their size). Earth's phase and the side it turns towards
+  the Moon are real (to about a degree); its clouds are not. IM-1 and IM-2 are shown tipped over on ground made for them. The ground near the craft is generated, in three
   styles (mare, highland, polar), because no terrain data exists at that scale.
 - In the mission view only the Apollo Lunar Module is a real 3D model (NASA). The other craft
   are simplified stand-ins for their class and are labelled so. 6 missions have no picture
@@ -123,6 +123,8 @@ property search, product-comparison sites, sun-planning tools); see
   slope is the steepest 80 m slope inside it.
 - Dates run from 4 Jan 2024 to 1 Nov 2035: the Sun and Earth table ends on 1 Jan 2036 and each
   card looks 60 days ahead.
+- In the main view the Sun and the Earth are drawn in their real directions from the Moon, but
+  much nearer and larger than they are (the Earth is 220 Moon radii away, the Sun 86,000).
 - Planned missions are placed at the centre of their announced target feature, not at a landing
   point.
 - In the 3D view the outer 50 km of the detailed terrain (roughly 80°S to 81.7°S) fades into

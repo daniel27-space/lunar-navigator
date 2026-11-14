@@ -415,6 +415,8 @@ export interface SceneSky {
   azStepDeg: number
   /** the site's latitude, used only to turn the Earth the right way up; 0 if unknown */
   latDeg?: number
+  /** longitude on Earth that faces the Moon now (degrees east); a fixed face if unknown */
+  earthFaceLonDeg?: number
 }
 
 export type SceneDetail = 'low' | 'medium' | 'high'
@@ -695,9 +697,10 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
   // The Sun's true direction, also when it is below the skyline: that is what lights the Earth.
   earthMaterial.uniforms.uSun.value.set(...toward(sky.sun.az, sky.sun.el))
   // Earth's axis is close to the Moon's: in this scene the Moon's north points along the local
-  // north raised by the site's latitude. The face shown (Africa and Europe) is illustrative.
+  // north raised by the site's latitude. The face shown is the side of Earth that really faces
+  // the Moon at this time, so it turns as the clock moves.
   const lat = (sky.latDeg ?? 0) * D2R
-  const earthTurn = earthOrientation(new THREE.Vector3(0, Math.sin(lat), -Math.cos(lat)), new THREE.Vector3(...earthDisc.p), 20)
+  const earthTurn = earthOrientation(new THREE.Vector3(0, Math.sin(lat), -Math.cos(lat)), new THREE.Vector3(...earthDisc.p), sky.earthFaceLonDeg ?? 20)
 
   return (
     <>

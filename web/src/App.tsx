@@ -23,6 +23,7 @@ import { Globe } from './scene/Globe'
 import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
 import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
+import { SkyBodies } from './scene/SkyBodies'
 import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
 import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
@@ -477,6 +478,8 @@ export default function App() {
     const v = bodyVectors(ephem, tMs).sun
     return { dir: unit(v), rad: Math.asin(SUN_RADIUS_KM / Math.hypot(v[0], v[1], v[2])) }
   }, [ephem, tMs])
+  // Where the Sun and the Earth are from the Moon now, for drawing them in the main view.
+  const bodies = useMemo(() => (ephem ? bodyVectors(ephem, tMs) : null), [ephem, tMs])
 
   // 80 m patches around mission sites, fetched when a pinned point needs one.
   // null marks a patch that failed to load: the point then keeps the coarser data.
@@ -723,6 +726,7 @@ export default function App() {
             <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} detail={detail} onPick={pick} />
           ))}
           <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
+          {bodies && <SkyBodies sun={bodies.sun} earth={bodies.earth} tMs={tMs} />}
           <PinMarkers elevation={elevation} />
           {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} />}
           <Rig />

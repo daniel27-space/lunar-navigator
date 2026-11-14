@@ -14,6 +14,7 @@ import { useMemo, useCallback, useEffect, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { fmtMissionDate } from '../lib/format'
 import { defaultModel, DISC_SCALE, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
+import { subLunarLonDeg } from '../scene/landers/earth'
 import { restNote, groundStyle } from '../scene/landers/ground'
 import { STATUS_COLOR, type Mission } from '../scene/Missions'
 import { useStore, type ViewRequest } from '../store'
@@ -144,7 +145,10 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
   // Decided once per opening, so the ground does not change under the viewer if the pin's height is refined.
   const [style] = useState(() => groundStyle(m.id, m.lat, pin?.hM ?? 0))
   // The same object while the sky is unchanged, so the scene does not rebuild on every render.
-  const sceneSky = useMemo(() => ({ ...sky, latDeg: m.lat }), [sky, m.lat])
+  const clock = useStore((st) => st.tMs)
+  // The side of the Earth facing the Moon turns by about 14.5 degrees an hour; a new sky only once it has moved a degree.
+  const earthFace = Math.round(subLunarLonDeg(clock))
+  const sceneSky = useMemo(() => ({ ...sky, latDeg: m.lat, earthFaceLonDeg: earthFace }), [sky, m.lat, earthFace])
   const [motion] = useState(() => !reducedMotion())
   const [narrow] = useState(isPhone)
   return (
