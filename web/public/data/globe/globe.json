@@ -31,5 +31,15 @@
     "max_m": 10632.0,
     "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/ldem_16.tif",
     "credit": "NASA's Scientific Visualization Studio / LOLA Science Team"
+  },
+  "earth": {
+    "file": "earth_2k.jpg",
+    "width": 2048,
+    "height": 1024,
+    "projection": "simple cylindrical, longitude -180..180 left to right, north at the top",
+    "credit": "NASA Earth Observatory (Blue Marble, Reto Stoeckli / NASA GSFC)",
+    "license": "Public domain",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Land_ocean_ice_2048.jpg",
+    "note": "Surface from NASA Blue Marble; the cloud layer is generated, not observed."
   }
 }

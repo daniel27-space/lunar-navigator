@@ -99,8 +99,9 @@ property search, product-comparison sites, sun-planning tools); see
   the whole-Moon map beyond, so a peak further away than that can be underestimated. The four
   polar landers also have 20 m terrain within 5 km; the 20 m product does not exist elsewhere.
 - In the mission view the skyline, the Sun and the Earth are real for that site and time (the
-  discs are drawn at twice their size). Earth's phase and the side it turns towards
-  the Moon are real (to about a degree); its clouds are not. IM-1 and IM-2 are shown tipped over on ground made for them. The ground near the craft is generated, in three
+  discs are drawn at twice their size). Earth's surface is NASA's Blue Marble image, and
+  its phase and the side it turns towards the Moon are real (to about a degree); its clouds
+  are generated, not observed. IM-1 and IM-2 are shown tipped over on ground made for them. The ground near the craft is generated, in three
   styles (mare, highland, polar), because no terrain data exists at that scale.
 - In the mission view only the Apollo Lunar Module is a real 3D model (NASA). The other craft
   are simplified stand-ins for their class and are labelled so. 6 missions have no picture
@@ -144,6 +145,7 @@ property search, product-comparison sites, sun-planning tools); see
 | 80 m terrain around mission sites: SLDEM2015 (LOLA + Kaguya, 512 pixels per degree) between 60°S and 60°N; LOLA polar grids `LDEM_60S_60M`, `LDEM_60N_60M` beyond | NASA PDS LOLA node, https://imbrium.mit.edu/DATA/SLDEM2015/ and https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/ (also linked from NASA GSFC PGDA product 54); exact file per site in `web/public/data/patches/patches.json` |
 | Apollo Lunar Module 3D model | NASA 3D Resources, https://github.com/nasa/NASA-3D-Resources |
 | Mission pictures (NASA and LRO/LROC imagery, two Wikimedia Commons photographs under CC BY 4.0 and CC BY-SA 3.0) | credit, licence and source page for each in `docs/research/mission-media.md` and shown beside the picture in the app |
+| Earth's surface for the globe in the sky: Blue Marble, "Land, Ocean Color, Sea Ice" | NASA Earth Observatory (Reto Stöckli, NASA GSFC), public domain; fetched from https://commons.wikimedia.org/wiki/File:Land_ocean_ice_2048.jpg |
 | Landing and impact site coordinates | NASA NSSDCA, https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html (per-site sources in `web/public/data/missions.json`) |
 
 ## References

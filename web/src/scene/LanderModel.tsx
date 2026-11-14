@@ -12,7 +12,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { EARTH_FRAGMENT, EARTH_VERTEX, earthOrientation, earthTexture } from './landers/earth'
+import { earthMaterial, earthOrientation } from './landers/earth'
 import { makeGround, startViewAz, type Ground, type GroundStyle, type Rest } from './landers/ground'
 
 export const ARCHETYPES = ['apollo-lm', 'surveyor', 'luna-lander', 'lunokhod', 'change-lander', 'small-lander', 'nova-c', 'impactor'] as const
@@ -677,25 +677,16 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
   const sunDisc = body(sky.sun)
   const earthDisc = body(sky.earth)
   const earthDir = toward(sky.earth.az, Math.max(sky.earth.el, 5))
-  const earthMaterial = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        vertexShader: EARTH_VERTEX,
-        fragmentShader: EARTH_FRAGMENT,
-        uniforms: { uMap: { value: earthTexture() }, uSun: { value: new THREE.Vector3(0, 1, 0) } },
-        toneMapped: false,
-      }),
-    [],
-  )
+  const earthGlobe = useMemo(() => earthMaterial(`${baseUrl}data/`, () => invalidate()), [baseUrl, invalidate])
   useEffect(
     () => () => {
-      earthMaterial.uniforms.uMap.value.dispose()
-      earthMaterial.dispose()
+      earthGlobe.uniforms.uMap.value.dispose()
+      earthGlobe.dispose()
     },
-    [earthMaterial],
+    [earthGlobe],
   )
   // The Sun's true direction, also when it is below the skyline: that is what lights the Earth.
-  earthMaterial.uniforms.uSun.value.set(...toward(sky.sun.az, sky.sun.el))
+  earthGlobe.uniforms.uSun.value.set(...toward(sky.sun.az, sky.sun.el))
   // Earth's axis is close to the Moon's: in this scene the Moon's north points along the local
   // north raised by the site's latitude. The face shown is the side of Earth that really faces
   // the Moon at this time, so it turns as the clock moves.
@@ -759,7 +750,7 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
           <meshBasicMaterial color="#fff8e0" side={THREE.DoubleSide} toneMapped={false} />
         </mesh>
         {/* Earth: a small globe lit from the true Sun direction, so its phase is the real one */}
-        <mesh position={earthDisc.p} quaternion={earthTurn} material={earthMaterial}>
+        <mesh position={earthDisc.p} quaternion={earthTurn} material={earthGlobe}>
           <sphereGeometry args={[earthDisc.r, 48, 32]} />
         </mesh>
       </group>

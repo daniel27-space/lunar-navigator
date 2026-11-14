@@ -106,6 +106,37 @@ export function earthTexture(width = 512, height = 256): THREE.DataTexture {
 }
 
 /**
+ * The material for the Earth globe. It starts with the generated texture above and switches to
+ * NASA's Blue Marble image (`globe/earth_2k.jpg`, built by pipeline/globe/build_earth.py) as
+ * soon as that has loaded; if it cannot be loaded the generated one stays. `onReady` is called
+ * when the picture changes, so a view that draws on demand can redraw.
+ */
+export function earthMaterial(dataBase: string, onReady: () => void): THREE.ShaderMaterial {
+  const material = new THREE.ShaderMaterial({
+    vertexShader: EARTH_VERTEX,
+    fragmentShader: EARTH_FRAGMENT,
+    uniforms: { uMap: { value: earthTexture() }, uSun: { value: new THREE.Vector3(1, 0, 0) }, uGain: { value: 1.05 } },
+    toneMapped: false,
+  })
+  new THREE.TextureLoader().load(
+    `${dataBase}globe/earth_2k.jpg`,
+    (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace
+      tex.wrapS = THREE.RepeatWrapping
+      const old = material.uniforms.uMap.value as THREE.Texture
+      material.uniforms.uMap.value = tex
+      // The photograph's oceans are much darker than the generated ones; lift it a little.
+      material.uniforms.uGain.value = 1.45
+      old.dispose()
+      onReady()
+    },
+    undefined,
+    () => {}, // keep the generated texture
+  )
+  return material
+}
+
+/**
  * How to turn a three.js sphere so that its north pole points along `north` (scene
  * coordinates) and the meridian `faceLonDeg` faces the viewer at the origin from position `p`.
  * (A three.js sphere's texture has longitude 0 towards +x and 90E towards -z.)
@@ -153,6 +184,7 @@ void main() {
 export const EARTH_FRAGMENT = /* glsl */ `
 uniform sampler2D uMap;
 uniform vec3 uSun;   // unit vector towards the Sun, scene coordinates
+uniform float uGain;
 varying vec2 vUv;
 varying vec3 vN;
 varying vec3 vView;
@@ -162,7 +194,8 @@ void main() {
   vec3 day = texture2D(uMap, vUv).rgb;
   // thin blue air at the limb, on the sunlit side only
   float rim = pow(1.0 - max(dot(n, normalize(vView)), 0.0), 2.5);
-  vec3 col = day * lit * 1.05 + vec3(0.35, 0.55, 0.95) * rim * lit * 0.7 + vec3(0.010, 0.014, 0.028);
+  // a faint blue haze over the whole lit side, as the air scatters sunlight
+  vec3 col = (day * uGain + vec3(0.03, 0.06, 0.13)) * lit + vec3(0.35, 0.55, 0.95) * rim * lit * 0.7 + vec3(0.010, 0.014, 0.028);
   gl_FragColor = vec4(col, 1.0);
   #include <colorspace_fragment>
 }`
