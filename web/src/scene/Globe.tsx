@@ -49,10 +49,12 @@ interface Props {
   cuts: Cut[]
   map: GlobeMap | null
   relief: GlobeRelief | null
+  /** sphere segments around and from pole to pole */
+  segments: [number, number]
   onPick: (lat: number, lon: number) => void
 }
 
-export function Globe({ sunDir, cuts, map, relief, onPick }: Props) {
+export function Globe({ sunDir, cuts, map, relief, segments, onPick }: Props) {
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -89,7 +91,7 @@ export function Globe({ sunDir, cuts, map, relief, onPick }: Props) {
         material.uniforms.uExpo.value = exposureFor(camera.position, material.uniforms.uSun.value)
       }}
     >
-      <sphereGeometry args={[R_KM, 1024, 512]} />
+      <sphereGeometry args={[R_KM, segments[0], segments[1]]} />
     </mesh>
   )
 }

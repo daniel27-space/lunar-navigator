@@ -5,7 +5,7 @@
 // and the orbit controls are rebuilt at the end of a move so they orbit about the new up.
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { useFrame, useThree } from '@react-three/fiber'
+import { invalidate, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { localFrame, R_KM, sitePosKm, upVector } from '../lib/geo'
@@ -120,6 +120,7 @@ export function Rig() {
       to: poseFor(goal, camera, c.target),
     }
     c.enabled = false
+    invalidate() // the view only redraws on demand; start the move
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal, camera])
 
@@ -138,6 +139,7 @@ export function Rig() {
     const target = m.fromTarget.clone().lerp(m.to.target, k)
     camera.up.copy(upAt(m.fromUp, m.to.up, m.to.via, k))
     camera.lookAt(target)
+    invalidate() // keep drawing until the move ends
     if (m.t >= 1) {
       camera.position.copy(m.to.pos)
       camera.up.copy(m.to.up)

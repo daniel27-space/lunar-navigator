@@ -4,11 +4,11 @@
 // texture in the fragment shader, including the curvature of the Moon.
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
-import { useThree, type ThreeEvent } from '@react-three/fiber'
+import { invalidate, useThree, type ThreeEvent } from '@react-three/fiber'
 import { latLonOf, R2D, type Vec3 } from '../lib/geo'
 import { globalHeightAt, type GlobalDem } from '../lib/globalDem'
 import { frameDirection, sampleXY, type Level, type Terrain } from '../lib/terrain'
-import type { LayerMode } from '../store'
+import type { Detail, LayerMode } from '../store'
 import {
   applyCuts,
   applyGlobeMap,
@@ -93,6 +93,27 @@ function buildGeometry(t: Terrain, global: GlobalDem | null, GRID: number): THRE
   return g
 }
 
+/** The same level at half the resolution (2 x 2 averages, ignoring missing cells). */
+function halved(l: Level): Level {
+  const size = l.size >> 1
+  const h = new Float32Array(size * size)
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      let sum = 0
+      let n = 0
+      for (let k = 0; k < 4; k++) {
+        const v = l.h[(2 * r + (k >> 1)) * l.size + 2 * c + (k & 1)]
+        if (!Number.isNaN(v)) {
+          sum += v
+          n++
+        }
+      }
+      h[r * size + c] = n ? sum / n : NaN
+    }
+  }
+  return { ...l, size, pixel: l.pixel * 2, h }
+}
+
 function heightTexture(t: Terrain, l: Level, global: GlobalDem | null, linear: boolean): THREE.DataTexture {
   // NaN would poison filtering. Gaps in the data take the whole-Moon map's height (for the
   // picture only; the numbers never use filled values), or a very low value the shader
@@ -125,7 +146,7 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`
 
-const fragmentShader = /* glsl */ `
+const fragmentShader = (steps: number, growth: number) => /* glsl */ `
 precision highp float;
 uniform sampler2D uH0;
 uniform sampler2D uH1;
@@ -229,7 +250,7 @@ void main() {
   float minA = 1.0;
   float t = max(e * 0.75, 0.02);
   vec3 start = p0 + up * 0.003;
-  for (int i = 0; i < 120; i++) {
+  for (int i = 0; i < ${steps}; i++) {
     vec3 q = start + uSun * t;
     float rq = length(q);
     if (rq - uR > 11.0) break;
@@ -237,7 +258,7 @@ void main() {
     if (!inside(uvOf(xy, uExt0), 0.0)) break;
     minA = min(minA, (rq - (uR + hAt(xy))) / t);
     if (minA < -uSunRad) break;
-    t *= 1.08;
+    t *= ${growth.toFixed(3)};
   }
   float lit = clamp(minA / uSunRad * 0.5 + 0.5, 0.0, 1.0);
   float direct = max(dot(n, uSun), 0.0) * lit;
@@ -292,7 +313,7 @@ const overlayCache = new Map<string, THREE.Texture>()
 function overlayTexture(base: string, file: string): THREE.Texture {
   let tex = overlayCache.get(file)
   if (!tex) {
-    tex = new THREE.TextureLoader().load(`${base}layers/${file}`)
+    tex = new THREE.TextureLoader().load(`${base}layers/${file}`, () => invalidate())
     tex.colorSpace = THREE.NoColorSpace
     tex.flipY = false
     tex.generateMipmaps = false
@@ -319,22 +340,27 @@ interface Props {
   relief: GlobeRelief | null
   /** true for the south-pole tiles, which have the NASA overlay layers; a site patch has none */
   overlays: boolean
+  /** how much detail to draw; affects the picture only */
+  detail: Detail
   /** finer terrains drawn on top of this one; this surface is skipped under them */
   cuts?: Cut[]
   onPick: (lat: number, lon: number) => void
 }
 
-export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, map, relief, overlays, cuts, onPick }: Props) {
+export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, map, relief, overlays, cuts, detail, onPick }: Props) {
   const gl = useThree((s) => s.gl)
   const global = relief ? relief.dem : null
-  const geometry = useMemo(() => buildGeometry(terrain, global, overlays ? 768 : 384), [terrain, global, overlays])
+  const grid = overlays ? detail.grid : Math.min(detail.grid, 384)
+  const geometry = useMemo(() => buildGeometry(terrain, global, grid), [terrain, global, grid])
   const material = useMemo(() => {
     const linear = !!gl.getContext().getExtension('OES_texture_float_linear')
-    const [l0, l1] = [terrain.levels[0], terrain.levels[terrain.levels.length - 1]]
+    const l0 = terrain.levels[0]
+    const top = terrain.levels[terrain.levels.length - 1]
+    const l1 = detail.halfFine && terrain.levels.length > 1 ? halved(top) : top
     return new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
       vertexShader,
-      fragmentShader,
+      fragmentShader: fragmentShader(detail.steps, detail.growth),
       uniforms: {
         ...shadingUniforms(),
         ...cutUniforms(),
@@ -358,7 +384,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, m
         uScoreRange: { value: new THREE.Vector2(0, 1) },
       },
     })
-  }, [terrain, global, gl])
+  }, [terrain, global, gl, detail])
 
   useEffect(
     () => () => {

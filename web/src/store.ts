@@ -3,6 +3,45 @@ import { PRESETS, type FinderCriteria } from './lib/finder'
 
 export type LayerMode = 'natural' | 'elevation' | 'slope' | 'sunavg' | 'earthavg' | 'psr' | 'finder'
 
+/**
+ * How much detail the 3D view draws. It changes only the picture (sharpness, shadow steps,
+ * mesh density), never the numbers on the cards.
+ */
+export type Quality = 'low' | 'medium' | 'high'
+export interface Detail {
+  /** cap on device pixels per CSS pixel */
+  dpr: number
+  /** shadow ray-march steps per pixel and their growth factor (fewer, longer steps reach as far) */
+  steps: number
+  growth: number
+  /** quads per side of the south-pole mesh */
+  grid: number
+  globe: [number, number]
+  /** draw the fine south-pole tile at half resolution (a quarter of the video memory) */
+  halfFine: boolean
+}
+export const DETAIL: Record<Quality, Detail> = {
+  low: { dpr: 1, steps: 48, growth: 1.2, grid: 384, globe: [384, 192], halfFine: true },
+  medium: { dpr: 1.5, steps: 80, growth: 1.125, grid: 512, globe: [768, 384], halfFine: false },
+  high: { dpr: 2, steps: 120, growth: 1.08, grid: 768, globe: [1024, 512], halfFine: false },
+}
+
+const QUALITY_KEY = 'lunar-navigator.quality'
+function initialQuality(): Quality {
+  try {
+    const saved = localStorage.getItem(QUALITY_KEY)
+    if (saved === 'low' || saved === 'medium' || saved === 'high') return saved
+  } catch {
+    // storage can be blocked; fall through to a guess
+  }
+  if (typeof window === 'undefined' || typeof matchMedia === 'undefined') return 'high'
+  // Phones and tablets start low; small laptops in the middle.
+  if (matchMedia('(pointer: coarse)').matches || window.innerWidth < 760) return 'low'
+  const cores = navigator.hardwareConcurrency ?? 8
+  const memory = (navigator as { deviceMemory?: number }).deviceMemory ?? 8
+  return cores <= 4 || memory <= 4 ? 'medium' : 'high'
+}
+
 /** One colour per pinned site, used everywhere that site appears. */
 export const SITE_COLORS = ['#b79bff', '#5fd38d', '#ff8f6b']
 
@@ -29,6 +68,8 @@ interface State {
   /** simulated seconds per real second */
   rate: number
   layer: LayerMode
+  quality: Quality
+  setQuality: (q: Quality) => void
   /** site finder: what the user needs from a site, and the preset it came from ('custom' once edited) */
   finder: FinderCriteria
   preset: string
@@ -58,6 +99,15 @@ export const useStore = create<State>((set) => ({
   playing: false,
   rate: 6 * 3600,
   layer: 'natural',
+  quality: initialQuality(),
+  setQuality: (quality) => {
+    try {
+      localStorage.setItem(QUALITY_KEY, quality)
+    } catch {
+      // not saved; the choice still applies for this visit
+    }
+    set({ quality })
+  },
   finder: PRESETS[0].criteria,
   preset: PRESETS[0].id,
   setFinder: (f) => set((s) => ({ finder: { ...s.finder, ...f }, preset: 'custom' })),

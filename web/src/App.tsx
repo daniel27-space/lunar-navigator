@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, invalidate } from '@react-three/fiber'
 import * as THREE from 'three'
 import { bodyVectors, ephemEndMs, ephemStartMs, loadEphem, type Ephem } from './lib/ephem'
 import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
@@ -21,7 +21,7 @@ import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
 import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
-import { SITE_COLORS, useStore, type LayerMode, type Pin } from './store'
+import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
 import { Compare } from './ui/Compare'
 import { FinderPanel } from './ui/FinderPanel'
 import { SiteCard } from './ui/SiteCard'
@@ -292,6 +292,14 @@ export default function App() {
   const addPin = useStore((s) => s.addPin)
   const activePin = useStore((s) => s.activePin)
   const goTo = useStore((s) => s.goTo)
+  const quality = useStore((s) => s.quality)
+  const setQuality = useStore((s) => s.setQuality)
+  const detail = DETAIL[quality]
+  // The 3D view is drawn only when something changes (not 60 times a second), so every
+  // React update asks for one fresh frame.
+  useEffect(() => {
+    invalidate()
+  })
   const finder = useStore((s) => s.finder)
   const preset = useStore((s) => s.preset)
   const setWindowStart = useStore((s) => s.setWindowStart)
@@ -420,14 +428,19 @@ export default function App() {
 
   return (
     <div className="app">
-      <Canvas camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }} gl={{ antialias: true }} dpr={[1, 2]}>
+      <Canvas
+        frameloop="demand"
+        camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }}
+        gl={{ antialias: quality !== 'low', powerPreference: 'high-performance' }}
+        dpr={[1, detail.dpr]}
+      >
         <color attach="background" args={['#000']} />
-        <Globe sunDir={sun.dir} cuts={cuts} map={globeMap} relief={globeRelief} onPick={pick} />
+        <Globe sunDir={sun.dir} cuts={cuts} map={globeMap} relief={globeRelief} segments={detail.globe} onPick={pick} />
         {terrain && (
-          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} score={score} dataBase={BASE} map={globeMap} relief={globeRelief} overlays cuts={patchCuts} onPick={pick} />
+          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} score={score} dataBase={BASE} map={globeMap} relief={globeRelief} overlays cuts={patchCuts} detail={detail} onPick={pick} />
         )}
         {shownPatches.map((t) => (
-          <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} onPick={pick} />
+          <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} detail={detail} onPick={pick} />
         ))}
         <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
         <PinMarkers elevation={elevation} />
@@ -479,6 +492,14 @@ export default function App() {
             </optgroup>
           )}
         </select>
+        <label className="quality">
+          <span>Detail</span>
+          <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} aria-label="3D detail level">
+            <option value="low">Low (phones)</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
         <div className="layers" role="group" aria-label="Map layer">
           {LAYERS.map((l) => (
             <button key={l.value} className={l.value === layer ? 'on' : ''} onClick={() => setLayer(l.value)}>
