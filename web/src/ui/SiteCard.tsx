@@ -1,6 +1,6 @@
 // One pinned point: what the Sun and Earth are doing there now, and over the next two months.
 import { useState } from 'react'
-import { fmtAngle, fmtCoord, fmtDate, fmtDegrees, fmtDuration, fmtElevation, fmtShare, fmtSlope } from '../lib/format'
+import { fmtAngle, fmtCoord, fmtDegrees, fmtDuration, fmtPeriod, fmtElevation, fmtShare, fmtSlope } from '../lib/format'
 import type { Series } from '../lib/windows'
 import { useStore } from '../store'
 import { Badge } from './controls'
@@ -134,7 +134,6 @@ interface Props {
 export function SiteCard({ a, active }: Props) {
   const removePin = useStore((s) => s.removePin)
   const setActivePin = useStore((s) => s.setActivePin)
-  const anchor = useStore((s) => s.windowStart)
   const { pin, hM, slope, horizon, series, summary, sky, eclipse, sunFrac, earthClear, sunNext, commNext, tier } = a
   // The horizon view follows the active card until the user opens or closes it by hand.
   const [panoChoice, setPanoChoice] = useState<boolean | null>(null)
@@ -190,7 +189,10 @@ export function SiteCard({ a, active }: Props) {
         {eclipse < 1 && <p className="caption">Earth is eclipsing the Sun.</p>}
       </div>
 
-      <SiteTimeline sites={[a]} />
+      <div>
+        <h3 className="section period">{fmtPeriod(series.t0Ms, WINDOW_DAYS)}</h3>
+        <SiteTimeline sites={[a]} />
+      </div>
 
       <dl className="stats">
         <div>
@@ -272,7 +274,7 @@ export function SiteCard({ a, active }: Props) {
             <b>Two rows at the top:</b> what is true at the selected time, and how long until it changes.
           </li>
           <li>
-            <b>Two bars:</b> the next {WINDOW_DAYS} days. Yellow means in sunlight, blue means Earth in view, a gap means not. The grey bracket
+            <b>Two bars:</b> the {WINDOW_DAYS} days named above them (the period moves on when the clock leaves it). Yellow means in sunlight, blue means Earth in view, a gap means not. The grey bracket
             marks the longest night. The white line is the selected time; drag it to move the clock.
           </li>
           <li>
@@ -294,10 +296,11 @@ export function SiteCard({ a, active }: Props) {
       <details className="note" onClick={(e) => e.stopPropagation()}>
         <summary>
           {rough && <i className="dot warn" />}
-          {tierShort} · {WINDOW_DAYS} days from {fmtDate(anchor)} UTC · <u>more</u>
+          {tierShort} · figures for {fmtPeriod(series.t0Ms, WINDOW_DAYS)}, UTC · <u>more</u>
         </summary>
         <p>
-          {TIER_NOTE[tier]} Observer {horizon.observerHeightM} m above the surface.
+          {TIER_NOTE[tier]} Observer {horizon.observerHeightM} m above the surface. These figures are worked out for this point and this period; the
+          site finder's shortlist shows 18.6-year averages on 300 m cells, so the two can differ by several points.
         </p>
       </details>
     </section>

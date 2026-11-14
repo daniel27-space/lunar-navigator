@@ -19,8 +19,8 @@ Pick any point near the Moon's south pole and any date from 2024 to 2036, and se
   view, in or near permanent shadow) or pick a goal such as "Ice prospecting", and the map
   shades the ground that qualifies, brightest where it fits best, with a ranked shortlist;
 - **when to land**: for any pinned site, the next year on one strip, the best landing dates
-  ranked for a 7, 14 or 30-day stay, and the selected date compared with them, for when a
-  schedule slips;
+  ranked for a 7, 14 or 30-day stay, and the selected date compared with them. Keep one date
+  as a baseline and the app states what a slip to another date gains and loses;
 - pin a point by typing its latitude and longitude, as well as by clicking the map;
 - **a comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
   one shared timeline, and one row per measure with the winner marked;
@@ -98,6 +98,8 @@ property search, product-comparison sites, sun-planning tools); see
   80 m. It works on cells about 300 m across and NASA's 18.6-year averages, so narrow ridge
   tops are blurred and its figures are a first cut; pin a spot for exact numbers. A cell's
   slope is the steepest 80 m slope inside it.
+- Dates run from 4 Jan 2024 to 1 Nov 2035: the Sun and Earth table ends on 1 Jan 2036 and each
+  card looks 60 days ahead.
 - Planned missions are placed at the centre of their announced target feature, not at a landing
   point.
 - In the 3D view the outer 50 km of the detailed terrain (roughly 80°S to 81.7°S) fades into

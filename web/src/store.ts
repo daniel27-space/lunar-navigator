@@ -104,6 +104,38 @@ interface State {
   /** interface only: ids of pins that came from the finder's shortlist (their card opens on "When to land") */
   fromFinder: Record<number, true>
   markFromFinder: (id: number) => void
+  /** interface only: the pin whose "When to land" should be brought into view (a single shortlist pick) */
+  landingFocus: number | null
+  focusLanding: (id: number | null) => void
+  /**
+   * interface only: what the last pin(s) pushed out, so the notice can name it and Undo can put
+   * it back. Cleared by Undo, by dismissing the notice, or by the next pin that replaces nothing.
+   */
+  replaced: Replaced | null
+  undoReplace: () => void
+  dismissReplace: () => void
+  /** interface only: per pin id, a landing time kept as the baseline for a schedule slip */
+  baselines: Record<number, number>
+  setBaseline: (pinId: number, tMs: number | null) => void
+  /** interface only: the first-use guide is showing */
+  help: boolean
+  setHelp: (on: boolean) => void
+}
+
+export interface Replaced {
+  removed: Pin[]
+  /** ids of the pins that took their places */
+  added: number[]
+  at: number
+}
+
+const HELP_KEY = 'lunar-navigator.intro-seen'
+function firstVisit(): boolean {
+  try {
+    return localStorage.getItem(HELP_KEY) === null
+  } catch {
+    return true
+  }
 }
 
 const MAX_PINS = 3
@@ -153,12 +185,21 @@ export const useStore = create<State>((set) => ({
       const slot = [0, 1, 2].find((k) => !kept.some((q) => q.slot === k)) ?? 0
       const pin: Pin = { ...p, id, slot, label: p.label ?? `Point ${String.fromCharCode(64 + ((id - 1) % 26) + 1)}` }
       const pins = [...kept, pin]
-      return { pins, activePin: id }
+      // Remember what was pushed out. Pins added in one go (Compare top 3) share one record.
+      const out = s.pins.slice(0, s.pins.length - kept.length)
+      const now = Date.now()
+      const batch = s.replaced && now - s.replaced.at < 250 ? s.replaced : null
+      const replaced: Replaced | null = out.length
+        ? { removed: [...(batch?.removed ?? []), ...out.filter((q) => !batch?.added.includes(q.id))], added: [...(batch?.added ?? []).filter((a) => !out.some((q) => q.id === a)), id], at: now }
+        : batch
+          ? { ...batch, added: [...batch.added, id], at: now }
+          : null
+      return { pins, activePin: id, replaced: replaced && replaced.removed.length ? replaced : null }
     }),
   removePin: (id) =>
     set((s) => {
       const pins = s.pins.filter((p) => p.id !== id)
-      return { pins, activePin: s.activePin === id ? (pins.at(-1)?.id ?? null) : s.activePin }
+      return { pins, activePin: s.activePin === id ? (pins.at(-1)?.id ?? null) : s.activePin, replaced: s.replaced?.added.includes(id) ? null : s.replaced }
     }),
   setActivePin: (activePin) => set({ activePin }),
   sheet: 'peek',
@@ -167,4 +208,35 @@ export const useStore = create<State>((set) => ({
   setTab: (tab) => set({ tab }),
   fromFinder: {},
   markFromFinder: (id) => set((s) => ({ fromFinder: { ...s.fromFinder, [id]: true } })),
+  landingFocus: null,
+  focusLanding: (landingFocus) => set({ landingFocus }),
+  replaced: null,
+  undoReplace: () =>
+    set((s) => {
+      if (!s.replaced) return s
+      const { removed, added } = s.replaced
+      // The removed pins come back with their own id, colour and label; the newcomers go.
+      const pins = [...removed, ...s.pins.filter((p) => !added.includes(p.id) && !removed.some((r) => r.id === p.id))].slice(-MAX_PINS)
+      return { pins, activePin: pins.at(-1)?.id ?? null, replaced: null }
+    }),
+  dismissReplace: () => set({ replaced: null }),
+  baselines: {},
+  setBaseline: (pinId, tMs) =>
+    set((s) => {
+      const baselines = { ...s.baselines }
+      if (tMs === null) delete baselines[pinId]
+      else baselines[pinId] = tMs
+      return { baselines }
+    }),
+  help: firstVisit(),
+  setHelp: (help) => {
+    if (!help) {
+      try {
+        localStorage.setItem(HELP_KEY, '1')
+      } catch {
+        // not remembered; the guide just shows again next visit
+      }
+    }
+    set({ help })
+  },
 }))

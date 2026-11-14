@@ -29,6 +29,8 @@ import { Compare } from './ui/Compare'
 import { INK, ON_ACCENT, Segmented, SITE_LETTERS } from './ui/controls'
 import { ErrorBoundary } from './ui/ErrorBoundary'
 import { FinderPanel } from './ui/FinderPanel'
+import { Intro } from './ui/Intro'
+import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
 import { SiteCard } from './ui/SiteCard'
 import { useSiteAnalysis, type SiteAnalysis } from './ui/useSiteAnalysis'
@@ -80,16 +82,17 @@ const RATES: readonly (readonly [number, string, string])[] = [
   [7 * 86400, '7 d/s', 'One week per second'],
 ]
 /** `hint` is the one-line description in the phone's layer list; `legend` the full note with sources. */
-const LAYERS: { label: string; value: LayerMode; hint: string; legend: string; ramp?: string; ends?: [string, string] }[] = [
+const LAYERS: { label: string; full?: string; value: LayerMode; hint: string; legend: string; ramp?: string; ends?: [string, string] }[] = [
   {
     label: 'Find a site',
     value: 'finder',
     hint: 'Rank the ground against what your mission needs',
     legend: 'Ground that meets every limit, brightest where it fits best. Slope from LOLA; long-term sunlight, Earth view and permanent shadow from NASA GSFC.',
   },
-  { label: 'Sun now', value: 'natural', hint: 'Light and shadow at the selected time', legend: 'Sunlight and shadow at the selected time, from LOLA terrain and the JPL DE440 ephemeris.' },
+  { label: 'Sun now', full: 'Sunlight now', value: 'natural', hint: 'Light and shadow at the selected time', legend: 'Sunlight and shadow at the selected time, from LOLA terrain and the JPL DE440 ephemeris.' },
   {
     label: 'Sun avg',
+    full: 'Average sunlight',
     value: 'sunavg',
     hint: 'Share of time the Sun is visible',
     legend: 'Share of time the Sun is visible, averaged over 18.6 years. NASA GSFC (Mazarico et al. 2011).',
@@ -98,6 +101,7 @@ const LAYERS: { label: string; value: LayerMode; hint: string; legend: string; r
   },
   {
     label: 'Earth avg',
+    full: 'Average Earth view',
     value: 'earthavg',
     hint: 'Share of time Earth is visible',
     legend: 'Share of time Earth is visible, averaged over 18.6 years. NASA GSFC (Mazarico et al. 2011).',
@@ -106,12 +110,14 @@ const LAYERS: { label: string; value: LayerMode; hint: string; legend: string; r
   },
   {
     label: 'Shadow',
+    full: 'Permanent shadow',
     value: 'psr',
     hint: 'Ground that never sees the Sun',
     legend: 'Ice-blue areas are in permanent shadow, they never see the Sun: cold enough for water ice to survive. NASA GSFC LOLA.',
   },
   {
     label: 'Height',
+    full: 'Elevation',
     value: 'elevation',
     hint: 'Elevation above the reference sphere',
     legend: 'Height relative to the 1737.4 km reference sphere (LOLA).',
@@ -199,9 +205,10 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
           {fmtDateTime(tMs)}
         </button>
       )}
+      {editing && <span className="utc">UTC</span>}
       {outOfRange && (
         <p className="caption range-note" role="status">
-          Sun and Earth positions are available from {fmtDay(first)} to {fmtDay(last)}; the date was set to the nearest end.
+          <i className="dot warn" /> Sun and Earth positions are available from {fmtDay(first)} to {fmtDay(last)}; the date was set to the nearest end.
         </p>
       )}
     </div>
@@ -294,10 +301,12 @@ interface SitesPanelProps {
   pending: (lat: number, lon: number) => boolean
   global: GlobalDem | null
   onAddCoords: (lat: number, lon: number) => void
+  /** pins a ready-made example site (the first-use guide's "Show me an example") */
+  onExample?: () => void
 }
 
 /** Right-hand panel: one card per pinned site, or the comparison once there are two or more. */
-function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global, onAddCoords }: SitesPanelProps) {
+function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global, onAddCoords, onExample }: SitesPanelProps) {
   const [mode, setMode] = useState<'compare' | 'cards'>('compare')
   const setTab = useStore((s) => s.setTab)
   // Sites are listed in badge order (A, B, C), whatever order they were pinned in.
@@ -322,9 +331,10 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
   }, [newest, setTab])
   return (
     <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
+      <Intro onExample={onExample} />
       {waiting.map((x) => (
         <p key={x.id} className="empty loading" role="status">
-          Loading detailed terrain for {x.label}…
+          <i className="dot pulse" /> Loading detailed terrain for {x.label}…
         </p>
       ))}
       {sites.length === 0 && waiting.length === 0 && (
@@ -363,6 +373,8 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
           <AddByCoords onAdd={onAddCoords} />
         </details>
       )}
+      {/* Last, and pinned to the bottom edge of the panel, so it is seen wherever the panel is scrolled. */}
+      <ReplacedNotice />
     </aside>
   )
 }
@@ -564,6 +576,8 @@ export default function App() {
       // Remember that this pin came from the finder: its card opens on "When to land".
       const id = useStore.getState().activePin
       if (id !== null) useStore.getState().markFromFinder(id)
+      // A single pick (not "Compare top 3") goes on to its landing dates.
+      if (id !== null && fly) useStore.getState().focusLanding(id)
       if (fly) goTo({ kind: 'site', lat: k.lat, lon: k.lon, hM: elevation(k.lat, k.lon) })
     },
     [pick, goTo, elevation, preset],
@@ -572,6 +586,35 @@ export default function App() {
   const [hover, setHover] = useState<{ m: Mission; x: number; y: number } | null>(null)
   const onHover = useCallback((m: Mission | null, x: number, y: number) => setHover(m ? { m, x, y } : null), [])
   const current = LAYERS.find((l) => l.value === layer)!
+
+  // A named crest is pinned at the highest ground within 300 m of its listed coordinates: the
+  // listed point itself can sit in a small pit beside the crest.
+  const pinPlace = (place: PatchIndex['patches'][number]) => {
+    if (!patchIndex) return
+    const pin = (t: Terrain | null) => {
+      const at = t ? highestNear(t, 300) : { lat: place.lat, lon: place.lon }
+      pick(at.lat, at.lon, place.name ?? place.id)
+      goTo({ kind: 'site', lat: at.lat, lon: at.lon, hM: elevation(at.lat, at.lon) })
+    }
+    const have = patches[place.id]
+    if (have !== undefined) pin(have)
+    else
+      loadPatch(BASE, patchIndex, place).then(
+        (t) => {
+          setPatches((m) => (place.id in m ? m : { ...m, [place.id]: t }))
+          pin(t)
+        },
+        () => pin(null),
+      )
+  }
+  // The guide's example: a polar crest with long sunlight, opened on its card.
+  const examplePlace = patchIndex?.patches.find((x) => x.id === 'connecting-ridge') ?? patchIndex?.patches.find((x) => x.kind === 'crest20')
+  const openHelp = () => {
+    useStore.getState().setHelp(true)
+    setTab('sites')
+    setMenu(null)
+    if (isPhone()) setSheet('full')
+  }
 
   const chooseLayer = (l: LayerMode) => {
     setLayer(l)
@@ -661,25 +704,7 @@ export default function App() {
                 const m = missions.find((x) => x.id === e.target.value)
                 if (m) selectMission(m)
                 const place = patchIndex?.patches.find((x) => `place:${x.id}` === e.target.value)
-                if (place && patchIndex) {
-                  // A named crest is pinned at the highest ground within 300 m of its listed
-                  // coordinates: the listed point itself can sit in a small pit beside the crest.
-                  const pin = (t: Terrain | null) => {
-                    const at = t ? highestNear(t, 300) : { lat: place.lat, lon: place.lon }
-                    pick(at.lat, at.lon, place.name ?? place.id)
-                    goTo({ kind: 'site', lat: at.lat, lon: at.lon, hM: elevation(at.lat, at.lon) })
-                  }
-                  const have = patches[place.id]
-                  if (have !== undefined) pin(have)
-                  else
-                    loadPatch(BASE, patchIndex, place).then(
-                      (t) => {
-                        setPatches((m) => (place.id in m ? m : { ...m, [place.id]: t }))
-                        pin(t)
-                      },
-                      () => pin(null),
-                    )
-                }
+                if (place) pinPlace(place)
                 setMenu(null)
               }}
             >
@@ -690,7 +715,7 @@ export default function App() {
                     .filter((m) => m.status === st)
                     .map((m) => (
                       <option key={m.id} value={m.id}>
-                        {m.name} ({m.date_utc.slice(0, 4)})
+                        {m.name} ({/\b(?:19|20)\d{2}\b/.exec(m.date_utc)?.[0] ?? 'planned'})
                       </option>
                     ))}
                 </optgroup>
@@ -715,6 +740,9 @@ export default function App() {
                 <option value="high">High</option>
               </select>
             </label>
+            <button className="btn ghost help-btn" onClick={openHelp} aria-label="Help: what this is for and how to use it">
+              Help
+            </button>
             <div className="quality phone-only">
               <span>Speed</span>
               <Segmented label="Playback speed" options={RATES} value={rate} onChange={setRate} />
@@ -724,7 +752,13 @@ export default function App() {
           <i className="brk" />
           <div className="layerbar seg" role="group" aria-label="Map layer" data-open={menu === 'layers'}>
             {LAYERS.map((l) => (
-              <button key={l.value} aria-pressed={l.value === layer} title={l.legend} onClick={() => chooseLayer(l.value)}>
+              <button
+                key={l.value}
+                aria-pressed={l.value === layer}
+                aria-label={`${l.full ?? l.label}: ${l.hint}`}
+                title={`${l.full ?? l.label}. ${l.legend}`}
+                onClick={() => chooseLayer(l.value)}
+              >
                 <span>{l.label}</span>
                 <small>{l.hint}</small>
                 {l.value === layer && l.ramp && (
@@ -762,7 +796,7 @@ export default function App() {
           <div className="dock dock-right" onClick={expandOnTap}>
             {ephem && terrain ? (
               <ErrorBoundary what="The sites panel">
-                <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} pending={terrainPending} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} />
+                <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} pending={terrainPending} global={globeRelief ? globeRelief.dem : null} onAddCoords={addByCoords} onExample={examplePlace ? () => pinPlace(examplePlace) : undefined} />
               </ErrorBoundary>
             ) : null}
           </div>

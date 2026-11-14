@@ -72,7 +72,7 @@ export interface StayMark {
 }
 
 /** One site over a year: sunlight and Earth lanes, the ranked stays marked above them, month ticks. */
-export function YearStrip({ series, marks }: { series: Series; marks: StayMark[] }) {
+export function YearStrip({ series, marks, baselineMs }: { series: Series; marks: StayMark[]; baselineMs?: number }) {
   const n = series.count
   const span = n * series.stepMs
   const lanes = useMemo(
@@ -115,7 +115,10 @@ export function YearStrip({ series, marks }: { series: Series; marks: StayMark[]
             </div>
           </div>
         </div>
-        <div {...hit}>{f >= 0 && f <= 1 && <i className="tl-cursor" style={{ left: `${f * 100}%` }} />}</div>
+        <div {...hit}>
+          {baselineMs !== undefined && baselineMs >= series.t0Ms && baselineMs <= series.t0Ms + span && <i className="tl-baseline" style={{ left: at(baselineMs) }} />}
+          {f >= 0 && f <= 1 && <i className="tl-cursor" style={{ left: `${f * 100}%` }} />}
+        </div>
       </div>
       <div className="tl-ticks" aria-hidden="true">
         {months.map((t) => (

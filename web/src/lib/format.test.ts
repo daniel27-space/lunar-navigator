@@ -8,6 +8,7 @@ import {
   fmtDay,
   fmtDurationWords,
   fmtMonth,
+  fmtPeriod,
   parseCoord,
   splitCoordPair,
   fmtDegrees,
@@ -92,6 +93,11 @@ describe('format', () => {
     expect(fmtDurationWords(14)).toBe('14 hours')
     expect(fmtDurationWords(1)).toBe('1.0 hour')
     expect(fmtDurationWords(0)).toBe('none')
+  })
+
+  it('periods are named by their real dates', () => {
+    expect(fmtPeriod(Date.UTC(2027, 2, 3), 60)).toBe('3 Mar \u2013 2 May 2027 (60 days)')
+    expect(fmtPeriod(Date.UTC(2026, 10, 12), 60)).toBe('12 Nov 2026 \u2013 11 Jan 2027 (60 days)')
   })
 
   it('parses typed coordinates: signs, hemisphere letters, 0..360 longitude', () => {

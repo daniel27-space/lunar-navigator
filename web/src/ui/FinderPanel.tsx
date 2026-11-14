@@ -117,6 +117,17 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
           <>
             <div className="group">
               <p className="hero">{area}</p>
+              <div className="ramp">
+                <span>just passes</span>
+                <i className="fit-ramp" />
+                <span>best fit</span>
+              </div>
+            </div>
+
+            <div className="group alone">
+              <h3 className="section" title="Share of the mapped ground that passes each limit when the other limits are ignored">
+                Passes this limit alone
+              </h3>
               <div className="bites">
                 {limits.map(([name, share]) => {
                   const tight = bites && name === tightest[0]
@@ -139,11 +150,6 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
                 })}
               </div>
               {bites && result.candidates.length === 0 && <p className="caption">{tightest[0]} removes the most ground: loosen it first.</p>}
-              <div className="ramp">
-                <span>just passes</span>
-                <i className="fit-ramp" />
-                <span>best fit</span>
-              </div>
             </div>
 
             <div className="group">
@@ -175,7 +181,12 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
                   </li>
                 ))}
               </ol>
-              {result.candidates.length > 0 && <p className="caption">Pick a spot, then see when to land there.</p>}
+              {result.candidates.length > 0 && (
+                <p className="caption">
+                  Pick a spot, then see when to land there. Shortlist figures are 18.6-year averages on 300 m cells; a pinned site shows its own
+                  period on finer terrain, so its numbers can differ.
+                </p>
+              )}
             </div>
 
             <details className="disclosure">

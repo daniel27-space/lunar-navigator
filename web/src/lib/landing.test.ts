@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { leader, rankWindows, windowStats } from './landing'
+import { fitScore, leader, rankWindows, windowStats } from './landing'
 import type { Series } from './windows'
 
 const H = 3600000
@@ -75,6 +75,13 @@ describe('rankWindows', () => {
       [T0 + 3 * 24 * H, 0.7],
       [T0, 0.6],
     ])
+  })
+
+  it('scores every ranked stay with the published rule', () => {
+    const lit = [...days(2, true), ...days(2, false), ...days(2, true)]
+    const link = [...days(2, false), ...days(2, true), ...days(2, true)]
+    for (const wants of [solar, { sunHigh: false, earthHigh: true }, { sunHigh: true, earthHigh: false }])
+      for (const x of rankWindows(series(lit, link), 2, wants, { top: 4 })) expect(x.score).toBeCloseTo(fitScore(x.stats, wants), 12)
   })
 
   it('returns stays at least half a stay apart, at most the number asked for', () => {

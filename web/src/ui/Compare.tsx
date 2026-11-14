@@ -1,11 +1,12 @@
 // Comparison of two or three pinned sites on one grid (docs/DESIGN.md section 7): who is who
 // (once), a one-sentence verdict, one shared timeline, then one aligned row per measure. Raw
 // details stay folded away.
-import { useMemo, useState, type CSSProperties } from 'react'
-import { fmtAngle, fmtCoord, fmtDate, fmtElevation, fmtMeasure, MISSING } from '../lib/format'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { fmtAngle, fmtCoord, fmtElevation, fmtMeasure, fmtPeriod, MISSING } from '../lib/format'
 import { measures, type Measure, type SiteFacts } from '../lib/verdict'
 import { useStore } from '../store'
 import { Badge, Segmented, SITE_LETTERS } from './controls'
+import { isPhone } from './Sheet'
 import { SiteTimeline } from './Timeline'
 import { WINDOW_DAYS, type SiteAnalysis, type Tier } from './useSiteAnalysis'
 import { useWants } from './useWants'
@@ -55,7 +56,31 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
   const goTo = useStore((s) => s.goTo)
   const [onlyDiff, setOnlyDiff] = useState(false)
   const wants = useWants()
-  const [landSite, setLandSite] = useState(0)
+  // The date tool follows the newest pin, so it never shows a site the user did not just choose.
+  const newest = useStore((s) => s.pins.at(-1)?.id ?? null)
+  const focus = useStore((s) => s.landingFocus)
+  const focusLanding = useStore((s) => s.focusLanding)
+  const sheet = useStore((s) => s.sheet)
+  const setSheet = useStore((s) => s.setSheet)
+  const [landPin, setLandPin] = useState(newest)
+  const [seenNewest, setSeenNewest] = useState(newest)
+  if (newest !== seenNewest) {
+    setSeenNewest(newest)
+    setLandPin(newest)
+  }
+  const [landOpen, setLandOpen] = useState(false)
+  const landRef = useRef<HTMLDetailsElement>(null)
+  // A spot picked from the finder's shortlist goes straight to its dates: open them and bring them into view.
+  useEffect(() => {
+    if (focus === null || focus !== newest) return
+    setLandOpen(true)
+    if (isPhone() && sheet === 'peek') setSheet('half')
+    setTimeout(() => {
+      landRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      focusLanding(null)
+    }, 300)
+  }, [focus, newest]) // eslint-disable-line react-hooks/exhaustive-deps
+  const landIdx = Math.max(sites.findIndex((a) => a.pin.id === landPin), 0)
   const facts: SiteFacts[] = useMemo(
     () => sites.map((a) => ({ label: a.pin.label, summary: a.summary, slopeDeg: a.slope })),
     [sites],
@@ -117,7 +142,7 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
       </div>
 
       <div className="cmp-block">
-        <h3 className="section">Next {WINDOW_DAYS} days</h3>
+        <h3 className="section">{fmtPeriod(sites[0].series.t0Ms, WINDOW_DAYS)}</h3>
         <SiteTimeline sites={sites} compare />
         <p className="caption key">
           <i className="sw sun" /> Sun <i className="sw earth" /> Earth <i className="sw night" /> longest night · all: every site sunlit · drag to move the clock
@@ -210,13 +235,13 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             ))}
           </div>
           <p className="caption">
-            {WINDOW_DAYS} days from {fmtDate(sites[0].series.t0Ms)} UTC, observer 2 m above the surface. Differences under 3 points, 0.5 d or 1° are
+            Figures cover {fmtPeriod(sites[0].series.t0Ms, WINDOW_DAYS)}, UTC, for an observer 2 m above the surface. Differences under 3 points, 0.5 d or 1° are
             ignored.
           </p>
         </div>
       </details>
 
-      <details className="disclosure">
+      <details className="disclosure wtl-in-compare" ref={landRef} open={landOpen} onToggle={(e) => setLandOpen(e.currentTarget.open)}>
         <summary>When to land</summary>
         <div className="cmp-details">
           <div className="field">
@@ -226,11 +251,11 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             <Segmented
               label="Site"
               options={sites.map((a, i) => [i, <Badge key={a.pin.id} slot={a.pin.slot} />, a.pin.label] as const)}
-              value={Math.min(landSite, sites.length - 1)}
-              onChange={setLandSite}
+              value={landIdx}
+              onChange={(i) => setLandPin(sites[i].pin.id)}
             />
           </div>
-          <WhenToLand key={sites[Math.min(landSite, sites.length - 1)].pin.id} a={sites[Math.min(landSite, sites.length - 1)]} />
+          {landOpen && <WhenToLand key={sites[landIdx].pin.id} a={sites[landIdx]} />}
         </div>
       </details>
     </section>

@@ -21,10 +21,12 @@ export class ErrorBoundary extends Component<Props, { error: Error | null }> {
   render() {
     if (!this.state.error) return this.props.children
     return (
-      <div className="panel empty" role="alert">
-        <p>{this.props.what} hit an error and stopped. The map and the clock still work.</p>
+      <div className="panel empty error-block" role="alert">
+        <p>
+          <i className="dot danger" /> {this.props.what} hit an error and stopped. The map and the clock still work.
+        </p>
         <p className="caption">{this.state.error.message}</p>
-        <button className="btn" onClick={() => this.setState({ error: null })}>
+        <button type="button" className="btn" onClick={() => this.setState({ error: null })}>
           Try again
         </button>
       </div>

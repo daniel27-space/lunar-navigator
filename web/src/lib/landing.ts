@@ -30,6 +30,11 @@ export interface RankedWindow {
   score: number
 }
 
+/** How well a stay fits the mission, 0..1: 0.6 x sunlight fit + 0.4 x Earth fit (the ranking rule). */
+export function fitScore(w: WindowStats, wants: Wants): number {
+  return 0.6 * (wants.sunHigh ? w.sunShare : 1 - w.sunShare) + 0.4 * (wants.earthHigh ? w.commShare : 1 - w.commShare)
+}
+
 /** First sample and sample count of a stay, or null when it is not wholly inside the series. */
 function span(s: Series, startMs: number, days: number): [number, number] | null {
   const i0 = Math.round((startMs - s.t0Ms) / s.stepMs)

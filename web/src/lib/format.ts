@@ -123,6 +123,14 @@ export function fmtDay(ms: number): string {
   return known(ms) ? `${fmtTick(ms)} ${new Date(ms).getUTCFullYear()}` : MISSING
 }
 
+/** A period by its real dates: "12 Nov \u2013 11 Jan 2027 (60 days)"; the year is on the end date (UTC). */
+export function fmtPeriod(startMs: number, days: number): string {
+  if (!known(startMs) || !known(days)) return MISSING
+  const end = startMs + days * 86400000
+  const sameYear = new Date(startMs).getUTCFullYear() === new Date(end).getUTCFullYear()
+  return `${sameYear ? fmtTick(startMs) : fmtDay(startMs)} \u2013 ${fmtDay(end)} (${days} days)`
+}
+
 /** Month tick on a year strip: "Mar" (UTC). */
 export function fmtMonth(ms: number): string {
   return known(ms) ? MONTHS[new Date(ms).getUTCMonth()] : MISSING
