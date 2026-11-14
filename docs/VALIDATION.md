@@ -3,6 +3,33 @@
 Measured 2026-11-14. Every number is reproduced by `pipeline/validation/` (see its `README.md`,
 about 6 minutes); headline agreements are asserted in `test_validation.py`. Nothing was tuned.
 
+## Current status (read this first)
+
+- **The one disagreement in the summary below is resolved.** On the 20 m terrain Gläser et al.
+  used, our method gives a longest darkness of 4.67 days at their spot 2 (published 4.62). The
+  earlier 9-day figure came from 80 m terrain, which averages each cell and lowers the crest
+  by about a metre. See "Follow-up" at the end. Point 3 of the summary is kept as first
+  written, for the record.
+- **The browser code has been run on this case too.** With the published 20 m ridge patch the
+  app's own code gives 4.67 days and 91.86 % in light over 2024 to 2036; without it, 9.25 days
+  (`web/src/lib/crest.real.test.ts`, checked against the Python reference in
+  `web/public/data/patches/crest_reference.json`). The "not run through the browser code"
+  note in the follow-up predates this.
+- **The rule used here is not the rule the app displays.** Every comparison with published
+  work in this document counts a moment as lit when *any part* of the Sun's disc is above
+  the terrain, because that is what the published work uses. The app's cards count a moment
+  as sunlit when *at least half* the disc is above the terrain, a stricter rule chosen so
+  that "sunlit" means usable power. The two give different numbers on a crest: at Gläser's
+  spot 2 on 20 m terrain the longest darkness is 4.67 days with "any part" and 9.62 days
+  with "half the disc". So the 4.67-day agreement validates the geometry (terrain, horizon,
+  ephemeris), not the half-disc figure shown on a card. Earth is counted as in view when its
+  centre is above the terrain.
+- **What this evidence covers.** Long-term averages at 185 points, permanent shadow, one
+  well-studied ridge, and consistency with two landings. It does not include time-tagged
+  sunrise or sunset checks against an independent source for a specific site, an uncertainty
+  estimate for an individual site, or sensitivity across a landing footprint. Treat the app
+  as a screening tool.
+
 ## Plain-language summary
 
 The tool compares the terrain horizon (NASA LOLA elevation, 80 m grid) with the Sun's and Earth's
@@ -299,6 +326,7 @@ the app shows a crest value from 80 m terrain it should say that the value is fo
 average and that longest darkness can be off by days.
 
 **Not verified.** The Icarus paper's full text. Whether the pits in the 20 m model are real craters
-or interpolation artefacts between LOLA tracks (no image check was made). The 20 m windows were not
-run through the web tile encoder or the browser code; only the Python reference was used. The radius
+or interpolation artefacts between LOLA tracks (no image check was made). At the time of this study the 20 m windows had not been
+run through the web tile encoder or the browser code, only the Python reference; that has since
+been done for the connecting ridge (see "Current status" at the top). The radius
 table uses a square window, so "5 km" means at least 5 km in every direction.

@@ -114,3 +114,19 @@ describe('leader', () => {
     expect(leader([5], true, 1)).toBe(-1)
   })
 })
+
+describe('landing times the clock can reach', () => {
+  it('never offers a landing after the latest time the clock allows', () => {
+    // Dark for 20 days, then lit: the best 5-day stays all start after day 20.
+    const lit = Array.from({ length: 40 * 24 }, (_, i) => i >= 20 * 24)
+    const s = series(lit)
+    const free = rankWindows(s, 5, { sunHigh: true, earthHigh: true })
+    expect(free[0].stats.startMs).toBeGreaterThanOrEqual(T0 + 20 * 24 * H)
+    // With the clock limited to day 10, every offered stay starts by day 10, even though better ones exist later.
+    const latest = T0 + 10 * 24 * H
+    const limited = rankWindows(s, 5, { sunHigh: true, earthHigh: true }, { latestStartMs: latest })
+    expect(limited.length).toBeGreaterThan(0)
+    for (const w of limited) expect(w.stats.startMs).toBeLessThanOrEqual(latest)
+  })
+})
+

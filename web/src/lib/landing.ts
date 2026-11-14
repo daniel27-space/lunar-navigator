@@ -85,6 +85,8 @@ export interface RankOptions {
   top?: number
   /** spacing of the landing times that are tried, hours (default 6) */
   everyH?: number
+  /** latest landing time that may be offered (the app's clock cannot be set later than this) */
+  latestStartMs?: number
   criteria?: Criteria
 }
 
@@ -94,7 +96,7 @@ export interface RankOptions {
  * stays returned start at least half a stay apart. Stays running past the series are not tried.
  */
 export function rankWindows(s: Series, days: number, wants: Wants, opts: RankOptions = {}): RankedWindow[] {
-  const { top = 5, everyH = 6, criteria = DEFAULT_CRITERIA } = opts
+  const { top = 5, everyH = 6, criteria = DEFAULT_CRITERIA, latestStartMs = Infinity } = opts
   const n = Math.round((days * DAY_MS) / s.stepMs)
   if (n <= 0 || n > s.count) return []
   const sun = new Uint32Array(s.count + 1)
@@ -106,6 +108,8 @@ export function rankWindows(s: Series, days: number, wants: Wants, opts: RankOpt
   const stride = Math.max(1, Math.round((everyH * 3600000) / s.stepMs))
   const scored: [score: number, i0: number][] = []
   for (let i0 = 0; i0 + n <= s.count; i0 += stride) {
+    // Never offer a landing time the clock cannot be set to.
+    if (s.t0Ms + i0 * s.stepMs > latestStartMs) break
     const sunShare = (sun[i0 + n] - sun[i0]) / n
     const commShare = (comm[i0 + n] - comm[i0]) / n
     scored.push([0.6 * (wants.sunHigh ? sunShare : 1 - sunShare) + 0.4 * (wants.earthHigh ? commShare : 1 - commShare), i0])

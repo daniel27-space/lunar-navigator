@@ -40,6 +40,14 @@ function yearSeries(a: SiteAnalysis, startMs: number): Series {
   return s
 }
 
+/** Figures for one stay, computed for exactly that period (independent of the year strip). */
+function stayAt(a: SiteAnalysis, startMs: number, days: number): WindowStats | null {
+  const t0 = Math.round(startMs / HOUR) * HOUR
+  const t1 = t0 + days * DAY
+  if (t1 > ephemEndMs(a.ephem)) return null
+  return windowStats(computeSeries(a.ephem, a.horizon, a.hM, t0, t1 - HOUR, HOUR), t0, days)
+}
+
 interface Row {
   label: string
   hint: string
@@ -62,15 +70,25 @@ export function WhenToLand({ a }: { a: SiteAnalysis }) {
   // The year starts at the analysis window in force when this was opened and stays put while the
   // clock is inside it, so jumping to a ranked stay does not reshuffle the ranking under the user.
   const [anchor, setAnchor] = useState(windowStart)
-  if (tMs < anchor || tMs > anchor + YEAR_DAYS * DAY) setAnchor(windowStart)
+  // When the clock leaves the year, the year restarts two days before the clock. The new start
+  // is worked out from the clock itself, so it always contains the clock: setting it to the
+  // shared window start (which is updated a moment later) could leave the clock outside again
+  // and repeat this update without end, which stopped the whole panel.
+  if (tMs < anchor || tMs > anchor + YEAR_DAYS * DAY) setAnchor(Math.floor(tMs / HOUR) * HOUR - 2 * DAY)
   const series = useMemo(() => yearSeries(a, anchor), [a.horizon, a.hM, a.ephem, anchor]) // eslint-disable-line react-hooks/exhaustive-deps
-  const ranked = useMemo(() => rankWindows(series, stay, wants), [series, stay, wants])
+  const latestStartMs = useStore((s) => (s.timeRange ? s.timeRange[1] : Infinity))
+  const ranked = useMemo(() => rankWindows(series, stay, wants, { latestStartMs }), [series, stay, wants, latestStartMs])
   const everLit = useMemo(() => series.sunFrac.some((f) => f >= DEFAULT_CRITERIA.minSunFrac), [series])
   const hasBaseline = baselineMs !== undefined
   // With a baseline kept the grid is Baseline | Selected | best 1 | best 2, so it still fits the card.
   const top = ranked.slice(0, hasBaseline ? 2 : 3).map((r) => r.stats)
   const selected = windowStats(series, tMs, stay)
-  const baseline = hasBaseline ? windowStats(series, baselineMs, stay) : null
+  // The baseline keeps its figures wherever the year strip has moved to: they are worked out
+  // from the baseline date itself, not read off the strip.
+  const baseline = useMemo(
+    () => (baselineMs === undefined ? null : stayAt(a, baselineMs, stay)),
+    [a.horizon, a.hM, a.ephem, baselineMs, stay], // eslint-disable-line react-hooks/exhaustive-deps
+  )
   const cols: (WindowStats | null)[] = hasBaseline ? [baseline, selected, ...top] : [selected, ...top]
   const val = (f: (w: WindowStats) => number) => cols.map((w) => (w ? f(w) : NaN))
   const rows: Row[] = [
