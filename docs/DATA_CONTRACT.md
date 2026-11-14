@@ -138,3 +138,34 @@ projection and pixel registration, with per-entry overrides in `patches.json`:
   is used for numbers only (the 3D view keeps the 80 m surface there).
 - Lookup order is unchanged: this patch first, then the south-pole tiles L1 and L0, then the
   whole-Moon map. So a horizon uses 20 m terrain out to about 5 km and 80 m beyond.
+
+## Mission showcase fields (`web/public/data/missions.json`, all optional per mission)
+
+    "about": "Two or three plain sentences: what the craft was and what it did or is meant to do.",
+    "facts": [["Launched", "16 Jul 1969"], ["Landed", "20 Jul 1969"], ["Operator", "NASA"],
+              ["Time on the surface", "21 h 36 min"], ["Landed mass", "about 7 t"], ["Outcome", "..."]],
+    "image": { "file": "missions/img/apollo-11.jpg", "caption": "...", "credit": "NASA",
+               "license": "Public domain", "source_url": "https://..." },
+    "model": { "kind": "glb", "file": "missions/models/apollo-lm.glb", "height_m": 7.0,
+               "credit": "NASA", "license": "...", "source_url": "https://..." }
+          or { "kind": "archetype", "archetype": "surveyor", "height_m": 3.0 }
+
+- `facts`: at most six label/value pairs, values as display strings, each traceable to
+  `source_url` or the sources listed in `docs/research/mission-media.md`.
+- `image.file` and `model.file` are relative to `web/public/data/`. Images are JPEG, at most
+  1200 px wide and about 150 kB. Only public-domain or freely licensed images (CC BY, CC BY-SA,
+  CC0) with the licence and credit recorded; no image is better than an unlicensed one.
+- `model.kind` "glb": a real model file (at most 5 MB each) with its licence. "archetype": the
+  app draws a simplified stand-in of that class of craft and labels it as simplified.
+  Archetypes: `apollo-lm`, `surveyor`, `luna-lander`, `lunokhod`, `change-lander`,
+  `small-lander`, `nova-c`, `impactor`. `height_m` is the real craft's height, for scale.
+
+### Two-level site patches
+
+A site patch entry may add an outer ring, so detailed terrain reaches further from the lander:
+
+    "outer": { "file": "apollo-15.outer.png", "size": 768, "pixel_m": 160 }
+
+Same projection, centre, registration and height encoding as the patch itself; x and y from
+-61440 m to +61440 m. Lookup order for a point: the patch's fine level, then its outer level,
+then the south-pole tiles, then the whole-Moon map.
