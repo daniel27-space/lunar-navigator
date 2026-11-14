@@ -48,10 +48,11 @@ function runs(count: number, test: (i: number) => boolean): [number, number][] {
 
 function Timeline({ s, tMs, onSeek }: { s: Series; tMs: number; onSeek: (t: number) => void }) {
   const W = 300
-  const x = (i: number) => (i / s.count) * W
+  const X0 = 34 // room for the row labels
+  const x = (i: number) => X0 + (i / s.count) * (W - X0)
   const sun = useMemo(() => runs(s.count, (i) => isSunlit(s, i, DEFAULT_CRITERIA)), [s])
   const comm = useMemo(() => runs(s.count, (i) => hasComm(s, i, DEFAULT_CRITERIA)), [s])
-  const cursor = ((tMs - s.t0Ms) / (s.count * s.stepMs)) * W
+  const cursor = X0 + ((tMs - s.t0Ms) / (s.count * s.stepMs)) * (W - X0)
   const days = Array.from({ length: WINDOW_DAYS / 10 + 1 }, (_, k) => k * 10)
   return (
     <svg
@@ -61,11 +62,14 @@ function Timeline({ s, tMs, onSeek }: { s: Series; tMs: number; onSeek: (t: numb
       aria-label="Sunlight and Earth visibility over the next 60 days"
       onClick={(ev) => {
         const r = ev.currentTarget.getBoundingClientRect()
-        onSeek(s.t0Ms + ((ev.clientX - r.left) / r.width) * s.count * s.stepMs)
+        const f = (((ev.clientX - r.left) / r.width) * W - X0) / (W - X0)
+        onSeek(s.t0Ms + Math.min(Math.max(f, 0), 1) * s.count * s.stepMs)
       }}
     >
-      <rect x="0" y="2" width={W} height="12" className="tl-bg" />
-      <rect x="0" y="18" width={W} height="12" className="tl-bg" />
+      <text x="0" y="11" className="tl-tick">Sunlight</text>
+      <text x="0" y="27" className="tl-tick">Earth</text>
+      <rect x={X0} y="2" width={W - X0} height="12" className="tl-bg" />
+      <rect x={X0} y="18" width={W - X0} height="12" className="tl-bg" />
       {sun.map(([a, b]) => (
         <rect key={`s${a}`} x={x(a)} y="2" width={Math.max(x(b) - x(a), 0.5)} height="12" className="tl-sun" />
       ))}
@@ -73,11 +77,11 @@ function Timeline({ s, tMs, onSeek }: { s: Series; tMs: number; onSeek: (t: numb
         <rect key={`e${a}`} x={x(a)} y="18" width={Math.max(x(b) - x(a), 0.5)} height="12" className="tl-earth" />
       ))}
       {days.map((d) => (
-        <text key={d} x={(d / WINDOW_DAYS) * W} y="43" className="tl-tick" textAnchor={d === 0 ? 'start' : d === WINDOW_DAYS ? 'end' : 'middle'}>
+        <text key={d} x={X0 + (d / WINDOW_DAYS) * (W - X0)} y="43" className="tl-tick" textAnchor={d === 0 ? 'start' : d === WINDOW_DAYS ? 'end' : 'middle'}>
           {new Date(s.t0Ms + d * DAY).toISOString().slice(5, 10)}
         </text>
       ))}
-      {cursor >= 0 && cursor <= W && <line x1={cursor} x2={cursor} y1="0" y2="32" className="tl-cursor" />}
+      {cursor >= X0 && cursor <= W && <line x1={cursor} x2={cursor} y1="0" y2="32" className="tl-cursor" />}
     </svg>
   )
 }
@@ -103,8 +107,12 @@ function Panorama({
     if (e < lo) lo = e
     if (e > hi) hi = e
   }
-  const yMin = Math.min(lo, sun.el, earth.el, -1) - 1
-  const yMax = Math.max(hi, sun.el, earth.el, 2) + 1.5
+  // The scale follows the terrain. A body far below the horizon (or very high) is shown as an
+  // arrow at the edge instead of stretching the picture until the terrain is a thin line.
+  const yMin = Math.min(lo, -1) - 1.5
+  const top = Math.max(hi, 2)
+  const inView = (el: number) => (el > yMin ? el : -Infinity)
+  const yMax = Math.min(Math.max(top, inView(sun.el), inView(earth.el)) + 1.5, top + 30)
   const X = (az: number) => (az / 360) * W
   const Y = (el: number) => H - ((el - yMin) / (yMax - yMin)) * H
   let d = `M0,${H}`
@@ -120,24 +128,46 @@ function Panorama({
     }
     return p
   }
-  const disc = (b: { az: number; el: number; radius: number }, cls: string) => (
-    <ellipse
-      cx={X(b.az)}
-      cy={Y(b.el)}
-      rx={Math.max((b.radius / 360) * W, 3)}
-      ry={Math.max((b.radius / (yMax - yMin)) * H, 3)}
-      className={cls}
-    />
-  )
-  const ticks = [Math.ceil(yMin), 0, Math.floor(yMax)].filter((v, i, a) => a.indexOf(v) === i)
+  const disc = (b: { az: number; el: number; radius: number }, cls: string, name: string) => {
+    const below = b.el < yMin
+    if (below || b.el > yMax) {
+      const cx = Math.min(Math.max(X(b.az), 6), W - 6)
+      const y = below ? H - 2 : 2
+      const d = below ? -7 : 7
+      return (
+        <g className={cls}>
+          <path d={`M${cx - 4},${y + d} L${cx + 4},${y + d} L${cx},${y} Z`} />
+          <text x={cx < W / 2 ? cx + 7 : cx - 7} y={below ? H - 3 : 9} textAnchor={cx < W / 2 ? 'start' : 'end'} className="off">
+            {name} {b.el.toFixed(0)}°
+          </text>
+        </g>
+      )
+    }
+    return (
+      <ellipse
+        cx={X(b.az)}
+        cy={Y(b.el)}
+        rx={Math.max((b.radius / 360) * W, 3)}
+        ry={Math.max((b.radius / (yMax - yMin)) * H, 3)}
+        className={cls}
+      />
+    )
+  }
+  // The lowest tick gives way to the off-scale arrow's label when a body is below the picture.
+  const anyBelow = sun.el < yMin || earth.el < yMin
+  const ticks = [...(anyBelow ? [] : [Math.ceil(yMin)]), 0, Math.floor(yMax)].filter((v, i, a) => a.indexOf(v) === i)
   return (
     <svg className="pano" viewBox={`0 0 ${W} ${H + 14}`} role="img" aria-label="Horizon panorama with the Sun and Earth">
-      <path d={track(s.sunAz, s.sunEl)} className="trk-sun" />
-      <path d={track(s.earthAz, s.earthEl)} className="trk-earth" />
-      {disc(sun, 'disc-sun')}
-      {disc(earth, 'disc-earth')}
-      <path d={d} className="terrain" />
-      <line x1="0" x2={W} y1={Y(0)} y2={Y(0)} className="zero" />
+      <svg x="0" y="0" width={W} height={H}>
+        <path d={track(s.sunAz, s.sunEl)} className="trk-sun" />
+        <path d={track(s.earthAz, s.earthEl)} className="trk-earth" />
+        {sun.el >= yMin && disc(sun, 'disc-sun', 'Sun')}
+        {earth.el >= yMin && disc(earth, 'disc-earth', 'Earth')}
+        <path d={d} className="terrain" />
+        <line x1="0" x2={W} y1={Y(0)} y2={Y(0)} className="zero" />
+        {sun.el < yMin && disc(sun, 'disc-sun', 'Sun')}
+        {earth.el < yMin && disc(earth, 'disc-earth', 'Earth')}
+      </svg>
       {ticks.map((v) => (
         <text key={v} x="2" y={Y(v) - 2} className="tl-tick">
           {v}°
@@ -228,13 +258,19 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
       </div>
 
       {active && (
-        <Panorama s={series} elev={horizon.elevDeg} azStep={horizon.azStepDeg} sun={sky.sun} earth={sky.earth} />
+        <>
+          <Panorama s={series} elev={horizon.elevDeg} azStep={horizon.azStepDeg} sun={sky.sun} earth={sky.earth} />
+          <p className="muted small key">
+            The view from this point, all the way round. Grey is ground. <i className="dot sun" /> Sun{' '}
+            <i className="dot earth" /> Earth; dotted lines are their paths over the next month.
+          </p>
+        </>
       )}
 
       <Timeline s={series} tMs={tMs} onSeek={setTime} />
 
       <dl className="stats">
-        <dt>Sunlit</dt>
+        <dt>In sunlight</dt>
         <dd>{pct(summary.sunShare)}</dd>
         <dt>Longest night</dt>
         <dd>{fmtDur(summary.longestDarkH)}</dd>
@@ -243,8 +279,33 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
         <dt>Longest outage</dt>
         <dd>{fmtDur(summary.longestNoCommH)}</dd>
       </dl>
+      <details className="help">
+        <summary>How to read this</summary>
+        <ul>
+          <li>
+            <b>Two boxes at the top:</b> what is true at the selected time, and how long until it changes.
+          </li>
+          <li>
+            <b>Dark picture:</b> stand on the point and turn a full circle (N, E, S, W). Grey is the ground and hills
+            around you. When the yellow dot (Sun) is above the grey, the point is in sunlight. When the blue dot
+            (Earth) is above it, a radio link to Earth is possible.
+          </li>
+          <li>
+            <b>Two bars:</b> the next 60 days. Yellow means in sunlight, blue means Earth in view, a gap means not.
+            The white line is the selected time; click a bar to jump there.
+          </li>
+          <li>
+            <b>Four numbers:</b> the share of those 60 days in sunlight and with Earth in view, and the longest
+            unbroken stretch without each.
+          </li>
+          <li>
+            <b>Observer 2 m:</b> everything is worked out for a solar panel or antenna 2 m above the ground, about the
+            top of a small lander. Taller sees over more hills.
+          </li>
+        </ul>
+      </details>
       <p className="muted small">
-        60 days from {new Date(anchor).toISOString().slice(0, 10)}. Observer {horizon.observerHeightM} m above the
+        Stats cover 60 days from {new Date(anchor).toISOString().slice(0, 10)}. Observer {horizon.observerHeightM} m above the
         surface. {TIER_NOTE[terrainTier(terrain, pin.lat, pin.lon)]}
       </p>
     </section>

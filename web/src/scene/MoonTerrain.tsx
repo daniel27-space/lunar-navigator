@@ -7,8 +7,23 @@ import { useThree, type ThreeEvent } from '@react-three/fiber'
 import { latLonOf, spDirection, type Vec3 } from '../lib/geo'
 import { sampleXY, type Level, type Terrain } from '../lib/terrain'
 import type { LayerMode, SiteFilter } from '../store'
+import { CUT_INSET_KM } from './Globe'
+import { applyGlobeMap, exposureFor, SHADING_GLSL, shadingUniforms, type GlobeMap } from './shading'
 
 const GRID = 768
+/**
+ * Width in km of the ring, just inside the 80S circle where the terrain data ends, over which
+ * the terrain fades into the smooth globe. The fade is round, so the detailed area reads as a
+ * polar cap rather than a square tile.
+ */
+const FADE_KM = 50
+
+/** 0 inside, rising to 1 where the globe takes over. x, y and edge in km. */
+function edgeFade(xKm: number, yKm: number, edgeKm: number): number {
+  const m = Math.hypot(xKm, yKm)
+  const k = Math.min(Math.max((m - (edgeKm - FADE_KM)) / (FADE_KM - 2), 0), 1)
+  return k * k * (3 - 2 * k)
+}
 
 function buildGeometry(t: Terrain): THREE.BufferGeometry {
   const l0 = t.levels[0]
@@ -17,6 +32,7 @@ function buildGeometry(t: Terrain): THREE.BufferGeometry {
   const xy = new Float32Array(n * n * 2)
   const valid = new Uint8Array(n * n)
   const rKm = t.radiusM / 1000
+  const edgeKm = l0.xMax / 1000 - CUT_INSET_KM
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
       const k = j * n + i
@@ -28,7 +44,8 @@ function buildGeometry(t: Terrain): THREE.BufferGeometry {
       const h = sampleXY(t, xs, ys)
       valid[k] = Number.isNaN(h) ? 0 : 1
       const d = spDirection(x, y, t.radiusM)
-      const r = rKm + (Number.isNaN(h) ? 0 : h / 1000)
+      // Relief flattens to the reference sphere at the edge, so it joins the globe without a step.
+      const r = rKm + (Number.isNaN(h) ? 0 : (h / 1000) * (1 - edgeFade(x / 1000, y / 1000, edgeKm)))
       pos[k * 3] = d[0] * r
       pos[k * 3 + 1] = d[1] * r
       pos[k * 3 + 2] = d[2] * r
@@ -94,7 +111,10 @@ uniform sampler2D uSunAvg;
 uniform sampler2D uEarthAvg;
 uniform vec3 uCrit;    // max slope deg, min average sunlight 0..1, min average Earth view 0..1
 uniform float uLitNow; // 1 = must be sunlit at the selected time
+uniform float uEdge;   // km, where the globe takes over
+uniform float uFade;   // km, width of the fade into the globe
 varying vec2 vXY;
+${SHADING_GLSL}
 
 vec2 uvOf(vec2 xy, vec4 ext) {
   return vec2((xy.x - ext.x) / (ext.z - ext.x), (ext.w - xy.y) / (ext.w - ext.y));
@@ -188,11 +208,11 @@ void main() {
   float lit = clamp(minA / uSunRad * 0.5 + 0.5, 0.0, 1.0);
   float direct = max(dot(n, uSun), 0.0) * lit;
 
+  vec3 albedo = albedoAt(up);
   vec3 col;
   float ov = texture2D(uOverlay, uv0).r;
   if (uMode == 0 || uMode == 5) {
-    float I = 0.6 * direct;
-    col = vec3(1.0 - exp(-I * 5.5)) * vec3(1.0, 0.985, 0.96) + vec3(0.012, 0.013, 0.016);
+    col = tone(albedo, direct);
     if (uMode == 5 && ov > 0.5) col = mix(col, vec3(0.05, 0.42, 0.85), 0.75);
   } else if (uMode == 3 || uMode == 4) {
     float relief = 0.6 + 0.4 * (1.0 - exp(-direct * 6.0));
@@ -216,6 +236,10 @@ void main() {
       : slopeRamp(degrees(acos(clamp(dot(n, up), -1.0, 1.0))));
     col = base * mix(lightMask, relief, 0.5);
   }
+  // Fade into the smooth globe's shading at the edge of the terrain data.
+  float m = length(vXY);
+  float w = smoothstep(uEdge - uFade, uEdge - 2.0, m);
+  col = mix(col, tone(albedo, max(dot(up, uSun), 0.0)), w);
   gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
 }`
 
@@ -251,10 +275,11 @@ interface Props {
   filter: SiteFilter
   /** URL prefix of the data folder */
   dataBase: string
+  map: GlobeMap | null
   onPick: (lat: number, lon: number) => void
 }
 
-export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, onPick }: Props) {
+export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, map, onPick }: Props) {
   const gl = useThree((s) => s.gl)
   const geometry = useMemo(() => buildGeometry(terrain), [terrain])
   const material = useMemo(() => {
@@ -265,6 +290,9 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
       vertexShader,
       fragmentShader,
       uniforms: {
+        ...shadingUniforms(),
+        uEdge: { value: l0.xMax / 1000 - CUT_INSET_KM },
+        uFade: { value: FADE_KM },
         uH0: { value: heightTexture(l0, linear) },
         uH1: { value: heightTexture(l1, linear) },
         uExt0: { value: extentKm(l0) },
@@ -294,6 +322,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
     [geometry, material],
   )
 
+  applyGlobeMap(material.uniforms as never, map)
   material.uniforms.uSun.value.set(sunDir[0], sunDir[1], sunDir[2])
   material.uniforms.uSunRad.value = sunRad
   material.uniforms.uMode.value = MODE[layer]
@@ -314,6 +343,13 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
   }
 
   return (
-    <mesh geometry={geometry} material={material} onClick={handleClick} />
+    <mesh
+      geometry={geometry}
+      material={material}
+      onClick={handleClick}
+      onBeforeRender={(_r, _s, camera) => {
+        material.uniforms.uExpo.value = exposureFor(camera.position)
+      }}
+    />
   )
 }

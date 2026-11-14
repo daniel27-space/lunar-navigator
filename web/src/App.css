@@ -344,3 +344,40 @@ button.on {
 .filter input[type='range'] {
   accent-color: #4fc38a;
 }
+
+/* Site card: key, off-scale markers and the "how to read this" help */
+.key {
+  margin-top: 3px;
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 2px;
+}
+.dot.sun {
+  background: #ffcf4a;
+}
+.dot.earth {
+  background: #4a9eff;
+}
+.pano .off {
+  font-size: 8px;
+}
+.help {
+  margin-top: 8px;
+  font-size: 12.5px;
+}
+.help summary {
+  cursor: pointer;
+  color: #9cc8ff;
+}
+.help ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  color: #cfd3da;
+}
+.help li + li {
+  margin-top: 4px;
+}

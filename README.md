@@ -65,6 +65,9 @@ regions, elevation and slope.
 - When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
 - Planned missions are placed at the centre of their announced target feature, not at a landing
   point.
+- In the 3D view the outer 50 km of the terrain data (roughly 80°S to 81.7°S) fades into the
+  smooth globe, so relief and shadows look weaker there. The numbers on a site card always use
+  the full terrain data.
 
 ## NASA data and resources
 

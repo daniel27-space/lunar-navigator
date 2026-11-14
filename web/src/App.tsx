@@ -8,6 +8,7 @@ import { Globe } from './scene/Globe'
 import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
 import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
+import { useGlobeMap } from './scene/shading'
 import { useStore, type LayerMode } from './store'
 import { SiteCard } from './ui/SiteCard'
 import './App.css'
@@ -194,6 +195,7 @@ function ringTexture(): THREE.Texture {
 export default function App() {
   const { ephem, terrain, error, missions } = useData()
   useClock(ephem)
+  const globeMap = useGlobeMap(BASE)
   const tMs = useStore((s) => s.tMs)
   const layer = useStore((s) => s.layer)
   const setLayer = useStore((s) => s.setLayer)
@@ -241,9 +243,9 @@ export default function App() {
     <div className="app">
       <Canvas camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }} gl={{ antialias: true }} dpr={[1, 2]}>
         <color attach="background" args={['#000']} />
-        <Globe sunDir={sun.dir} cutKm={terrain ? terrain.levels[0].xMax / 1000 : 0} dataBase={BASE} onPick={pick} />
+        <Globe sunDir={sun.dir} cutKm={terrain ? terrain.levels[0].xMax / 1000 : 0} map={globeMap} onPick={pick} />
         {terrain && (
-          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} onPick={pick} />
+          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} onPick={pick} />
         )}
         <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
         <PinMarkers />
