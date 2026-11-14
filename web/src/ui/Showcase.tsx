@@ -10,11 +10,11 @@
 //   leaving  -> the scene dollies back and fades while the camera flies back up
 // `useShowcaseSequence` moves it on. The camera rig reports the end of each move through
 // `arrivedSeq`; any camera request that is not part of the sequence cancels it.
-import { useCallback, useEffect, useState } from 'react'
+import { useMemo, useCallback, useEffect, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { fmtMissionDate } from '../lib/format'
 import { defaultModel, DISC_SCALE, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
-import { groundStyle } from '../scene/landers/ground'
+import { restNote, groundStyle } from '../scene/landers/ground'
 import { STATUS_COLOR, type Mission } from '../scene/Missions'
 import { useStore, type ViewRequest } from '../store'
 import { isPhone } from './Sheet'
@@ -143,6 +143,8 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
   const onState = useCallback((s: ModelState) => setState(s), [])
   // Decided once per opening, so the ground does not change under the viewer if the pin's height is refined.
   const [style] = useState(() => groundStyle(m.id, m.lat, pin?.hM ?? 0))
+  // The same object while the sky is unchanged, so the scene does not rebuild on every render.
+  const sceneSky = useMemo(() => ({ ...sky, latDeg: m.lat }), [sky, m.lat])
   const [motion] = useState(() => !reducedMotion())
   const [narrow] = useState(isPhone)
   return (
@@ -160,7 +162,7 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
         baseUrl={baseUrl}
         seed={m.id}
         style={style}
-        sky={sky}
+        sky={sceneSky}
         detail={quality}
         shift={narrow ? 0 : 0.12}
         back={narrow ? 2.6 : 3.5}
@@ -180,6 +182,7 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
         <p>
           {state === 'loading' && <span role="status">Loading the 3D model…</span>}
           {state === 'simplified' && 'Simplified model, not to scale in detail.'}
+          {restNote(m.id) && <> {restNote(m.id)}</>}
           {state === 'file' && model.kind === 'glb' && (
             <span title={model.license}>
               3D model:{' '}

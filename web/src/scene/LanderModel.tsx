@@ -12,7 +12,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { makeGround, startViewAz, type Ground, type GroundStyle } from './landers/ground'
+import { EARTH_FRAGMENT, EARTH_VERTEX, earthOrientation, earthTexture } from './landers/earth'
+import { makeGround, startViewAz, type Ground, type GroundStyle, type Rest } from './landers/ground'
 
 export const ARCHETYPES = ['apollo-lm', 'surveyor', 'luna-lander', 'lunokhod', 'change-lander', 'small-lander', 'nova-c', 'impactor'] as const
 export type Archetype = (typeof ARCHETYPES)[number]
@@ -342,26 +343,25 @@ const BUILD: Record<Archetype, () => ReactNode> = {
 }
 
 /**
- * Craft that did not end up upright, by mission id: how far they lean from vertical, in degrees.
- * Both Intuitive Machines landers tipped over at touchdown: Odysseus (IM-1) came to rest leaning
- * at about 30 degrees to the ground, Athena (IM-2) on its side in a small crater.
+ * A stand-in model on the ground. A craft that tipped over (`rest`, from the ground made for
+ * it) is leaned, turned, lowered until its lowest point touches the ground, then sunk by the
+ * amount that puts its body, not its legs, on the surface.
  */
-export const TIPPED: Record<string, number> = { 'im-1-odysseus': 60, 'im-2-athena': 88 }
-
-function ArchetypeModel({ archetype, heightM, tiltDeg = 0, turnDeg = 0 }: { archetype: Archetype; heightM: number; tiltDeg?: number; turnDeg?: number }) {
+function ArchetypeModel({ archetype, heightM, rest }: { archetype: Archetype; heightM: number; rest?: Rest }) {
   const Build = BUILD[archetype]
   const lean = useRef<THREE.Group>(null)
-  // A leaning craft is rotated, then lowered until its lowest point rests on the ground.
   useLayoutEffect(() => {
     const g = lean.current
-    if (!g) return
+    if (!g || !g.parent) return
     g.position.y = 0
+    if (!rest) return
     g.updateWorldMatrix(true, true)
-    if (tiltDeg) g.position.y = -new THREE.Box3().setFromObject(g, true).min.y
-  }, [tiltDeg, turnDeg, heightM, archetype])
+    const groundY = g.parent.getWorldPosition(new THREE.Vector3()).y
+    g.position.y = groundY - new THREE.Box3().setFromObject(g, true).min.y - rest.sinkM
+  }, [rest, heightM, archetype])
   return (
-    <group rotation={[0, turnDeg * D2R, 0]}>
-      <group ref={lean} rotation={[0, 0, -tiltDeg * D2R]}>
+    <group rotation={[0, (rest?.turnDeg ?? 0) * D2R, 0]}>
+      <group ref={lean} rotation={[0, 0, -(rest?.tiltDeg ?? 0) * D2R]}>
         <group scale={heightM}>
           <Build />
         </group>
@@ -413,6 +413,8 @@ export interface SceneSky {
   /** terrain skyline, degrees above level, one value per `azStepDeg`; null until it is known (flat skyline) */
   horizon: Float32Array | null
   azStepDeg: number
+  /** the site's latitude, used only to turn the Earth the right way up; 0 if unknown */
+  latDeg?: number
 }
 
 export type SceneDetail = 'low' | 'medium' | 'high'
@@ -673,6 +675,29 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
   const sunDisc = body(sky.sun)
   const earthDisc = body(sky.earth)
   const earthDir = toward(sky.earth.az, Math.max(sky.earth.el, 5))
+  const earthMaterial = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        vertexShader: EARTH_VERTEX,
+        fragmentShader: EARTH_FRAGMENT,
+        uniforms: { uMap: { value: earthTexture() }, uSun: { value: new THREE.Vector3(0, 1, 0) } },
+        toneMapped: false,
+      }),
+    [],
+  )
+  useEffect(
+    () => () => {
+      earthMaterial.uniforms.uMap.value.dispose()
+      earthMaterial.dispose()
+    },
+    [earthMaterial],
+  )
+  // The Sun's true direction, also when it is below the skyline: that is what lights the Earth.
+  earthMaterial.uniforms.uSun.value.set(...toward(sky.sun.az, sky.sun.el))
+  // Earth's axis is close to the Moon's: in this scene the Moon's north points along the local
+  // north raised by the site's latitude. The face shown (Africa and Europe) is illustrative.
+  const lat = (sky.latDeg ?? 0) * D2R
+  const earthTurn = earthOrientation(new THREE.Vector3(0, Math.sin(lat), -Math.cos(lat)), new THREE.Vector3(...earthDisc.p), 20)
 
   return (
     <>
@@ -730,13 +755,16 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
           <circleGeometry args={[sunDisc.r, 40]} />
           <meshBasicMaterial color="#fff8e0" side={THREE.DoubleSide} toneMapped={false} />
         </mesh>
-        <mesh position={earthDisc.p} onUpdate={(m) => m.lookAt(0, 0, 0)}>
-          <circleGeometry args={[earthDisc.r, 40]} />
-          <meshBasicMaterial color="#a9c8f4" side={THREE.DoubleSide} toneMapped={false} />
+        {/* Earth: a small globe lit from the true Sun direction, so its phase is the real one */}
+        <mesh position={earthDisc.p} quaternion={earthTurn} material={earthMaterial}>
+          <sphereGeometry args={[earthDisc.r, 48, 32]} />
         </mesh>
       </group>
 
-      {state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} tiltDeg={TIPPED[seed] ?? 0} turnDeg={seed === 'im-2-athena' ? 40 : 0} /> : null}
+      {/* the craft stands (or lies) on the ground at the centre, wherever that ground is */}
+      <group position={[0, ground.height(0, 0), 0]}>
+        {state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} rest={ground.rest} /> : null}
+      </group>
     </>
   )
 }

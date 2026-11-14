@@ -138,6 +138,71 @@ export interface Ground {
   padM: number
   /** where the ground mesh ends, m */
   edgeM: number
+  /** for a craft that did not end up upright: how it lies */
+  rest?: Rest
+}
+
+/** How a tipped craft lies: lean from vertical, compass turn of the lean, and how far it has sunk in. */
+export interface Rest {
+  tiltDeg: number
+  turnDeg: number
+  sinkM: number
+}
+
+/** Outline of the Nova-C stand-in, in units of its height (see `NovaC` in LanderModel.tsx). */
+const NOVA = { bodyR: 0.19, bodyLow: 0.27, bodyTop: 0.89, footX: 0.46 * Math.cos(Math.PI / 6) }
+
+/**
+ * Ground made for the two craft that tipped over, so they rest on something instead of hanging
+ * in the air. Illustrative, like all ground here, but it follows what is known:
+ * - IM-1 Odysseus caught a leg, tipped and came to rest leaning at about 30 degrees to the
+ *   ground: here it leans at 60 degrees from vertical with its low-side legs dug into a ridge
+ *   of pushed-up soil and its upper body propped on a boulder.
+ * - IM-2 Athena came down in a small crater and lies on its side: here it lies on the floor of
+ *   a crater a few craft-lengths across.
+ */
+interface Custom {
+  rest: Rest
+  /** a bowl centred on the craft: radius and depth, m */
+  crater?: { r: number; depth: number }
+  mounds: { x: number; z: number; r: number; h: number }[]
+  rocks: Rock[]
+}
+const TIP_DEG: Record<string, [tilt: number, turn: number]> = { 'im-1-odysseus': [60, 25], 'im-2-athena': [88, 40] }
+
+/** One line for the caption of a craft that is shown tipped over, or null. */
+export function restNote(missionId: string): string | null {
+  return missionId in TIP_DEG ? 'Shown tipped over, as it came to rest (how it leans and what it rests on are illustrative).' : null
+}
+
+function customGround(missionId: string, h: number): Custom | null {
+  const tip = TIP_DEG[missionId]
+  if (!tip) return null
+  const [tiltDeg, turnDeg] = tip
+  const t = (tiltDeg * Math.PI) / 180
+  const turn = (turnDeg * Math.PI) / 180
+  // After leaning by `t` towards +x, a point (x, y) of the upright craft is at height -x sin t + y cos t.
+  const foot = -NOVA.footX * Math.sin(t) + 0.005 * Math.cos(t)
+  const bodyEdge = -NOVA.bodyR * Math.sin(t) + NOVA.bodyLow * Math.cos(t)
+  // Sink until the lower edge of the body, not the legs, rests on the ground.
+  const sinkM = Math.max(bodyEdge - foot, 0) * h
+  // The lean points this way on the ground (x east, z south) once the craft is turned.
+  const dir = [Math.cos(turn), -Math.sin(turn)]
+  const along = (d: number) => ({ x: dir[0] * d * h, z: dir[1] * d * h })
+  if (missionId === 'im-2-athena') {
+    const r = Math.max(1.9 * h, 7)
+    return { rest: { tiltDeg, turnDeg, sinkM }, crater: { r, depth: 0.13 * r }, mounds: [], rocks: [] }
+  }
+  // Where the upper body ends up, and how high its underside is there.
+  const topOut = NOVA.bodyR * Math.cos(t) + NOVA.bodyTop * Math.sin(t)
+  const topUp = (NOVA.bodyTop - NOVA.bodyLow) * Math.cos(t) * h
+  const feetOut = NOVA.footX * Math.cos(t)
+  const half = (topUp + 0.08) / 1.55 // a rock's top is 1.55 half-heights above the ground it sits on
+  return {
+    rest: { tiltDeg, turnDeg, sinkM },
+    mounds: [{ ...along(feetOut + 0.05), r: 0.5 * h, h: 0.11 * h }],
+    rocks: [{ ...along(topOut - 0.06), size: [half * 1.35, half, half * 1.2], turn: 0.6 }],
+  }
 }
 
 /** Beyond this distance the ground falls away, so its edge never rises above the real skyline. */
@@ -152,6 +217,7 @@ export function makeGround(seedText: string, craftHeightM: number, style: Ground
   const n = noise2(seed)
   // The craft's pads rest on a level patch; the relief fades in around it.
   const padM = Math.max(craftHeightM * 0.95, 3)
+  const custom = customGround(seedText, craftHeightM)
   const craters: Crater[] = []
   for (let i = 0; i < k.craters; i++) {
     // Denser near the craft, where the camera stands.
@@ -161,9 +227,21 @@ export function makeGround(seedText: string, craftHeightM: number, style: Ground
     const r = 0.45 + Math.pow(rand(), k.craterSkew) * k.craterMaxM
     craters.push({ x: Math.cos(a) * d, z: Math.sin(a) * d, r })
   }
+  // Shapes added for a tipped craft; they apply on the level patch too.
+  const shaped = (x: number, z: number) => {
+    if (!custom) return 0
+    let h = 0
+    if (custom.crater) {
+      const q = Math.hypot(x, z) / custom.crater.r
+      if (q < 1) h -= custom.crater.depth * (1 - q * q)
+      h += 0.05 * custom.crater.r * Math.exp(-(((q - 1) / 0.28) ** 2))
+    }
+    for (const m of custom.mounds) h += m.h * Math.exp(-((Math.hypot(x - m.x, z - m.z) / m.r) ** 2) * 2.2)
+    return h
+  }
   const height = (x: number, z: number) => {
     const d = Math.hypot(x, z)
-    if (d <= padM) return 0
+    if (d <= padM) return shaped(x, z)
     let h = (n(x / 24, z / 24) - 0.5) * 2 * k.relief[0] + (n(x / 6, z / 6) - 0.5) * 2 * k.relief[1] + (n(x / 1.4, z / 1.4) - 0.5) * 2 * k.relief[2]
     for (const c of craters) {
       const q = Math.hypot(x - c.x, z - c.z) / c.r
@@ -173,7 +251,7 @@ export function makeGround(seedText: string, craftHeightM: number, style: Ground
       h += bowl + rim
     }
     const far = d > FALL_FROM_M ? -((d - FALL_FROM_M) ** 2) / (2 * FALL_RADIUS_M) : 0
-    return h * smooth(padM, padM * 2.4, d) + far
+    return h * smooth(padM, padM * 2.4, d) + far + shaped(x, z)
   }
   const rocks: Rock[] = []
   for (let i = 0; i < k.rocks; i++) {
@@ -193,7 +271,8 @@ export function makeGround(seedText: string, craftHeightM: number, style: Ground
     }
     rocks.push({ x: Math.cos(a) * d, z: Math.sin(a) * d, size: [s * (0.7 + rand() * 0.6), s * (0.45 + rand() * 0.4), s * (0.7 + rand() * 0.6)], turn: rand() * Math.PI })
   }
-  return { height, style, albedo: k.albedo, grain: k.grain, craters, rocks, padM, edgeM: GROUND_EDGE_M }
+  if (custom) rocks.push(...custom.rocks)
+  return { height, style, albedo: k.albedo, grain: k.grain, craters, rocks, padM, edgeM: GROUND_EDGE_M, rest: custom?.rest }
 }
 
 /**

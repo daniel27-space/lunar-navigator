@@ -99,7 +99,8 @@ property search, product-comparison sites, sun-planning tools); see
   the whole-Moon map beyond, so a peak further away than that can be underestimated. The four
   polar landers also have 20 m terrain within 5 km; the 20 m product does not exist elsewhere.
 - In the mission view the skyline, the Sun and the Earth are real for that site and time (the
-  discs are drawn at twice their size). The ground near the craft is generated, in three
+  discs are drawn at twice their size). Earth's phase is real; the face it shows and its
+  clouds are not. IM-1 and IM-2 are shown tipped over on ground made for them. The ground near the craft is generated, in three
   styles (mare, highland, polar), because no terrain data exists at that scale.
 - In the mission view only the Apollo Lunar Module is a real 3D model (NASA). The other craft
   are simplified stand-ins for their class and are labelled so. 6 missions have no picture
