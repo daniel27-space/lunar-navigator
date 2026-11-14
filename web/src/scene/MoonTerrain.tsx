@@ -4,7 +4,7 @@
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
-import { latLonOf, R_KM, spDirection, type Vec3 } from '../lib/geo'
+import { latLonOf, spDirection, type Vec3 } from '../lib/geo'
 import { sampleXY, type Level, type Terrain } from '../lib/terrain'
 import type { LayerMode } from '../store'
 
@@ -88,7 +88,8 @@ uniform float uPix1;
 uniform float uR;     // km
 uniform vec3 uSun;    // unit, body-fixed, towards the Sun
 uniform float uSunRad; // angular radius, radians
-uniform int uMode;    // 0 natural, 1 elevation, 2 slope
+uniform int uMode;    // 0 natural, 1 elevation, 2 slope, 3 avg sunlight, 4 avg Earth, 5 PSR
+uniform sampler2D uOverlay; // 8-bit layer on the L0 grid
 varying vec2 vXY;
 
 vec2 uvOf(vec2 xy, vec4 ext) {
@@ -135,6 +136,23 @@ vec3 slopeRamp(float deg) {
   return mix(vec3(0.95, 0.70, 0.15), vec3(0.75, 0.12, 0.10), clamp((deg - 15.0) / 15.0, 0.0, 1.0));
 }
 
+vec3 sunRamp(float f) {
+  // never lit: near black; rarely lit: purple; often lit: orange to pale yellow
+  vec3 c0 = vec3(0.03, 0.02, 0.08);
+  vec3 c1 = vec3(0.35, 0.10, 0.45);
+  vec3 c2 = vec3(0.90, 0.40, 0.20);
+  vec3 c3 = vec3(1.00, 0.95, 0.60);
+  if (f < 0.25) return mix(c0, c1, f / 0.25);
+  if (f < 0.6) return mix(c1, c2, (f - 0.25) / 0.35);
+  return mix(c2, c3, (f - 0.6) / 0.4);
+}
+vec3 earthRamp(float f) {
+  vec3 c0 = vec3(0.04, 0.04, 0.06);
+  vec3 c1 = vec3(0.10, 0.30, 0.60);
+  vec3 c2 = vec3(0.75, 0.92, 1.00);
+  return f < 0.5 ? mix(c0, c1, f / 0.5) : mix(c1, c2, (f - 0.5) / 0.5);
+}
+
 void main() {
   vec2 uv0 = uvOf(vXY, uExt0);
   if (!inside(uv0, 0.0)) discard;
@@ -167,9 +185,16 @@ void main() {
   float direct = max(dot(n, uSun), 0.0) * lit;
 
   vec3 col;
-  if (uMode == 0) {
+  float ov = texture2D(uOverlay, uv0).r;
+  if (uMode == 0 || uMode == 5) {
     float I = 0.6 * direct;
-    col = vec3(1.0 - exp(-I * 9.0)) * vec3(1.0, 0.985, 0.96) + vec3(0.012, 0.013, 0.016);
+    col = vec3(1.0 - exp(-I * 5.5)) * vec3(1.0, 0.985, 0.96) + vec3(0.012, 0.013, 0.016);
+    if (uMode == 5 && ov > 0.5) col = mix(col, vec3(0.05, 0.42, 0.85), 0.75);
+  } else if (uMode == 3 || uMode == 4) {
+    float relief = 0.6 + 0.4 * (1.0 - exp(-direct * 6.0));
+    float f = clamp(ov * 255.0 / 250.0, 0.0, 1.0);
+    vec3 base = uMode == 3 ? sunRamp(f) : earthRamp(f);
+    col = ov > 0.99 ? vec3(0.05) : base * relief;
   } else {
     float relief = 0.45 + 0.55 * (1.0 - exp(-direct * 6.0));
     float lightMask = mix(0.55, 1.0, lit);
@@ -181,7 +206,27 @@ void main() {
   gl_FragColor = vec4(pow(col, vec3(1.0 / 2.2)), 1.0);
 }`
 
-const MODE: Record<LayerMode, number> = { natural: 0, elevation: 1, slope: 2 }
+const MODE: Record<LayerMode, number> = { natural: 0, elevation: 1, slope: 2, sunavg: 3, earthavg: 4, psr: 5 }
+const OVERLAY_FILE: Partial<Record<LayerMode, string>> = {
+  sunavg: 'sun_avg.png',
+  earthavg: 'earth_avg.png',
+  psr: 'psr.png',
+}
+const overlayCache = new Map<string, THREE.Texture>()
+function overlayTexture(base: string, file: string): THREE.Texture {
+  let tex = overlayCache.get(file)
+  if (!tex) {
+    tex = new THREE.TextureLoader().load(`${base}layers/${file}`)
+    tex.colorSpace = THREE.NoColorSpace
+    tex.flipY = false
+    tex.generateMipmaps = false
+    tex.minFilter = tex.magFilter = THREE.LinearFilter
+    overlayCache.set(file, tex)
+  }
+  return tex
+}
+const blankOverlay = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1)
+blankOverlay.needsUpdate = true
 
 interface Props {
   terrain: Terrain
@@ -190,10 +235,12 @@ interface Props {
   /** Sun angular radius in radians */
   sunRad: number
   layer: LayerMode
+  /** URL prefix of the data folder */
+  dataBase: string
   onPick: (lat: number, lon: number) => void
 }
 
-export function MoonTerrain({ terrain, sunDir, sunRad, layer, onPick }: Props) {
+export function MoonTerrain({ terrain, sunDir, sunRad, layer, dataBase, onPick }: Props) {
   const gl = useThree((s) => s.gl)
   const geometry = useMemo(() => buildGeometry(terrain), [terrain])
   const material = useMemo(() => {
@@ -214,6 +261,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, onPick }: Props) {
         uSun: { value: new THREE.Vector3(1, 0, 0) },
         uSunRad: { value: 0.00465 },
         uMode: { value: 0 },
+        uOverlay: { value: blankOverlay },
       },
     })
   }, [terrain, gl])
@@ -231,6 +279,8 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, onPick }: Props) {
   material.uniforms.uSun.value.set(sunDir[0], sunDir[1], sunDir[2])
   material.uniforms.uSunRad.value = sunRad
   material.uniforms.uMode.value = MODE[layer]
+  const file = OVERLAY_FILE[layer]
+  material.uniforms.uOverlay.value = file ? overlayTexture(dataBase, file) : blankOverlay
 
   const handleClick = (ev: ThreeEvent<MouseEvent>) => {
     if (ev.delta > 4) return // it was a drag, not a click
@@ -240,13 +290,6 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, onPick }: Props) {
   }
 
   return (
-    <>
-      <mesh geometry={geometry} material={material} onClick={handleClick} />
-      {/* The rest of the Moon, below the lowest polar terrain, so the patch has a body. */}
-      <mesh>
-        <sphereGeometry args={[R_KM - 9.5, 96, 64]} />
-        <meshBasicMaterial color="#0b0c0f" />
-      </mesh>
-    </>
+    <mesh geometry={geometry} material={material} onClick={handleClick} />
   )
 }

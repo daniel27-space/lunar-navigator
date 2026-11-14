@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { computeHorizon, discVisibleFraction, horizonAt } from '../lib/horizon'
-import type { Terrain } from '../lib/terrain'
+import { terrainTier, type Terrain } from '../lib/terrain'
 import {
   computeSeries,
   DEFAULT_CRITERIA,
@@ -23,6 +23,12 @@ const fmtLon = (v: number) => `${Math.abs(v).toFixed(3)}°${v < 0 ? 'W' : 'E'}`
 const fmtDur = (h: number | null) =>
   h === null ? `more than ${WINDOW_DAYS} d` : h >= 48 ? `${(h / 24).toFixed(1)} d` : `${h.toFixed(1)} h`
 const pct = (v: number) => `${Math.round(v * 100)}%`
+
+const TIER_NOTE = {
+  fine: 'Horizon from LOLA 80 m terrain.',
+  coarse: 'Horizon from LOLA terrain at about 300 m: rise and set times are less certain here.',
+  none: 'No terrain data here: smooth-sphere horizon, so real hills are ignored.',
+}
 
 /** Consecutive runs where `test` is true, as [startIndex, endIndex) pairs. */
 function runs(count: number, test: (i: number) => boolean): [number, number][] {
@@ -236,7 +242,7 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
       </dl>
       <p className="muted small">
         60 days from {new Date(anchor).toISOString().slice(0, 10)}. Observer {horizon.observerHeightM} m above the
-        surface.
+        surface. {TIER_NOTE[terrainTier(terrain, pin.lat, pin.lon)]}
       </p>
     </section>
   )

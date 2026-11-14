@@ -89,3 +89,15 @@ export function heightAt(t: Terrain, latDeg: number, lonDeg: number): number {
   const [x, y] = spProject(latDeg, lonDeg, t.radiusM)
   return sampleXY(t, x, y)
 }
+
+export type TerrainTier = 'fine' | 'coarse' | 'none'
+
+/** Which elevation data covers a point: the 80 m tile, only the ~300 m tile, or nothing. */
+export function terrainTier(t: Terrain, latDeg: number, lonDeg: number): TerrainTier {
+  const [x, y] = spProject(latDeg, lonDeg, t.radiusM)
+  if (latDeg > -60) return 'none'
+  for (let k = t.levels.length - 1; k >= 0; k--) {
+    if (!Number.isNaN(sampleLevel(t.levels[k], x, y))) return k === 0 ? 'coarse' : 'fine'
+  }
+  return 'none'
+}

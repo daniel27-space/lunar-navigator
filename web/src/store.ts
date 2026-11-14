@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 
-export type LayerMode = 'natural' | 'elevation' | 'slope'
+export type LayerMode = 'natural' | 'elevation' | 'slope' | 'sunavg' | 'earthavg' | 'psr'
+
+/** Where the camera should go. `seq` changes on every request so repeats still animate. */
+export type ViewGoal =
+  | { kind: 'pole'; seq: number }
+  | { kind: 'globe'; seq: number; lat?: number; lon?: number }
+  | { kind: 'site'; seq: number; lat: number; lon: number; hM: number }
 
 export interface Pin {
   id: number
@@ -19,6 +25,8 @@ interface State {
   layer: LayerMode
   pins: Pin[]
   activePin: number | null
+  view: ViewGoal
+  goTo: (v: { kind: 'pole' } | { kind: 'globe'; lat?: number; lon?: number } | { kind: 'site'; lat: number; lon: number; hM: number }) => void
   setTime: (t: number) => void
   setPlaying: (p: boolean) => void
   setRate: (r: number) => void
@@ -38,6 +46,8 @@ export const useStore = create<State>((set) => ({
   layer: 'natural',
   pins: [],
   activePin: null,
+  view: { kind: 'pole', seq: 0 },
+  goTo: (v) => set((s) => ({ view: { ...v, seq: s.view.seq + 1 } as ViewGoal })),
   setTime: (tMs) => set({ tMs }),
   setPlaying: (playing) => set({ playing }),
   setRate: (rate) => set({ rate }),
