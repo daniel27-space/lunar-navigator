@@ -88,8 +88,9 @@ property search, product-comparison sites, sun-planning tools); see
   the whole-Moon map beyond, so a peak further away than that can be underestimated. The four
   polar landers also have 20 m terrain within 5 km; the 20 m product does not exist elsewhere.
 - In the mission view only the Apollo Lunar Module is a real 3D model (NASA). The other craft
-  are simplified stand-ins for their class and are labelled so. 17 missions have no picture
-  because none could be found under a free licence.
+  are simplified stand-ins for their class and are labelled so. 6 missions have no picture
+  because none could be found under a free licence, and for most non-NASA craft the picture
+  is a NASA orbital view of the lander or its site, not a close-up.
 - Inside about 84.6°S the browser uses 80 m terrain. Outside it uses about 300 m terrain, where
   the horizon can be wrong by a degree or more; rise and set times there are less certain.
 - On ridge crests the result is very sensitive to observer height: a mast a metre taller can
