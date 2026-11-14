@@ -12,7 +12,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { makeGround, skylineShade, startViewAz, type Ground, type GroundStyle } from './landers/ground'
+import { makeGround, startViewAz, type Ground, type GroundStyle } from './landers/ground'
 
 export const ARCHETYPES = ['apollo-lm', 'surveyor', 'luna-lander', 'lunokhod', 'change-lander', 'small-lander', 'nova-c', 'impactor'] as const
 export type Archetype = (typeof ARCHETYPES)[number]
@@ -462,33 +462,53 @@ function grainTexture(): THREE.DataTexture {
   return t
 }
 
-/** The distant terrain: a ring round the camera whose top edge is the site's real skyline. */
-function skylineGeometry(sky: SceneSky, albedo: string): THREE.BufferGeometry {
-  const base = new THREE.Color(albedo)
-  // The foot of the distant terrain takes the tone of the ground plain it rises from.
-  const plain = sky.sun.up ? Math.min(0.1 + 0.9 * Math.sin(Math.max(sky.sun.el, 0) * D2R), 0.6) : 0.04
+/**
+ * The distant terrain: a ring round the camera whose top edge is the site's real skyline.
+ *
+ * It is lit by the scene's own lights, not coloured separately, so it can never disagree with
+ * the ground in front of it: its foot has the ground's upward normal (and so exactly the
+ * ground's tone under any light), and its crest leans towards the viewer, so a hill is
+ * brighter when the Sun is behind the camera and darker when you look towards the Sun.
+ */
+function skylineGeometry(sky: SceneSky): THREE.BufferGeometry {
   const n = sky.horizon ? sky.horizon.length : 72
   const step = sky.horizon ? sky.azStepDeg : 360 / n
   const pos: number[] = []
-  const col: number[] = []
+  const nor: number[] = []
   const idx: number[] = []
   const low = -SKYLINE_R * Math.tan(16 * D2R)
   for (let i = 0; i <= n; i++) {
     const az = i * step
     const el = sky.horizon ? sky.horizon[i % n] : 0
-    const x = Math.sin(az * D2R) * SKYLINE_R
-    const z = -Math.cos(az * D2R) * SKYLINE_R
-    const shade = skylineShade(az, sky.sun)
-    pos.push(x, SKYLINE_R * Math.tan(Math.min(Math.max(el, -15), 60) * D2R), z, x, low, z)
-    const foot = shade * 0.4 + plain * 0.6
-    col.push(shade * base.r * 1.25, shade * base.g * 1.25, shade * base.b * 1.25, foot * base.r, foot * base.g, foot * base.b)
+    const sx = Math.sin(az * D2R)
+    const sz = -Math.cos(az * D2R)
+    pos.push(sx * SKYLINE_R, SKYLINE_R * Math.tan(Math.min(Math.max(el, -15), 60) * D2R), sz * SKYLINE_R, sx * SKYLINE_R, low, sz * SKYLINE_R)
+    // crest: a slope facing the viewer (inward and up); foot: level ground
+    nor.push(-sx * 0.8, 0.6, -sz * 0.8, 0, 1, 0)
     if (i < n) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 2, i * 2 + 1, i * 2 + 3)
   }
   const geo = new THREE.BufferGeometry()
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
-  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3))
   geo.setIndex(idx)
   return geo
+}
+
+/**
+ * Light for the ground scene. On the Moon a camera is exposed for the scene in front of it, so
+ * this keeps level ground at a steady brightness whatever the Sun's height, instead of letting
+ * it go black as the Sun nears the horizon. The Sun's compass direction is always the real one.
+ * Its height is the real one down to 5 degrees; below that the light is kept at 5 degrees so
+ * that ground which the app counts as sunlit (for a panel 2 m up) is not drawn black.
+ */
+export function sceneLight(sunElDeg: number): { elDeg: number; sun: number; bounce: number } {
+  const elDeg = Math.max(sunElDeg, 5)
+  const s = Math.sin(elDeg * D2R)
+  // level ground receives sun * s: about 1.7 at 30 degrees and above, easing down to 0.6 at 5 degrees
+  const sun = Math.min(Math.max(1.7 / s, 3), 7)
+  // sunlit ground throws light back into shadows; more of it reaches the craft when the ground is bright
+  const bounce = 0.55 + 0.5 * Math.min(sun * s, 1.7) / 1.7
+  return { elDeg, sun, bounce }
 }
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
@@ -615,7 +635,7 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
   const ground = useMemo(() => makeGround(seed, h, style), [seed, h, style])
   const groundGeo = useMemo(() => groundGeometry(ground, d.rings, d.around), [ground, d.rings, d.around])
   const grain = useMemo(grainTexture, [])
-  const skyline = useMemo(() => skylineGeometry(sky, ground.albedo), [sky, ground.albedo])
+  const skyline = useMemo(() => skylineGeometry(sky), [sky])
   useEffect(() => () => groundGeo.dispose(), [groundGeo])
   useEffect(() => () => skyline.dispose(), [skyline])
   useEffect(() => () => grain.dispose(), [grain])
@@ -623,7 +643,8 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
   useEffect(() => invalidate(), [sky, invalidate])
   const [skyGroup, setSkyGroup] = useState<THREE.Group | null>(null)
 
-  const sunDir = toward(sky.sun.az, Math.max(sky.sun.el, 0.5))
+  const light = sceneLight(sky.sun.el)
+  const sunDir = toward(sky.sun.az, light.elDeg)
   const reach = Math.max(14, h * 5)
   const body = (b: { az: number; el: number; radius: number }): { p: V3; r: number } => {
     const t = toward(b.az, b.el)
@@ -639,9 +660,14 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
       <StandingCamera heightM={h} ground={ground} stand={stand} shift={shift} motion={motion} leaving={leaving} sky={skyGroup} />
       {sky.sun.up ? (
         <>
+          {/* Each light has its own key and an explicit colour. Day and night lights are different
+              elements: without keys the night light was reused for the Sun and, losing its colour
+              prop, shone black, so daylight after a night was pitch dark. */}
           <directionalLight
+            key="sun"
+            color="#ffffff"
             position={[sunDir[0] * 80, sunDir[1] * 80, sunDir[2] * 80]}
-            intensity={3.4}
+            intensity={light.sun}
             castShadow
             shadow-mapSize={[d.shadow, d.shadow]}
             shadow-camera-left={-reach}
@@ -653,14 +679,15 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
             shadow-bias={-0.0008}
             shadow-normalBias={0.03}
           />
-          {/* sunlight bounced back up from the ground */}
-          <hemisphereLight args={['#101216', ground.albedo, 0.55]} />
+          {/* sunlight bounced back up from the ground, which is what lights the shadowed side of a craft */}
+          <hemisphereLight key="bounce" args={['#2a2d33', ground.albedo, light.bounce]} />
+          <ambientLight key="ambient" color="#ffffff" intensity={0.22} />
         </>
       ) : (
         <>
           {/* night: soft fill so the craft can be seen, from Earth's side when Earth is up */}
-          <directionalLight position={[earthDir[0] * 80, earthDir[1] * 80, earthDir[2] * 80]} intensity={sky.earth.el > 0 ? 0.9 : 0.5} color="#b4c4dc" />
-          <hemisphereLight args={['#6f7a8c', '#3a3835', 1.3]} />
+          <directionalLight key="fill" position={[earthDir[0] * 80, earthDir[1] * 80, earthDir[2] * 80]} intensity={sky.earth.el > 0 ? 0.9 : 0.5} color="#b4c4dc" />
+          <hemisphereLight key="night" args={['#6f7a8c', '#3a3835', 1.3]} />
         </>
       )}
 
@@ -676,7 +703,7 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
 
       <group ref={setSkyGroup}>
         <mesh geometry={skyline}>
-          <meshBasicMaterial vertexColors side={THREE.DoubleSide} fog={false} />
+          <meshStandardMaterial color={ground.albedo} roughness={1} metalness={0} fog={false} />
         </mesh>
         {/* beyond the skyline, so terrain hides whatever part of a disc is below it */}
         <mesh position={sunDisc.p} onUpdate={(m) => m.lookAt(0, 0, 0)}>
