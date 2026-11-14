@@ -1,0 +1,24 @@
+{
+  "t0_utc": "2024-01-01T00:00:00Z",
+  "step_s": 3600,
+  "count": 105193,
+  "frame": "MOON_ME",
+  "abcorr": "LT+S",
+  "kernels": [
+    "naif0012.tls",
+    "pck00011.tpc",
+    "de440s.bsp",
+    "moon_pa_de440_200625.bpc",
+    "moon_de440_250416.tf"
+  ],
+  "record": [
+    "sun_x",
+    "sun_y",
+    "sun_z",
+    "sun_dist_km",
+    "earth_x",
+    "earth_y",
+    "earth_z",
+    "earth_dist_km"
+  ]
+}
