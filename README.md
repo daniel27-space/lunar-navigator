@@ -41,6 +41,16 @@ regions, elevation and slope.
   between 2025 and 2034 (`docs/research/ephemeris-validation.md`).
 - The browser horizon code reproduces the Python reference on real LOLA tiles to within 0.001°
   at six test points (`web/src/lib/horizon.real.test.ts`).
+- Over a full 18.6-year cycle at 185 points, our share of time in sunlight correlates with
+  **NASA GSFC's published illumination map** at r = 0.988 (RMS difference 2.7 percentage
+  points); Earth visibility at r = 0.993. All tested permanently shadowed crater floors come
+  out at exactly zero sunlight.
+- For the Shackleton connecting ridge we get 92.29% illumination at 2 m and 95.69% at 10 m;
+  **Gläser et al. (2014)** published 92.27% and 95.65%. Longest darkness matches at 10 m but
+  not at 2 m (9.4 days against their 4.6), which is discussed in `docs/VALIDATION.md`.
+- The total lunar eclipse of 14 March 2025 shows up as Earth covering the Sun at the Blue
+  Ghost landing site.
+- Full method, tables and disagreements: [`docs/VALIDATION.md`](docs/VALIDATION.md).
 - Run the checks: `cd web && npm test` and
   `.venv/bin/python -m pytest -p no:cacheprovider pipeline`.
 
@@ -50,6 +60,9 @@ regions, elevation and slope.
 - Inside about 84.6°S the browser uses 80 m terrain. Outside it uses about 300 m terrain, where
   the horizon can be wrong by a degree or more; rise and set times there are less certain.
 - Points close to 80°S are missing part of their northern horizon.
+- On ridge crests the result is very sensitive to observer height: a mast a metre taller can
+  halve the longest night.
+- When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
 - Planned missions are placed at the centre of their announced target feature, not at a landing
   point.
 

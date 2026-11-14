@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { skyAt, type Ephem } from './ephem'
+import { eclipseFactor } from './windows'
 
 const dir = new URL('../../public/data/ephem/', import.meta.url)
 const meta = JSON.parse(readFileSync(new URL('ephem.json', dir), 'utf8'))
@@ -49,5 +50,22 @@ describe('Sun and Earth angles vs JPL Horizons', () => {
     }
     console.log(`worst angular difference vs Horizons: ${worst.toFixed(5)} deg`)
     expect(worst).toBeLessThan(0.02)
+  })
+})
+
+describe('eclipse of the Sun by Earth', () => {
+  // Total lunar eclipse of 14 March 2025 (greatest eclipse about 06:59 UTC), which the
+  // Blue Ghost lander watched from Mare Crisium (18.56N, 61.81E).
+  it('hides the Sun at mid-eclipse and not a day earlier', () => {
+    const mid = skyAt(ephem, Date.parse('2025-03-14T06:59:00Z'), 18.56, 61.81, 0)
+    expect(eclipseFactor(mid)).toBe(0)
+    const before = skyAt(ephem, Date.parse('2025-03-13T06:59:00Z'), 18.56, 61.81, 0)
+    expect(eclipseFactor(before)).toBe(1)
+  })
+  it('is partial around first contact', () => {
+    const partial = skyAt(ephem, Date.parse('2025-03-14T05:40:00Z'), 18.56, 61.81, 0)
+    const f = eclipseFactor(partial)
+    expect(f).toBeGreaterThan(0)
+    expect(f).toBeLessThan(1)
   })
 })

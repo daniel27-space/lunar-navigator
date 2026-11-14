@@ -1,0 +1,246 @@
+{
+ "im-1-odysseus": {
+  "lat": -80.13,
+  "lon": 1.44,
+  "reported": {
+   "landing_utc": "2024-02-22T23:23:00Z",
+   "end_utc": "2024-02-29T17:00:00Z",
+   "note": "last contact / power-down 29 Feb 2024 (time of day about 17:00 UTC is from a search snippet only); attributed to approaching lunar night with the lander tipped so one panel was lit"
+  },
+  "sources": {
+   "tif": {
+    "h0_m": 2591.947755256692,
+    "events": [
+     {
+      "type": "sunrise",
+      "utc": "2024-02-19T04:40:00Z",
+      "sun_az_deg": 64.7225914001681,
+      "sun_el_deg": 5.42469980010422,
+      "dem_ray_km_at_az": 9.5
+     },
+     {
+      "type": "sunset",
+      "utc": "2024-03-02T18:00:00Z",
+      "sun_az_deg": 271.4835580128344,
+      "sun_el_deg": 1.1621693027891151,
+      "dem_ray_km_at_az": 81.0
+     }
+    ],
+    "centre_events": [
+     {
+      "type": "sunrise",
+      "utc": "2024-02-19T06:20:00Z"
+     },
+     {
+      "type": "sunset",
+      "utc": "2024-03-02T14:05:00Z"
+     }
+    ],
+    "landing_utc": {
+     "utc": "2024-02-22T23:23:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 10.473315124248106,
+     "sun_az_deg": 18.59426089230436,
+     "horizon_at_sun_az_deg": -0.870232003986272
+    },
+    "end_utc": {
+     "utc": "2024-02-29T17:00:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 5.3226758367142,
+     "sun_az_deg": 296.0101680551695,
+     "horizon_at_sun_az_deg": 1.0569674800259614
+    }
+   },
+   "tiles": {
+    "h0_m": 2592.5043919493864,
+    "events": [
+     {
+      "type": "sunrise",
+      "utc": "2024-02-19T01:05:00Z"
+     },
+     {
+      "type": "sunset",
+      "utc": "2024-03-02T18:40:00Z"
+     }
+    ],
+    "centre_events": [
+     {
+      "type": "sunrise",
+      "utc": "2024-02-19T02:50:00Z"
+     },
+     {
+      "type": "sunset",
+      "utc": "2024-03-02T14:55:00Z"
+     }
+    ],
+    "landing_utc": {
+     "utc": "2024-02-22T23:23:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 10.473315124036725,
+     "sun_az_deg": 18.594260892304366,
+     "horizon_at_sun_az_deg": -0.908391958058149
+    },
+    "end_utc": {
+     "utc": "2024-02-29T17:00:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 5.322675836500267,
+     "sun_az_deg": 296.0101680551695,
+     "horizon_at_sun_az_deg": 1.0377448095659292
+    }
+   }
+  },
+  "earth_in_front_of_sun": {
+   "partial": null,
+   "total": null
+  },
+  "smooth_sphere_events": [
+   {
+    "type": "sunrise",
+    "utc": "2024-02-16T09:05:00Z"
+   },
+   {
+    "type": "sunset",
+    "utc": "2024-03-03T10:15:00Z"
+   }
+  ],
+  "dem_ray_km_by_az": {
+   "0": 3.5,
+   "30": 4.5,
+   "60": 8.0,
+   "90": 293.5,
+   "120": 300.0,
+   "150": 300.0,
+   "180": 300.0,
+   "210": 300.0,
+   "240": 300.0,
+   "270": 197.0,
+   "300": 7.5,
+   "330": 4.5
+  }
+ },
+ "im-2-athena": {
+  "lat": -84.7906,
+  "lon": 29.1957,
+  "reported": {
+   "landing_utc": "2025-03-06T17:28:00Z",
+   "end_utc": "2025-03-07T06:15:00Z",
+   "note": "ended by battery depletion, on its side in a shadowed crater; planned for about 10 days"
+  },
+  "sources": {
+   "tif": {
+    "h0_m": 5321.501553305141,
+    "events": [
+     {
+      "type": "sunrise",
+      "utc": "2025-03-05T22:50:00Z",
+      "sun_az_deg": 75.11646793841679,
+      "sun_el_deg": 1.678843202490061,
+      "dem_ray_km_at_az": 233.0
+     },
+     {
+      "type": "sunset",
+      "utc": "2025-03-19T22:55:00Z",
+      "sun_az_deg": 264.76949456035186,
+      "sun_el_deg": -0.5434009882935191,
+      "dem_ray_km_at_az": 300.0
+     }
+    ],
+    "centre_events": [
+     {
+      "type": "sunrise",
+      "utc": "2025-03-06T00:40:00Z"
+     },
+     {
+      "type": "sunset",
+      "utc": "2025-03-19T19:50:00Z"
+     }
+    ],
+    "landing_utc": {
+     "utc": "2025-03-06T17:28:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 2.4654288512020597,
+     "sun_az_deg": 65.67046704600692,
+     "horizon_at_sun_az_deg": 0.8324525795948233
+    },
+    "end_utc": {
+     "utc": "2025-03-07T06:15:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 2.9702347028119647,
+     "sun_az_deg": 59.21505231105337,
+     "horizon_at_sun_az_deg": 0.4097593595655936
+    }
+   },
+   "tiles": {
+    "h0_m": 5321.320971424112,
+    "events": [
+     {
+      "type": "sunrise",
+      "utc": "2025-03-05T22:50:00Z"
+     },
+     {
+      "type": "sunset",
+      "utc": "2025-03-19T22:50:00Z"
+     }
+    ],
+    "centre_events": [
+     {
+      "type": "sunrise",
+      "utc": "2025-03-06T00:45:00Z"
+     },
+     {
+      "type": "sunset",
+      "utc": "2025-03-19T19:40:00Z"
+     }
+    ],
+    "landing_utc": {
+     "utc": "2025-03-06T17:28:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 2.4654288512716973,
+     "sun_az_deg": 65.67046704600692,
+     "horizon_at_sun_az_deg": 0.8334462155749243
+    },
+    "end_utc": {
+     "utc": "2025-03-07T06:15:00Z",
+     "disc_fraction": 1.0,
+     "sun_el_deg": 2.9702347028815437,
+     "sun_az_deg": 59.21505231105337,
+     "horizon_at_sun_az_deg": 0.41004835089843683
+    }
+   }
+  },
+  "earth_in_front_of_sun": {
+   "partial": [
+    "2025-03-14T04:25:00Z",
+    "2025-03-14T09:25:00Z"
+   ],
+   "total": [
+    "2025-03-14T05:35:00Z",
+    "2025-03-14T08:15:00Z"
+   ]
+  },
+  "smooth_sphere_events": [
+   {
+    "type": "sunrise",
+    "utc": "2025-03-04T03:05:00Z"
+   },
+   {
+    "type": "sunset",
+    "utc": "2025-03-19T17:00:00Z"
+   }
+  ],
+  "dem_ray_km_by_az": {
+   "0": 189.0,
+   "30": 262.0,
+   "60": 225.5,
+   "90": 259.0,
+   "120": 300.0,
+   "150": 300.0,
+   "180": 300.0,
+   "210": 300.0,
+   "240": 300.0,
+   "270": 300.0,
+   "300": 192.5,
+   "330": 165.0
+  }
+ }
+}

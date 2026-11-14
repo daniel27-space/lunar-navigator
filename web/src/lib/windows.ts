@@ -1,5 +1,5 @@
 // Sunlight and Earth-visibility time series for one site, and the events planners ask about.
-import { skyAt, type Ephem } from './ephem'
+import { skyAt, type Ephem, type Sky } from './ephem'
 import { discVisibleFraction, type Horizon } from './horizon'
 
 export interface Series {
@@ -16,6 +16,23 @@ export interface Series {
   earthFrac: Float32Array
   /** Earth-centre elevation above the terrain horizon at Earth's azimuth, degrees */
   earthClear: Float32Array
+}
+
+/**
+ * Fraction (0..1) of the solar disc NOT covered by Earth, as seen from the site. Earth's disc
+ * is about 3.6 times wider than the Sun's from the Moon, so when the two line up (a lunar
+ * eclipse seen from Earth) the surface loses direct sunlight for up to a few hours. Linear in
+ * the separation between first and last contact; sunlight refracted through Earth's
+ * atmosphere is ignored.
+ */
+export function eclipseFactor(sky: Sky): number {
+  const r = Math.PI / 180
+  const c =
+    Math.sin(sky.sun.el * r) * Math.sin(sky.earth.el * r) +
+    Math.cos(sky.sun.el * r) * Math.cos(sky.earth.el * r) * Math.cos((sky.sun.az - sky.earth.az) * r)
+  const sep = Math.acos(Math.min(1, Math.max(-1, c))) / r
+  const inner = sky.earth.radius - sky.sun.radius
+  return Math.min(Math.max((sep - inner) / (2 * sky.sun.radius), 0), 1)
 }
 
 export function computeSeries(
@@ -44,7 +61,7 @@ export function computeSeries(
     const sky = skyAt(e, t0Ms + i * stepMs, h.lat, h.lon, elevM)
     s.sunEl[i] = sky.sun.el
     s.sunAz[i] = sky.sun.az
-    s.sunFrac[i] = discVisibleFraction(h, sky.sun.az, sky.sun.el, sky.sun.radius)
+    s.sunFrac[i] = discVisibleFraction(h, sky.sun.az, sky.sun.el, sky.sun.radius) * eclipseFactor(sky)
     s.earthEl[i] = sky.earth.el
     s.earthAz[i] = sky.earth.az
     s.earthFrac[i] = discVisibleFraction(h, sky.earth.az, sky.earth.el, sky.earth.radius)

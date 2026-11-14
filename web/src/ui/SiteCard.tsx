@@ -5,6 +5,7 @@ import { computeHorizon, discVisibleFraction, horizonAt } from '../lib/horizon'
 import { slopeAt, terrainTier, type Terrain } from '../lib/terrain'
 import {
   computeSeries,
+  eclipseFactor,
   DEFAULT_CRITERIA,
   hasComm,
   isSunlit,
@@ -180,7 +181,8 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
   const summary = useMemo(() => summarise(series), [series])
 
   const sky = skyAt(ephem, tMs, pin.lat, pin.lon, hM + horizon.observerHeightM)
-  const sunFrac = discVisibleFraction(horizon, sky.sun.az, sky.sun.el, sky.sun.radius)
+  const eclipse = eclipseFactor(sky)
+  const sunFrac = discVisibleFraction(horizon, sky.sun.az, sky.sun.el, sky.sun.radius) * eclipse
   const earthClear = sky.earth.el - horizonAt(horizon, sky.earth.az)
   const sunNext = nextChange(series, tMs, (i) => isSunlit(series, i, DEFAULT_CRITERIA))
   const commNext = nextChange(series, tMs, (i) => hasComm(series, i, DEFAULT_CRITERIA))
@@ -210,7 +212,7 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
             {sunNext.now ? 'Sunset' : 'Sunrise'} in {fmtDur(sunNext.inHours)}
           </span>
           <span className="muted">
-            Sun {sky.sun.el.toFixed(2)}° · {pct(sunFrac)} of disc visible
+            Sun {sky.sun.el.toFixed(2)}° · {pct(sunFrac)} of disc visible{eclipse < 1 ? ' (Earth is eclipsing the Sun)' : ''}
           </span>
         </div>
         <div className={commNext.now ? 'ok' : 'bad'}>
