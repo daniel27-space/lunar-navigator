@@ -22,8 +22,8 @@ export interface HorizonOptions {
   maxRangeKm?: number
 }
 
-const FIRST_STEP_M = 40
-const GROWTH = 0.01
+const FIRST_STEP_M = 20
+const GROWTH = 0.002
 
 export function computeHorizon(
   t: Terrain,

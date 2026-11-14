@@ -149,8 +149,8 @@ export default function App() {
   return (
     <div className="app">
       <Canvas
-        camera={{ position: [260, -180, -(R_KM + 330)], up: [0, 0, -1], near: 0.5, far: 30000, fov: 40 }}
-        gl={{ antialias: true, logarithmicDepthBuffer: true }}
+        camera={{ position: [260, -180, -(R_KM + 330)], up: [0, 0, -1], near: 1, far: 20000, fov: 40 }}
+        gl={{ antialias: true }}
         dpr={[1, 2]}
       >
         <color attach="background" args={['#000']} />

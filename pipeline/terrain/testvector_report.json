@@ -1,0 +1,174 @@
+{
+  "source_of_vectors": "web tiles (L1 where covered, else L0)",
+  "scheme": {
+    "ds_min_m": 20.0,
+    "growth": 0.002,
+    "max_range_m": 300000.0,
+    "samples_per_ray": 2202,
+    "az_step_deg": 0.5,
+    "observer_height_m": 2.0
+  },
+  "load_seconds": {
+    "geotiff": 0.7213687896728516,
+    "tiles": 0.2666018009185791
+  },
+  "points": [
+    {
+      "name": "Shackleton rim connecting ridge",
+      "lat": -89.45,
+      "lon": 222.7,
+      "observer_in_L1": true,
+      "surface_h_tiles_m": 1954.364,
+      "surface_h_fullres_m": 1954.436,
+      "tiles_minus_fullres_deg": {
+        "max_abs": 0.230027458180728,
+        "rms": 0.08090579498240054,
+        "mean": 0.04714114369255004,
+        "p95_abs": 0.20381502166127843,
+        "worst_az_deg": 128.0,
+        "worst_az_horizon_dist_m_fullres": 60.0
+      },
+      "fullres_4x_finer_steps_minus_reference_steps_deg": {
+        "max_abs": 0.06359541337842156,
+        "rms": 0.01404411593693589
+      },
+      "horizon_min_deg": -2.8445594686577222,
+      "horizon_max_deg": 0.521559121241893,
+      "horizon_dist_km_median_fullres": 0.3,
+      "horizon_dist_km_max_fullres": 161.7097080341139,
+      "seconds_tiles": 0.023965041007613763,
+      "seconds_fullres": 0.027178958000149578
+    },
+    {
+      "name": "Shackleton crater floor",
+      "lat": -89.67,
+      "lon": 129.2,
+      "observer_in_L1": true,
+      "surface_h_tiles_m": -2786.809,
+      "surface_h_fullres_m": -2786.849,
+      "tiles_minus_fullres_deg": {
+        "max_abs": 0.0014211783618485185,
+        "rms": 0.0005628827510621458,
+        "mean": -0.00020846937907374277,
+        "p95_abs": 0.0010426312325344965,
+        "worst_az_deg": 94.5,
+        "worst_az_horizon_dist_m_fullres": 9660.0
+      },
+      "fullres_4x_finer_steps_minus_reference_steps_deg": {
+        "max_abs": 0.006939761982135195,
+        "rms": 0.000938916714048531
+      },
+      "horizon_min_deg": 19.76163560344102,
+      "horizon_max_deg": 23.432798638145925,
+      "horizon_dist_km_median_fullres": 9.96,
+      "horizon_dist_km_max_fullres": 11.13927594892196,
+      "seconds_tiles": 0.024192249999032356,
+      "seconds_fullres": 0.02815162499609869
+    },
+    {
+      "name": "Malapert massif",
+      "lat": -85.99,
+      "lon": 357.1,
+      "observer_in_L1": true,
+      "surface_h_tiles_m": 4847.303,
+      "surface_h_fullres_m": 4847.206,
+      "tiles_minus_fullres_deg": {
+        "max_abs": 0.13416455972721897,
+        "rms": 0.054274431029749895,
+        "mean": -0.03129131674418468,
+        "p95_abs": 0.12324484655520011,
+        "worst_az_deg": 299.5,
+        "worst_az_horizon_dist_m_fullres": 140.0
+      },
+      "fullres_4x_finer_steps_minus_reference_steps_deg": {
+        "max_abs": 0.07388020014618846,
+        "rms": 0.01249145486302464
+      },
+      "horizon_min_deg": -4.825343417924017,
+      "horizon_max_deg": 12.770340682337554,
+      "horizon_dist_km_median_fullres": 1.8,
+      "horizon_dist_km_max_fullres": 220.85165183875148,
+      "seconds_tiles": 0.02304666698910296,
+      "seconds_fullres": 0.02689341599761974
+    },
+    {
+      "name": "Nobile rim",
+      "lat": -85.2,
+      "lon": 31.0,
+      "observer_in_L1": true,
+      "surface_h_tiles_m": 5789.406,
+      "surface_h_fullres_m": 5789.564,
+      "tiles_minus_fullres_deg": {
+        "max_abs": 0.06091296820497316,
+        "rms": 0.013551674644990503,
+        "mean": 0.006563432101560112,
+        "p95_abs": 0.0347479372538924,
+        "worst_az_deg": 169.0,
+        "worst_az_horizon_dist_m_fullres": 280.0
+      },
+      "fullres_4x_finer_steps_minus_reference_steps_deg": {
+        "max_abs": 0.0341817226549308,
+        "rms": 0.003518891760580931
+      },
+      "horizon_min_deg": -4.185950794400465,
+      "horizon_max_deg": 11.033719171495035,
+      "horizon_dist_km_median_fullres": 6.03,
+      "horizon_dist_km_max_fullres": 36.20867777898268,
+      "seconds_tiles": 0.022361666997312568,
+      "seconds_fullres": 0.026281915997969918
+    },
+    {
+      "name": "Haworth floor",
+      "lat": -87.5,
+      "lon": 355.0,
+      "observer_in_L1": true,
+      "surface_h_tiles_m": -3329.981,
+      "surface_h_fullres_m": -3330.013,
+      "tiles_minus_fullres_deg": {
+        "max_abs": 0.000579255083512642,
+        "rms": 0.00022497958224872744,
+        "mean": -5.3923361172448284e-05,
+        "p95_abs": 0.00042318694867389257,
+        "worst_az_deg": 265.5,
+        "worst_az_horizon_dist_m_fullres": 22148.9513606896
+      },
+      "fullres_4x_finer_steps_minus_reference_steps_deg": {
+        "max_abs": 0.002584193852904093,
+        "rms": 0.000457236134144053
+      },
+      "horizon_min_deg": 3.087200362912836,
+      "horizon_max_deg": 10.002358024411013,
+      "horizon_dist_km_median_fullres": 25.98788234566409,
+      "horizon_dist_km_max_fullres": 46.29588754681664,
+      "seconds_tiles": 0.023936874989885837,
+      "seconds_fullres": 0.027875375002622604
+    },
+    {
+      "name": "Near DEM edge 81S",
+      "lat": -81.0,
+      "lon": 60.0,
+      "observer_in_L1": false,
+      "surface_h_tiles_m": 1979.284,
+      "surface_h_fullres_m": 1985.015,
+      "tiles_minus_fullres_deg": {
+        "max_abs": 2.072225817773517,
+        "rms": 0.5295486197364029,
+        "mean": -0.20117928185943232,
+        "p95_abs": 1.5201795313747486,
+        "worst_az_deg": 339.0,
+        "worst_az_horizon_dist_m_fullres": 140.0
+      },
+      "fullres_4x_finer_steps_minus_reference_steps_deg": {
+        "max_abs": 0.07652103218086381,
+        "rms": 0.01408623281960699
+      },
+      "horizon_min_deg": -2.832365224203709,
+      "horizon_max_deg": 4.965673747808464,
+      "horizon_dist_km_median_fullres": 3.21,
+      "horizon_dist_km_max_fullres": 114.45117827529312,
+      "seconds_tiles": 0.017626625005505048,
+      "seconds_fullres": 0.0217712500016205
+    }
+  ],
+  "testvector_bytes": 41869
+}

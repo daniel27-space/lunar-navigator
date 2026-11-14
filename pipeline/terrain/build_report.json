@@ -1,0 +1,127 @@
+{
+  "source_nan_pixels": 0,
+  "source_min_m": -7295.51708984375,
+  "source_max_m": 7026.3310546875,
+  "slope_source": {
+    "max_deg": 60.05779266357422,
+    "pixels_over_63.75": 0,
+    "seconds": 0.9689948558807373
+  },
+  "L0_seconds": 2.548308849334717,
+  "L1_seconds": 7.975739002227783,
+  "L0_quantisation_vs_area_average_m": {
+    "max_abs": 0.24999998917883204,
+    "rms": 0.14437719771020885,
+    "p99_abs": 0.24748869310491156,
+    "n": 4194304
+  },
+  "L0_bilinear_at_source_pixels_vs_source_m": {
+    "max_abs": 134.47451504176706,
+    "rms": 4.26970712034881,
+    "p99_abs": 14.812741070593544,
+    "n": 57699216
+  },
+  "L1_decoded_vs_source_m": {
+    "max_abs": 0.2509765625,
+    "rms": 0.14434471726417542,
+    "p99_abs": 0.24755859375,
+    "n": 16777216
+  },
+  "slope_L0_quantisation_vs_area_average_deg": {
+    "max_abs": 0.12499997832491072,
+    "rms": 0.07217325093646984,
+    "p99_abs": 0.12375577322852355,
+    "n": 4194304
+  },
+  "slope_L1_decoded_vs_source_deg": {
+    "max_abs": 0.125,
+    "rms": 0.07216884940862656,
+    "p99_abs": 0.12375092506408691,
+    "n": 16777216
+  },
+  "slope_L0_bilinear_at_source_pixels_vs_source_deg": {
+    "max_abs": 31.839586292382315,
+    "rms": 1.2043352649343577,
+    "p99_abs": 4.359486267549997,
+    "n": 57699216
+  },
+  "nan_in_decoded": {
+    "L0": 0,
+    "L1": 0
+  },
+  "verify_seconds": 4.11136794090271,
+  "files": {
+    "sp_dem_L0.png": {
+      "bytes": 5739829,
+      "ihdr": {
+        "width": 2048,
+        "height": 2048,
+        "bit_depth": 8,
+        "color_type": 2,
+        "interlace": 0
+      },
+      "chunk_types": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ],
+      "mode": "RGB",
+      "icc_profile": false
+    },
+    "sp_dem_L1.png": {
+      "bytes": 15590564,
+      "ihdr": {
+        "width": 4096,
+        "height": 4096,
+        "bit_depth": 8,
+        "color_type": 2,
+        "interlace": 0
+      },
+      "chunk_types": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ],
+      "mode": "RGB",
+      "icc_profile": false
+    },
+    "sp_slope_L0.png": {
+      "bytes": 2464746,
+      "ihdr": {
+        "width": 2048,
+        "height": 2048,
+        "bit_depth": 8,
+        "color_type": 0,
+        "interlace": 0
+      },
+      "chunk_types": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ],
+      "mode": "L",
+      "icc_profile": false
+    },
+    "sp_slope_L1.png": {
+      "bytes": 8183887,
+      "ihdr": {
+        "width": 4096,
+        "height": 4096,
+        "bit_depth": 8,
+        "color_type": 0,
+        "interlace": 0
+      },
+      "chunk_types": [
+        "IDAT",
+        "IEND",
+        "IHDR"
+      ],
+      "mode": "L",
+      "icc_profile": false
+    },
+    "sp_meta.json": {
+      "bytes": 2276
+    }
+  },
+  "total_seconds": 16.288580179214478
+}

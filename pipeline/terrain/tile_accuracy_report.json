@@ -1,0 +1,42 @@
+{
+  "n_sites": 400,
+  "az_step_deg": 2.0,
+  "lat_range": [
+    -90,
+    -80.5
+  ],
+  "observer_in_L1": {
+    "sites": 162,
+    "per_site_max_abs_deg": {
+      "median": 0.04923115745694018,
+      "p90": 0.14693086393028632,
+      "worst": 0.2340244106440057
+    },
+    "per_site_rms_deg": {
+      "median": 0.012305742934772965,
+      "p90": 0.03763215796976326,
+      "worst": 0.11329637391668337
+    },
+    "observer_surface_height_diff_m": {
+      "median": 0.07129488991910193,
+      "worst": 0.21888625443943965
+    }
+  },
+  "observer_in_L0_only": {
+    "sites": 238,
+    "per_site_max_abs_deg": {
+      "median": 0.6825024065615111,
+      "p90": 2.115236735448762,
+      "worst": 15.133124206844814
+    },
+    "per_site_rms_deg": {
+      "median": 0.22214863892666456,
+      "p90": 0.776919091930782,
+      "worst": 8.699728577924615
+    },
+    "observer_surface_height_diff_m": {
+      "median": 2.007910452756903,
+      "worst": 13.388501536431932
+    }
+  }
+}

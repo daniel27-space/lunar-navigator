@@ -200,6 +200,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, onPick }: Props) {
     const linear = !!gl.getContext().getExtension('OES_texture_float_linear')
     const [l0, l1] = [terrain.levels[0], terrain.levels[terrain.levels.length - 1]]
     return new THREE.ShaderMaterial({
+      side: THREE.DoubleSide,
       vertexShader,
       fragmentShader,
       uniforms: {

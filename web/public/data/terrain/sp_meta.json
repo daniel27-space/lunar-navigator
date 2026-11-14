@@ -1,0 +1,58 @@
+{
+  "radius_m": 1737400,
+  "projection": "south polar stereographic",
+  "levels": [
+    {
+      "file": "sp_dem_L0.png",
+      "size": 2048,
+      "x_min_m": -304000.0,
+      "x_max_m": 304000.0,
+      "y_min_m": -304000.0,
+      "y_max_m": 304000.0,
+      "pixel_m": 296.875
+    },
+    {
+      "file": "sp_dem_L1.png",
+      "size": 4096,
+      "x_min_m": -163840.0,
+      "x_max_m": 163840.0,
+      "y_min_m": -163840.0,
+      "y_max_m": 163840.0,
+      "pixel_m": 80.0
+    }
+  ],
+  "height_encoding": {
+    "formula": "h_m = (R*256 + G) * 0.5 - 10000",
+    "scale_m": 0.5,
+    "offset_m": -10000.0,
+    "blue": 0,
+    "nodata_rgb": [
+      0,
+      0,
+      0
+    ],
+    "pixel_registration": "area: pixel (row i, col j) centre is at x = x_min_m + (j+0.5)*pixel_m, y = y_max_m - (i+0.5)*pixel_m; row 0 is maximum y"
+  },
+  "slope_encoding": {
+    "files": [
+      "sp_slope_L0.png",
+      "sp_slope_L1.png"
+    ],
+    "formula": "slope_deg = value * 0.25",
+    "clamp_deg": 63.75,
+    "method": "central differences on the 80 m source grid (160 m effective baseline), scaled by the stereographic map scale; L0 is the area average of that"
+  },
+  "source": {
+    "file": "LDEM_80S_80MPP_ADJ.TIF",
+    "url": "https://pgda.gsfc.nasa.gov/data/LOLA_20mpp/LDEM_80S_80MPP_ADJ.TIF",
+    "product": "NASA GSFC PGDA product 78, LOLA south pole 80S-90S, 80 m/pixel",
+    "crs_wkt": "PROJCS[\"Moon (2015) - Sphere / Ocentric / South Polar\",GEOGCS[\"Moon (2015) - Sphere / Ocentric\",DATUM[\"Moon (2015) - Sphere\",SPHEROID[\"Moon (2015) - Sphere\",1737400,0,AUTHORITY[\"IAU\",\"30100\"]],AUTHORITY[\"IAU\",\"30100\"]],PRIMEM[\"Reference Meridian\",0,AUTHORITY[\"IAU\",\"30100\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"IAU\",\"30100\"]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH],AUTHORITY[\"IAU\",\"30135\"]]",
+    "pixel_m": 80.0,
+    "size": 7600,
+    "height_units": "metres above the 1737.4 km sphere",
+    "resampling": {
+      "L0": "exact area (box) average",
+      "L1": "none (native pixels, crop)"
+    }
+  }
+}

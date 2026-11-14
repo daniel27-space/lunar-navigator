@@ -1,0 +1,101 @@
+{
+  "n_sites": 300,
+  "az_step_deg": 2.0,
+  "lat_range": [
+    -89.5,
+    -85.0
+  ],
+  "horizon_setting_distance_km": {
+    "median": 9.44,
+    "p90": 65.02121413258784,
+    "p99": 123.97357622806159,
+    "max": 223.51515814923795
+  },
+  "cuts": [
+    {
+      "cut_km": 15,
+      "equivalent_site_latitude_deg": -80.49,
+      "fraction_of_azimuths_with_loss_over_0.1deg": 0.3988703703703704,
+      "fraction_of_azimuths_with_loss_over_0.5deg": 0.3470925925925926,
+      "loss_deg_mean": 1.1934655286293288,
+      "loss_deg_p95": 6.095574243698153,
+      "loss_deg_p99": 9.98075331477456,
+      "loss_deg_max": 16.362607064719537,
+      "sites_with_any_azimuth_loss_over_0.25deg": 0.9633333333333334,
+      "sites_with_any_azimuth_loss_over_1deg": 0.9066666666666666
+    },
+    {
+      "cut_km": 30,
+      "equivalent_site_latitude_deg": -80.99,
+      "fraction_of_azimuths_with_loss_over_0.1deg": 0.25833333333333336,
+      "fraction_of_azimuths_with_loss_over_0.5deg": 0.20972222222222223,
+      "loss_deg_mean": 0.5117447310490755,
+      "loss_deg_p95": 3.2895921148192344,
+      "loss_deg_p99": 5.923459120158382,
+      "loss_deg_max": 8.93448484606008,
+      "sites_with_any_azimuth_loss_over_0.25deg": 0.8766666666666667,
+      "sites_with_any_azimuth_loss_over_1deg": 0.7766666666666666
+    },
+    {
+      "cut_km": 61,
+      "equivalent_site_latitude_deg": -82.01,
+      "fraction_of_azimuths_with_loss_over_0.1deg": 0.09925925925925926,
+      "fraction_of_azimuths_with_loss_over_0.5deg": 0.06825925925925926,
+      "loss_deg_mean": 0.10599937120801084,
+      "loss_deg_p95": 0.837923837031123,
+      "loss_deg_p99": 2.2654958654314585,
+      "loss_deg_max": 5.124924479250858,
+      "sites_with_any_azimuth_loss_over_0.25deg": 0.6533333333333333,
+      "sites_with_any_azimuth_loss_over_1deg": 0.4633333333333333
+    },
+    {
+      "cut_km": 91,
+      "equivalent_site_latitude_deg": -83.0,
+      "fraction_of_azimuths_with_loss_over_0.1deg": 0.03625925925925926,
+      "fraction_of_azimuths_with_loss_over_0.5deg": 0.01972222222222222,
+      "loss_deg_mean": 0.02543372932557911,
+      "loss_deg_p95": 0.0,
+      "loss_deg_p99": 0.9456674853687178,
+      "loss_deg_max": 3.1294955937143456,
+      "sites_with_any_azimuth_loss_over_0.25deg": 0.35333333333333333,
+      "sites_with_any_azimuth_loss_over_1deg": 0.20666666666666667
+    },
+    {
+      "cut_km": 121,
+      "equivalent_site_latitude_deg": -83.99,
+      "fraction_of_azimuths_with_loss_over_0.1deg": 0.008092592592592592,
+      "fraction_of_azimuths_with_loss_over_0.5deg": 0.0032962962962962963,
+      "loss_deg_mean": 0.004514192132655229,
+      "loss_deg_p95": 0.0,
+      "loss_deg_p99": 0.0284101831542377,
+      "loss_deg_max": 2.5949080727608287,
+      "sites_with_any_azimuth_loss_over_0.25deg": 0.13,
+      "sites_with_any_azimuth_loss_over_1deg": 0.043333333333333335
+    },
+    {
+      "cut_km": 152,
+      "equivalent_site_latitude_deg": -85.01,
+      "fraction_of_azimuths_with_loss_over_0.1deg": 0.001425925925925926,
+      "fraction_of_azimuths_with_loss_over_0.5deg": 0.0002777777777777778,
+      "loss_deg_mean": 0.0005460140966805626,
+      "loss_deg_p95": 0.0,
+      "loss_deg_p99": 0.0,
+      "loss_deg_max": 1.2851896878294138,
+      "sites_with_any_azimuth_loss_over_0.25deg": 0.03666666666666667,
+      "sites_with_any_azimuth_loss_over_1deg": 0.0033333333333333335
+    },
+    {
+      "cut_km": 200,
+      "equivalent_site_latitude_deg": -86.6,
+      "fraction_of_azimuths_with_loss_over_0.1deg": 0.00024074074074074075,
+      "fraction_of_azimuths_with_loss_over_0.5deg": 5.555555555555556e-05,
+      "loss_deg_mean": 8.930302976991544e-05,
+      "loss_deg_p95": 0.0,
+      "loss_deg_p99": 0.0,
+      "loss_deg_max": 0.6535399665611656,
+      "sites_with_any_azimuth_loss_over_0.25deg": 0.006666666666666667,
+      "sites_with_any_azimuth_loss_over_1deg": 0.0
+    }
+  ],
+  "seconds": 12.390902042388916
+}

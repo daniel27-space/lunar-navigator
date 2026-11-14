@@ -1,0 +1,167 @@
+{
+  "sun": {
+    "file": "AVGVISIB_75S_120M_201608.TIF",
+    "bytes": 83052039,
+    "driver": "GTiff",
+    "width": 7624,
+    "height": 7624,
+    "dtype": "int16",
+    "nodata": -32768.0,
+    "scale": 4e-05,
+    "offset": 0.0,
+    "transform": [
+      120.0,
+      0.0,
+      -457440.0,
+      0.0,
+      -120.0,
+      457440.0
+    ],
+    "bounds": [
+      -457440.0,
+      -457440.0,
+      457440.0,
+      457440.0
+    ],
+    "crs_wkt": "PROJCS[\"Moon2000_spole\",GEOGCS[\"GCS_Moon\",DATUM[\"D_Moon_2000\",SPHEROID[\"Moon_2000_IAU_IAG\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "crs_facts": {
+      "proj": "stere",
+      "lat_0": -90,
+      "lat_ts": -90,
+      "lon_0": 0,
+      "x_0": 0,
+      "y_0": 0,
+      "k": null,
+      "a": 1737400,
+      "b": null,
+      "rf": null,
+      "units": "m"
+    },
+    "tags": {
+      "DATA_SET_ID": "\"LRO-L-LOLA-4-GDR-V1.0\"",
+      "INSTRUMENT_ID": "\"LOLA\"",
+      "INSTRUMENT_NAME": "\"LUNAR ORBITER LASER ALTIMETER\"",
+      "PRODUCER_INSTITUTION_NAME": "\"GODDARD SPACE FLIGHT CENTER\"",
+      "PRODUCT_CREATION_TIME": "2016-09-15T00:00:00",
+      "PRODUCT_ID": "\"AVGVISIB_75S_120M_201608\"",
+      "START_TIME": "2009-07-13T17:33:17.246",
+      "STOP_TIME": "2013-07-18T14:12:13",
+      "TARGET_NAME": "MOON",
+      "AREA_OR_POINT": "Area"
+    },
+    "raw_min": 0,
+    "raw_max": 22396,
+    "nodata_count": 0,
+    "n_unique_raw": 15981
+  },
+  "earth": {
+    "file": "AVGVISIB_75S_120M_201608_EARTH.TIF",
+    "bytes": 43148153,
+    "driver": "GTiff",
+    "width": 7624,
+    "height": 7624,
+    "dtype": "int16",
+    "nodata": -32768.0,
+    "scale": 4e-05,
+    "offset": 0.0,
+    "transform": [
+      120.0,
+      0.0,
+      -457440.0,
+      0.0,
+      -120.0,
+      457440.0
+    ],
+    "bounds": [
+      -457440.0,
+      -457440.0,
+      457440.0,
+      457440.0
+    ],
+    "crs_wkt": "PROJCS[\"Moon2000_spole\",GEOGCS[\"GCS_Moon\",DATUM[\"D_Moon_2000\",SPHEROID[\"Moon_2000_IAU_IAG\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "crs_facts": {
+      "proj": "stere",
+      "lat_0": -90,
+      "lat_ts": -90,
+      "lon_0": 0,
+      "x_0": 0,
+      "y_0": 0,
+      "k": null,
+      "a": 1737400,
+      "b": null,
+      "rf": null,
+      "units": "m"
+    },
+    "tags": {
+      "DATA_SET_ID": "\"LRO-L-LOLA-4-GDR-V1.0\"",
+      "INSTRUMENT_ID": "\"LOLA\"",
+      "INSTRUMENT_NAME": "\"LUNAR ORBITER LASER ALTIMETER\"",
+      "PRODUCER_INSTITUTION_NAME": "\"GODDARD SPACE FLIGHT CENTER\"",
+      "PRODUCT_CREATION_TIME": "2016-09-15T00:00:00",
+      "PRODUCT_ID": "\"AVGVISIB_75S_120M_201608_EARTH\"",
+      "START_TIME": "2009-07-13T17:33:17.246",
+      "STOP_TIME": "2013-07-18T14:12:13",
+      "TARGET_NAME": "MOON",
+      "AREA_OR_POINT": "Area"
+    },
+    "raw_min": 0,
+    "raw_max": 25000,
+    "nodata_count": 0,
+    "n_unique_raw": 25001
+  },
+  "psr": {
+    "file": "LPSR_75S_120M_201608.TIF",
+    "bytes": 1046706,
+    "driver": "GTiff",
+    "width": 7624,
+    "height": 7624,
+    "dtype": "int16",
+    "nodata": -32768.0,
+    "scale": 2.5e-05,
+    "offset": 0.5,
+    "transform": [
+      120.0,
+      0.0,
+      -457440.0,
+      0.0,
+      -120.0,
+      457440.0
+    ],
+    "bounds": [
+      -457440.0,
+      -457440.0,
+      457440.0,
+      457440.0
+    ],
+    "crs_wkt": "PROJCS[\"Moon2000_spole\",GEOGCS[\"GCS_Moon\",DATUM[\"D_Moon_2000\",SPHEROID[\"Moon_2000_IAU_IAG\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "crs_facts": {
+      "proj": "stere",
+      "lat_0": -90,
+      "lat_ts": -90,
+      "lon_0": 0,
+      "x_0": 0,
+      "y_0": 0,
+      "k": null,
+      "a": 1737400,
+      "b": null,
+      "rf": null,
+      "units": "m"
+    },
+    "tags": {
+      "DATA_SET_ID": "\"LRO-L-LOLA-4-GDR-V1.0\"",
+      "INSTRUMENT_ID": "\"LOLA\"",
+      "INSTRUMENT_NAME": "\"LUNAR ORBITER LASER ALTIMETER\"",
+      "PRODUCER_INSTITUTION_NAME": "\"GODDARD SPACE FLIGHT CENTER\"",
+      "PRODUCT_CREATION_TIME": "2016-09-15T00:00:00",
+      "PRODUCT_ID": "\"LPSR_75S_120M_201608\"",
+      "START_TIME": "2009-07-13T17:33:17.246",
+      "STOP_TIME": "2013-07-18T14:12:13",
+      "TARGET_NAME": "MOON",
+      "AREA_OR_POINT": "Area"
+    },
+    "raw_min": -20000,
+    "raw_max": 20000,
+    "nodata_count": 0,
+    "n_unique_raw": 2
+  }
+}
