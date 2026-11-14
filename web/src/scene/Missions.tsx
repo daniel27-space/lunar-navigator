@@ -19,10 +19,10 @@ export interface Mission {
 }
 
 export const STATUS_COLOR: Record<Mission['status'], string> = {
-  landed: '#4fc38a',
-  crashed: '#e0625a',
-  planned: '#ffcf4a',
-  candidate: '#ffcf4a',
+  landed: '#4fc38a', // --data-ok
+  crashed: '#ff7a6b', // --data-danger
+  planned: '#eceef2', // neutral ink: yellow is reserved for the Sun
+  candidate: '#8e95a1',
 }
 
 function dotTexture(): THREE.Texture {

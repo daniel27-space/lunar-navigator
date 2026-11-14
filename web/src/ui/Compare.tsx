@@ -1,113 +1,34 @@
-// Comparison of two or three pinned sites. The order follows what a decision needs:
-// a verdict in plain words, then one shared timeline, then one dot row per measure, with the
-// full table last. (Patterns: "main differences" from product-comparison sites, a shared time
-// cursor from sun-planning tools, dot rows instead of a radar chart; docs/research/design-references.md.)
-import { useMemo } from 'react'
-import { measures, verdict, type Measure, type SiteFacts } from '../lib/verdict'
-import { DEFAULT_CRITERIA, hasComm, isSunlit, type Series } from '../lib/windows'
-import { SITE_COLORS, useStore } from '../store'
-import { DAY, runs, WINDOW_DAYS, type SiteAnalysis } from './useSiteAnalysis'
+// Comparison of two or three pinned sites on one grid (docs/DESIGN.md section 7): who is who
+// (once), a one-sentence verdict, one shared timeline, then one aligned row per measure. Raw
+// details stay folded away.
+import { useMemo, useState, type CSSProperties } from 'react'
+import { fmtAngle, fmtCoord, fmtDate, fmtElevation, fmtMeasure, MISSING } from '../lib/format'
+import { measures, type Measure, type SiteFacts } from '../lib/verdict'
+import { useStore } from '../store'
+import { Badge, SITE_LETTERS } from './controls'
+import { SiteTimeline } from './Timeline'
+import { WINDOW_DAYS, type SiteAnalysis, type Tier } from './useSiteAnalysis'
+import { MISSION, verdictSentence } from './verdictSentence'
 
-const short = (label: string) => (label.length > 16 ? `${label.slice(0, 15)}…` : label)
-
-function longest(spans: [number, number][]): [number, number] | null {
-  let best: [number, number] | null = null
-  for (const s of spans) if (!best || s[1] - s[0] > best[1] - best[0]) best = s
-  return best
+/** [panel label, phone label] */
+const LABEL: Record<Measure['id'], [string, string]> = {
+  sun: ['Time in sunlight', 'Sunlight'],
+  night: ['Longest night', 'Night'],
+  earth: ['Earth in view', 'Earth'],
+  outage: ['Longest Earth gap', 'Earth gap'],
+  slope: ['Slope', 'Slope'],
 }
 
-function SharedTimeline({ sites }: { sites: SiteAnalysis[] }) {
-  const tMs = useStore((s) => s.tMs)
-  const setTime = useStore((s) => s.setTime)
-  const s0: Series = sites[0].series
-  const W = 340
-  const X0 = 4
-  const LANE = 26
-  const top = 4
-  const H = top + sites.length * LANE + 16
-  const x = (i: number) => X0 + (i / s0.count) * (W - X0)
-  const lanes = useMemo(
-    () =>
-      sites.map((a) => {
-        const sun = runs(a.series.count, (i) => isSunlit(a.series, i, DEFAULT_CRITERIA))
-        const dark = runs(a.series.count, (i) => !isSunlit(a.series, i, DEFAULT_CRITERIA))
-        const comm = runs(a.series.count, (i) => hasComm(a.series, i, DEFAULT_CRITERIA))
-        return { sun, comm, night: longest(dark) }
-      }),
-    [sites],
-  )
-  // When every site is in sunlight at once.
-  const allLit = useMemo(
-    () => runs(s0.count, (i) => sites.every((a) => isSunlit(a.series, i, DEFAULT_CRITERIA))),
-    [sites, s0],
-  )
-  const cursor = X0 + ((tMs - s0.t0Ms) / (s0.count * s0.stepMs)) * (W - X0)
-  const seek = (ev: React.PointerEvent<SVGSVGElement>) => {
-    const r = ev.currentTarget.getBoundingClientRect()
-    const f = (((ev.clientX - r.left) / r.width) * W - X0) / (W - X0)
-    setTime(s0.t0Ms + Math.min(Math.max(f, 0), 1) * s0.count * s0.stepMs)
-  }
-  const days = [0, 15, 30, 45, 60]
-  return (
-    <svg
-      className="cmp-timeline"
-      viewBox={`0 0 ${W} ${H + 12}`}
-      role="img"
-      aria-label="Sunlight and Earth visibility for each site over the same 60 days"
-      onPointerDown={(ev) => {
-        ev.currentTarget.setPointerCapture(ev.pointerId)
-        seek(ev)
-      }}
-      onPointerMove={(ev) => ev.buttons === 1 && seek(ev)}
-    >
-      {sites.map((a, k) => {
-        const y = top + k * LANE
-        const l = lanes[k]
-        return (
-          <g key={a.pin.id}>
-            <rect x={X0} y={y} width={W - X0} height="10" className="tl-bg" />
-            <rect x={X0} y={y + 12} width={W - X0} height="5" className="tl-bg" />
-            {l.sun.map(([p, q]) => (
-              <rect key={`s${p}`} x={x(p)} y={y} width={Math.max(x(q) - x(p), 0.5)} height="10" className="tl-sun" />
-            ))}
-            {l.comm.map(([p, q]) => (
-              <rect key={`e${p}`} x={x(p)} y={y + 12} width={Math.max(x(q) - x(p), 0.5)} height="5" className="tl-earth" />
-            ))}
-            {l.night && (
-              <path
-                d={`M${x(l.night[0])},${y + 20} v2.5 H${x(l.night[1])} v-2.5`}
-                className="cmp-night"
-              />
-            )}
-            <rect x="0" y={y} width="2.5" height="17" fill={SITE_COLORS[a.pin.slot]} />
-          </g>
-        )
-      })}
-      <rect x={X0} y={top + sites.length * LANE} width={W - X0} height="5" className="tl-bg" />
-      {allLit.map(([p, q]) => (
-        <rect key={`a${p}`} x={x(p)} y={top + sites.length * LANE} width={Math.max(x(q) - x(p), 0.5)} height="5" className="cmp-all" />
-      ))}
-      {days.map((d) => (
-        <text
-          key={d}
-          x={X0 + (d / WINDOW_DAYS) * (W - X0)}
-          y={H + 8}
-          className="tl-tick"
-          textAnchor={d === 0 ? 'start' : d === WINDOW_DAYS ? 'end' : 'middle'}
-        >
-          {new Date(s0.t0Ms + d * DAY).toISOString().slice(5, 10)}
-        </text>
-      ))}
-      {cursor >= X0 && cursor <= W && <line x1={cursor} x2={cursor} y1="0" y2={H - 4} className="tl-cursor" />}
-    </svg>
-  )
+const TERRAIN: Record<Tier, string> = { crest: '20 m', fine: '80 m', patch: '80 m', coarse: '300 m', global: '2.7 km', none: MISSING }
+
+/** True when the known values are closer together than the smallest difference that counts. */
+function aboutEqual(m: Measure): boolean {
+  const v = m.values.filter((x) => !Number.isNaN(x))
+  return v.length === m.values.length && Math.max(...v) - Math.min(...v) < m.threshold
 }
 
-const show = (v: number, unit: Measure['unit']) =>
-  Number.isNaN(v) ? 'n/a' : unit === '%' ? `${Math.round(v)}%` : unit === 'd' ? `${v.toFixed(1)} d` : `${v.toFixed(1)}°`
-
-/** One measure: a track running from worse (left) to better (right) with one dot per site. */
-function DotRow({ m, sites }: { m: Measure; sites: SiteAnalysis[] }) {
+/** One measure on a worse-to-better scale with one dot per site (in Details). */
+function Scale({ m, sites }: { m: Measure; sites: SiteAnalysis[] }) {
   const known = m.values.filter((v) => !Number.isNaN(v))
   const hi = m.unit === '%' ? 100 : Math.max(...known, m.unit === 'd' ? 5 : 10) * 1.1
   const pos = (v: number) => {
@@ -115,28 +36,10 @@ function DotRow({ m, sites }: { m: Measure; sites: SiteAnalysis[] }) {
     return (m.higherIsBetter ? t : 1 - t) * 100
   }
   return (
-    <div className="dotrow">
-      <div className="dotrow-head">
-        <span>{m.label}</span>
-        <span className="muted">{m.higherIsBetter ? 'more is better' : 'less is better'} →</span>
-      </div>
-      <div className="track">
-        {sites.map((a, i) =>
-          Number.isNaN(m.values[i]) ? null : (
-            <i
-              key={a.pin.id}
-              className={i === m.winner ? 'win' : ''}
-              style={{ left: `${pos(m.values[i])}%`, background: SITE_COLORS[a.pin.slot], color: SITE_COLORS[a.pin.slot] }}
-            />
-          ),
-        )}
-      </div>
-      <div className="dotrow-values">
-        {sites.map((a, i) => (
-          <span key={a.pin.id} className={i === m.winner ? 'win' : ''} style={{ color: SITE_COLORS[a.pin.slot] }}>
-            {show(m.values[i], m.unit)}
-          </span>
-        ))}
+    <div className="cmp-row cmp-scale">
+      <span className="cmp-label">{LABEL[m.id][0]}</span>
+      <div className="track" role="img" aria-label={`${m.label}: worse on the left, better on the right`}>
+        {sites.map((a, i) => (Number.isNaN(m.values[i]) ? null : <i key={a.pin.id} className="sdot" data-slot={a.pin.slot} style={{ left: `${pos(m.values[i])}%` }} />))}
       </div>
     </div>
   )
@@ -146,8 +49,11 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
   const finder = useStore((s) => s.finder)
   const preset = useStore((s) => s.preset)
   const layer = useStore((s) => s.layer)
+  const setLayer = useStore((s) => s.setLayer)
+  const setTab = useStore((s) => s.setTab)
   const removePin = useStore((s) => s.removePin)
   const goTo = useStore((s) => s.goTo)
+  const [onlyDiff, setOnlyDiff] = useState(false)
   // "Better" follows the finder's mission when it is in use; otherwise sunlight and Earth view are good.
   const wants = useMemo(
     () =>
@@ -161,109 +67,160 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
     [sites],
   )
   const ms = useMemo(() => measures(facts, wants), [facts, wants])
-  const v = useMemo(() => verdict(facts, wants), [facts, wants])
-  const start = new Date(sites[0].series.t0Ms).toISOString().slice(0, 10)
+  const mission = MISSION[preset] ?? MISSION.custom
+  const v = useMemo(
+    () =>
+      verdictSentence(
+        ms,
+        sites.map((a) => SITE_LETTERS[a.pin.slot]),
+        mission[0],
+      ),
+    [ms, sites, mission],
+  )
+  const shown = onlyDiff ? ms.filter((m) => !aboutEqual(m)) : ms
 
   return (
-    <section className="compare">
-      <div className="cmp-sites">
+    <section className="compare" style={{ '--n': sites.length } as CSSProperties}>
+      <div className="cmp-row cmp-head">
+        <span />
         {sites.map((a) => (
-          <div key={a.pin.id} className="cmp-site" style={{ borderColor: SITE_COLORS[a.pin.slot] }}>
-            <button className="cmp-name" onClick={() => goTo({ kind: 'site', lat: a.pin.lat, lon: a.pin.lon, hM: a.hM })} title="Fly to this site">
-              <i style={{ background: SITE_COLORS[a.pin.slot] }} />
-              {short(a.pin.label)}
+          <div key={a.pin.id} className="cmp-col">
+            <button
+              type="button"
+              className="cmp-fly"
+              onClick={() => goTo({ kind: 'site', lat: a.pin.lat, lon: a.pin.lon, hM: a.hM })}
+              title={`${a.pin.label}: fly to this site`}
+              aria-label={`Fly to ${a.pin.label}`}
+            >
+              <Badge slot={a.pin.slot} />
+              <span className="cmp-name">{a.pin.label}</span>
             </button>
-            <span className="cmp-now">
-              <b className={a.sunNext.now ? 'lit' : ''}>{a.sunNext.now ? 'Sunlit' : 'Dark'}</b>
-              <b className={a.commNext.now ? 'link' : ''}>{a.commNext.now ? 'Earth' : 'No Earth'}</b>
-            </span>
-            <button className="cmp-x" onClick={() => removePin(a.pin.id)} aria-label={`Remove ${a.pin.label}`}>
+            <button type="button" className="cmp-x" onClick={() => removePin(a.pin.id)} aria-label={`Remove ${a.pin.label}`}>
               ×
             </button>
           </div>
         ))}
       </div>
 
-      <h3>Verdict</h3>
-      <ul className="verdict">
-        {v.lines.map((l) => (
-          <li key={l.text} style={{ borderColor: SITE_COLORS[sites[l.winner].pin.slot] }}>
-            {l.text}
-          </li>
-        ))}
-      </ul>
-      <p className="overall">{v.overall}</p>
-      <p className="muted small">
-        Judged for a mission that wants {wants.sunHigh ? 'sunlight' : 'darkness'} and {wants.earthHigh ? 'a view of Earth' : 'to be hidden from Earth'}
-        {layer === 'finder' ? ' (from the site finder)' : ''}. Differences under 3 points, half a day or 1° are not counted.
-      </p>
+      <div className="cmp-verdict">
+        <p className="verdict">
+          {v.leader >= 0 && <Badge slot={sites[v.leader].pin.slot} />} {v.text}
+        </p>
+        <p className="caption">
+          {v.sub} Judged for:{' '}
+          <button
+            type="button"
+            className="link"
+            title="Open the site finder to change what the mission needs"
+            onClick={() => {
+              setLayer('finder')
+              setTab('find')
+            }}
+          >
+            {mission[1]}
+          </button>
+        </p>
+      </div>
 
-      <h3>The same 60 days, side by side</h3>
-      <SharedTimeline sites={sites} />
-      <p className="muted small key">
-        Per site: <i className="bar sun" /> in sunlight, <i className="bar earth" /> Earth in view, <i className="bar night" /> longest night.
-        Bottom strip: <i className="bar all" /> every site sunlit at once. Drag to move the clock.
-      </p>
+      <div className="cmp-block">
+        <h3 className="section">Next {WINDOW_DAYS} days</h3>
+        <SiteTimeline sites={sites} compare />
+        <p className="caption key">
+          <i className="sw sun" /> Sun <i className="sw earth" /> Earth <i className="sw night" /> longest night · all: every site sunlit · drag to move the clock
+        </p>
+      </div>
 
-      <h3>Measure by measure</h3>
-      {ms.map((m) => (
-        <DotRow key={m.id} m={m} sites={sites} />
-      ))}
-
-      <details className="help">
-        <summary>All figures as a table</summary>
-        <table className="cmp-table">
-          <thead>
-            <tr>
-              <th />
-              {sites.map((a) => (
-                <th key={a.pin.id} style={{ color: SITE_COLORS[a.pin.slot] }}>
-                  {short(a.pin.label)}
-                </th>
+      <div className="cmp-block">
+        <div className="cmp-row cmp-mhead">
+          <h3 className="section">Measures</h3>
+          {sites.map((a) => (
+            <span key={a.pin.id} className="cmp-letter">
+              {SITE_LETTERS[a.pin.slot]}
+            </span>
+          ))}
+        </div>
+        {shown.map((m) => {
+          const equal = aboutEqual(m)
+          const hint = m.higherIsBetter ? 'higher is better for this mission' : 'lower is better for this mission'
+          return (
+            <div key={m.id} className="cmp-row cmp-measure">
+              <span className="cmp-label" title={`${m.label}: ${equal ? 'about equal' : hint}`}>
+                <span className="lbl-wide">{LABEL[m.id][0]}</span>
+                <span className="lbl-phone">{LABEL[m.id][1]}</span>
+                {equal ? (
+                  <em>about equal</em>
+                ) : (
+                  <i className="dir" aria-label={hint}>
+                    {m.higherIsBetter ? '↑' : '↓'}
+                  </i>
+                )}
+              </span>
+              {m.values.map((val, i) => (
+                <span key={sites[i].pin.id} className={Number.isNaN(val) ? 'cmp-val none' : i === m.winner ? 'cmp-val win' : 'cmp-val'}>
+                  {fmtMeasure(val, m.unit)}
+                  {i === m.winner && <i className="sdot" data-slot={sites[i].pin.slot} role="img" aria-label="best" />}
+                </span>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ms.map((m) => (
-              <tr key={m.id}>
-                <td>{m.label}</td>
-                {m.values.map((val, i) => (
-                  <td key={i} className={i === m.winner ? 'win' : ''}>
-                    {show(val, m.unit)}
-                  </td>
-                ))}
-              </tr>
+            </div>
+          )
+        })}
+        {shown.length === 0 && <p className="caption">No measure differs between these sites.</p>}
+      </div>
+
+      <details className="disclosure">
+        <summary>Details</summary>
+        <div className="cmp-details">
+          <label className="check">
+            <input type="checkbox" checked={onlyDiff} onChange={(e) => setOnlyDiff(e.target.checked)} />
+            <span>Show only differences</span>
+          </label>
+          <ul className="cmp-sitelist">
+            {sites.map((a) => (
+              <li key={a.pin.id}>
+                <Badge slot={a.pin.slot} />
+                <span>{a.pin.label}</span>
+                <span className="num">{fmtCoord(a.pin.lat, a.pin.lon)}</span>
+              </li>
             ))}
-            <tr>
-              <td>Elevation</td>
+          </ul>
+          <div>
+            <div className="cmp-row cmp-fine">
+              <span className="cmp-label">Elevation</span>
               {sites.map((a) => (
-                <td key={a.pin.id}>{a.hM.toFixed(0)} m</td>
+                <span key={a.pin.id} className="cmp-val">
+                  {fmtElevation(a.hM)}
+                </span>
               ))}
-            </tr>
-            <tr>
-              <td>Latitude, longitude</td>
+            </div>
+            <div className="cmp-row cmp-fine">
+              <span className="cmp-label">Sun elevation now</span>
               {sites.map((a) => (
-                <td key={a.pin.id}>
-                  {a.pin.lat.toFixed(2)}°, {a.pin.lon.toFixed(2)}°
-                </td>
+                <span key={a.pin.id} className="cmp-val">
+                  {fmtAngle(a.sky.sun.el)}
+                </span>
               ))}
-            </tr>
-            <tr>
-              <td>Sun now</td>
+            </div>
+            <div className="cmp-row cmp-fine">
+              <span className="cmp-label">Terrain used</span>
               {sites.map((a) => (
-                <td key={a.pin.id}>{a.sky.sun.el.toFixed(1)}°</td>
+                <span key={a.pin.id} className="cmp-val">
+                  {TERRAIN[a.tier]}
+                </span>
               ))}
-            </tr>
-            <tr>
-              <td>Terrain used</td>
-              {sites.map((a) => (
-                <td key={a.pin.id}>{a.tier === 'crest' ? '20 m' : a.tier === 'fine' || a.tier === 'patch' ? '80 m' : a.tier === 'coarse' ? '300 m' : a.tier === 'global' ? '2.7 km' : 'none'}</td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
+            </div>
+          </div>
+          <div>
+            <h3 className="section">Worse to better</h3>
+            {ms.map((m) => (
+              <Scale key={m.id} m={m} sites={sites} />
+            ))}
+          </div>
+          <p className="caption">
+            {WINDOW_DAYS} days from {fmtDate(sites[0].series.t0Ms)} UTC, observer 2 m above the surface. Differences under 3 points, 0.5 d or 1° are
+            ignored.
+          </p>
+        </div>
       </details>
-      <p className="muted small">60 days from {start}. Observer 2 m above the surface.</p>
     </section>
   )
 }

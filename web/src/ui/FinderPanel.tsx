@@ -2,59 +2,27 @@
 // limit removes the most, then pick from a ranked shortlist. (Patterns: goal presets and a
 // live "passing area" readout from GIS suitability tools; map-and-shortlist from property
 // search; docs/research/design-references.md.)
+import { fmtArea, fmtDegrees, fmtDistance, fmtLat, fmtLon, fmtShare, fmtShareRange, fmtSlope } from '../lib/format'
 import { PRESETS, type Candidate, type FinderCriteria, type FinderResult, type Prefer } from '../lib/finder'
 import { useStore } from '../store'
+import { RangeSlider, Segmented, Slider } from './controls'
 
-const pct = (v: number) => `${Math.round(v * 100)}%`
-const fmtLat = (v: number) => `${Math.abs(v).toFixed(2)}°${v < 0 ? 'S' : 'N'}`
-const fmtLon = (v: number) => `${Math.abs(v).toFixed(2)}°${v < 0 ? 'W' : 'E'}`
+/** Preset names short enough for a 2 x 2 switch. */
+const PRESET_LABEL: Record<string, string> = { solar: 'Solar lander', ice: 'Ice prospecting', base: 'Base near ice', quiet: 'Radio-quiet' }
 
-function PreferSwitch({ value, onChange, more, less }: { value: Prefer; onChange: (p: Prefer) => void; more: string; less: string }) {
-  const opts: [Prefer, string][] = [
-    ['high', more],
-    ['low', less],
-    ['none', 'Either'],
-  ]
-  return (
-    <div className="seg" role="group">
-      {opts.map(([v, label]) => (
-        <button key={v} className={v === value ? 'on' : ''} onClick={() => onChange(v)}>
-          {label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function Range({
-  label,
-  min,
-  max,
-  onMin,
-  onMax,
-}: {
-  label: string
-  min: number
-  max: number
-  onMin: (v: number) => void
-  onMax: (v: number) => void
-}) {
-  return (
-    <div className="range2">
-      <span>
-        {label} between {pct(min)} and {pct(max)} of the time
-      </span>
-      <div>
-        <input type="range" min={0} max={1} step={0.05} value={min} aria-label={`${label}, at least`} onChange={(e) => onMin(Math.min(Number(e.target.value), max))} />
-        <input type="range" min={0} max={1} step={0.05} value={max} aria-label={`${label}, at most`} onChange={(e) => onMax(Math.max(Number(e.target.value), min))} />
-      </div>
-    </div>
-  )
-}
+const PREFER: readonly (readonly [Prefer, string])[] = [
+  ['high', 'Prefer more'],
+  ['low', 'Prefer less'],
+  ['none', 'Either'],
+]
+const PSR: readonly (readonly [FinderCriteria['psr'], string])[] = [
+  ['any', 'Anywhere'],
+  ['outside', 'Stay out of it'],
+  ['inside', 'Inside it'],
+]
 
 interface Props {
   result: FinderResult | null
-  /** total mapped area in km2, for the share readout */
   onPick: (c: Candidate) => void
   onCompareTop: (cs: Candidate[]) => void
 }
@@ -75,117 +43,147 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
       ]
     : []
   const tightest = limits.length ? limits.reduce((a, b) => (b[1] < a[1] ? b : a)) : null
+  const bites = tightest !== null && tightest[1] < 0.999
   const upd = (f: Partial<FinderCriteria>) => set(f)
+  const area = result ? (
+    <>
+      <b>{fmtArea(result.eligibleKm2)}</b> <span>{result.eligibleKm2 < 10 ? 'meets' : 'meet'} every limit</span>
+    </>
+  ) : (
+    <span>Loading the NASA layers…</span>
+  )
 
   return (
-    <aside className="finder">
-      <h2>What do you need from a site?</h2>
-      <div className="presets">
-        {PRESETS.map((p) => (
-          <button key={p.id} className={p.id === preset ? 'on' : ''} onClick={() => applyPreset(p.id)}>
-            {p.label}
-          </button>
-        ))}
-      </div>
-      <p className="muted small">{preset === 'custom' ? 'Custom: your own limits.' : blurb}</p>
-
-      <label className="row">
-        <span>Slope at most {c.maxSlopeDeg}°</span>
-        <input type="range" min={2} max={25} step={1} value={c.maxSlopeDeg} onChange={(e) => upd({ maxSlopeDeg: Number(e.target.value) })} />
-      </label>
-
-      <Range label="In sunlight" min={c.sunMin} max={c.sunMax} onMin={(v) => upd({ sunMin: v })} onMax={(v) => upd({ sunMax: v })} />
-      <PreferSwitch value={c.sunPrefer} onChange={(p) => upd({ sunPrefer: p })} more="More sun is better" less="Less is better" />
-
-      <Range label="Earth in view" min={c.earthMin} max={c.earthMax} onMin={(v) => upd({ earthMin: v })} onMax={(v) => upd({ earthMax: v })} />
-      <PreferSwitch value={c.earthPrefer} onChange={(p) => upd({ earthPrefer: p })} more="More Earth is better" less="Less is better" />
-
-      <div className="row">
-        <span>Permanent shadow (possible ice)</span>
-        <div className="seg" role="group">
-          {(
-            [
-              ['any', 'Anywhere'],
-              ['outside', 'Stay out of it'],
-              ['inside', 'Inside it'],
-            ] as const
-          ).map(([v, label]) => (
-            <button key={v} className={c.psr === v ? 'on' : ''} onClick={() => upd({ psr: v, ...(v === 'inside' ? { maxPsrKm: null } : {}) })}>
-              {label}
-            </button>
-          ))}
+    <aside className="panel finder" aria-label="Site finder">
+      <p className="peek-line hero">{area}</p>
+      <h2 className="panel-head">What do you need from a site?</h2>
+      <div className="panel-body">
+        <div className="group">
+          <Segmented
+            className="grid2"
+            label="Mission preset"
+            options={PRESETS.map((p) => [p.id, PRESET_LABEL[p.id] ?? p.label, p.label] as const)}
+            value={preset}
+            onChange={applyPreset}
+          />
+          <p className="caption">{preset === 'custom' ? 'Custom: your own limits.' : blurb}</p>
         </div>
-      </div>
-      {c.psr !== 'inside' && (
-        <label className="row check">
-          <input type="checkbox" checked={c.maxPsrKm !== null} onChange={(e) => upd({ maxPsrKm: e.target.checked ? 5 : null })} />
-          <span>Within {c.maxPsrKm ?? 5} km of permanent shadow</span>
-          {c.maxPsrKm !== null && (
-            <input type="range" min={1} max={30} step={1} value={c.maxPsrKm} onChange={(e) => upd({ maxPsrKm: Number(e.target.value) })} />
+
+        <div className="group">
+          <Slider label="Slope at most" text={fmtDegrees(c.maxSlopeDeg)} min={2} max={25} step={1} value={c.maxSlopeDeg} onChange={(v) => upd({ maxSlopeDeg: v })} />
+
+          <RangeSlider label="Time in sunlight" text={fmtShareRange(c.sunMin, c.sunMax)} lo={c.sunMin} hi={c.sunMax} onLo={(v) => upd({ sunMin: v })} onHi={(v) => upd({ sunMax: v })} />
+          <Segmented label="Sunlight preference" options={PREFER} value={c.sunPrefer} onChange={(p) => upd({ sunPrefer: p })} />
+
+          <RangeSlider label="Time with Earth in view" text={fmtShareRange(c.earthMin, c.earthMax)} lo={c.earthMin} hi={c.earthMax} onLo={(v) => upd({ earthMin: v })} onHi={(v) => upd({ earthMax: v })} />
+          <Segmented label="Earth view preference" options={PREFER} value={c.earthPrefer} onChange={(p) => upd({ earthPrefer: p })} />
+
+          <div className="field">
+            <span className="field-head">
+              <span>Permanent shadow (possible ice)</span>
+            </span>
+            <Segmented label="Permanent shadow" options={PSR} value={c.psr} onChange={(v) => upd({ psr: v, ...(v === 'inside' ? { maxPsrKm: null } : {}) })} />
+          </div>
+          {c.psr !== 'inside' && (
+            <div className="field">
+              <label className="check field-head">
+                <input type="checkbox" checked={c.maxPsrKm !== null} onChange={(e) => upd({ maxPsrKm: e.target.checked ? 5 : null })} />
+                <span>Close to permanent shadow</span>
+                {c.maxPsrKm !== null && <b>within {fmtDistance(c.maxPsrKm * 1000)}</b>}
+              </label>
+              {c.maxPsrKm !== null && (
+                <input
+                  className="slider"
+                  type="range"
+                  min={1}
+                  max={30}
+                  step={1}
+                  value={c.maxPsrKm}
+                  aria-label="Distance to permanent shadow, at most (km)"
+                  style={{ '--p': `${((c.maxPsrKm - 1) / 29) * 100}%` } as React.CSSProperties}
+                  onChange={(e) => upd({ maxPsrKm: Number(e.target.value) })}
+                />
+              )}
+            </div>
           )}
-        </label>
-      )}
+        </div>
 
-      {!result && <p className="muted small">Loading the NASA layers…</p>}
-      {result && (
-        <>
-          <div className="fit">
-            <b>{result.eligibleKm2 < 10 ? result.eligibleKm2.toFixed(1) : Math.round(result.eligibleKm2).toLocaleString()} km²</b> meets every limit
-          </div>
-          <div className="bites">
-            {limits.map(([name, share]) => (
-              <div key={name} className={tightest && name === tightest[0] && share < 0.999 ? 'tight' : ''}>
-                <span>{name}</span>
-                <i>
-                  <u style={{ width: `${Math.max(share * 100, 1)}%` }} />
-                </i>
-                <span>{share < 0.01 && share > 0 ? '<1%' : pct(share)}</span>
+        {!result && <p className="caption">Loading the NASA layers…</p>}
+        {result && (
+          <>
+            <div className="group">
+              <p className="hero">{area}</p>
+              <div className="bites">
+                {limits.map(([name, share]) => {
+                  const tight = bites && name === tightest[0]
+                  return (
+                    <div key={name}>
+                      <span>{name}</span>
+                      <i>
+                        <u style={{ width: `${Math.max(share * 100, 1)}%` }} />
+                      </i>
+                      <b>{fmtShare(share)}</b>
+                      <span className="tight">
+                        {tight && (
+                          <>
+                            <i className="dot warn" /> tightest
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
-            ))}
-          </div>
-          <p className="muted small">
-            Share of the mapped ground that passes each limit on its own.
-            {tightest && tightest[1] < 0.999 ? ` ${tightest[0]} removes the most${result.candidates.length === 0 ? ': loosen it first' : ''}.` : ''}
-          </p>
+              {bites && result.candidates.length === 0 && <p className="caption">{tightest[0]} removes the most ground: loosen it first.</p>}
+              <div className="ramp">
+                <span>just passes</span>
+                <i className="fit-ramp" />
+                <span>best fit</span>
+              </div>
+            </div>
 
-          <div className="ramp">
-            <span>just passes</span>
-            <i style={{ background: 'linear-gradient(90deg,#0a4d57,#29b875,#fff26b)' }} />
-            <span>best fit</span>
-          </div>
+            <div className="group">
+              <div className="section-row">
+                <h3 className="section">Shortlist</h3>
+                {result.candidates.length >= 2 && (
+                  <button type="button" className="btn primary" onClick={() => onCompareTop(result.candidates.slice(0, 3))}>
+                    Compare top {Math.min(3, result.candidates.length)}
+                  </button>
+                )}
+              </div>
+              {result.candidates.length === 0 && <p className="caption">Nothing on the map meets every limit.</p>}
+              <ol className="shortlist">
+                {result.candidates.map((k) => (
+                  <li key={k.rank}>
+                    <button type="button" onClick={() => onPick(k)} title="Pin this spot and fly to it">
+                      <b>{k.rank}</b>
+                      <span className="where">
+                        {fmtLat(k.lat)}, {fmtLon(k.lon)}
+                        <i title="How well it fits, relative to the best spot">
+                          <u style={{ width: `${Math.round((k.score / Math.max(result.candidates[0].score, 1e-6)) * 100)}%` }} />
+                        </i>
+                      </span>
+                      <span className="facts">
+                        slope {fmtSlope(k.slopeDeg)} · sun {fmtShare(k.sun)} · Earth {fmtShare(k.earth)}
+                        {(c.maxPsrKm !== null || c.psr === 'inside') && ` · ${k.inPsr ? 'in shadow' : `shadow ${fmtDistance(k.psrKm * 1000)}`}`}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </div>
 
-          <h3>
-            Shortlist
-            {result.candidates.length >= 2 && <button onClick={() => onCompareTop(result.candidates.slice(0, 3))}>Compare top {Math.min(3, result.candidates.length)}</button>}
-          </h3>
-          {result.candidates.length === 0 && <p className="muted small">Nothing on the map meets every limit.</p>}
-          <ol className="shortlist">
-            {result.candidates.map((k) => (
-              <li key={k.rank}>
-                <button onClick={() => onPick(k)} title="Pin this spot and fly to it">
-                  <b>{k.rank}</b>
-                  <span className="where">
-                    {fmtLat(k.lat)} {fmtLon(k.lon)}
-                    <i>
-                      <u style={{ width: `${Math.round((k.score / Math.max(result.candidates[0].score, 1e-6)) * 100)}%` }} />
-                    </i>
-                  </span>
-                  <span className="chips">
-                    <em>slope {k.slopeDeg.toFixed(1)}°</em>
-                    <em>sun {pct(k.sun)}</em>
-                    <em>Earth {pct(k.earth)}</em>
-                    {(c.maxPsrKm !== null || c.psr === 'inside') && <em>{k.inPsr ? 'in shadow' : `shadow ${k.psrKm.toFixed(1)} km`}</em>}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ol>
-          <p className="muted small">
-            Each cell is about 300 m across and uses NASA's 18.6-year averages, so narrow ridge tops are blurred. Inside about
-            84.6°S the slope is the steepest 80 m slope in the cell; outside it is the cell average. Pin a spot for exact figures.
-          </p>
-        </>
-      )}
+            <details className="disclosure">
+              <summary>About these numbers</summary>
+              <p className="caption">
+                The bars show the share of the mapped ground that passes each limit on its own. Each cell is about 300 m across and uses
+                NASA's 18.6-year averages, so narrow ridge tops are blurred. Inside about 84.6°S the slope is the steepest 80 m slope in the
+                cell; outside it is the cell average. Pin a spot for exact figures.
+              </p>
+            </details>
+          </>
+        )}
+      </div>
     </aside>
   )
 }

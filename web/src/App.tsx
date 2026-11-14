@@ -1,6 +1,7 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, invalidate } from '@react-three/fiber'
 import * as THREE from 'three'
+import { fmtDateTime } from './lib/format'
 import { bodyVectors, ephemEndMs, ephemStartMs, loadEphem, type Ephem } from './lib/ephem'
 import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
 import { sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
@@ -23,7 +24,9 @@ import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
 import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
 import { Compare } from './ui/Compare'
+import { INK, ON_ACCENT, Segmented, SITE_LETTERS } from './ui/controls'
 import { FinderPanel } from './ui/FinderPanel'
+import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
 import { SiteCard } from './ui/SiteCard'
 import { useSiteAnalysis, type SiteAnalysis } from './ui/useSiteAnalysis'
 import './App.css'
@@ -67,41 +70,47 @@ function useClock(ephem: Ephem | null) {
   }, [playing, ephem])
 }
 
-const RATES: { label: string; value: number }[] = [
-  { label: '1 h/s', value: 3600 },
-  { label: '6 h/s', value: 6 * 3600 },
-  { label: '1 d/s', value: 86400 },
-  { label: '7 d/s', value: 7 * 86400 },
+const RATES: readonly (readonly [number, string, string])[] = [
+  [3600, '1 h/s', 'One hour of Moon time per second'],
+  [6 * 3600, '6 h/s', 'Six hours per second'],
+  [86400, '1 d/s', 'One day per second'],
+  [7 * 86400, '7 d/s', 'One week per second'],
 ]
-const LAYERS: { label: string; value: LayerMode; legend: string; ramp?: string; ends?: [string, string] }[] = [
+/** `hint` is the one-line description in the phone's layer list; `legend` the full note with sources. */
+const LAYERS: { label: string; value: LayerMode; hint: string; legend: string; ramp?: string; ends?: [string, string] }[] = [
   {
     label: 'Find a site',
     value: 'finder',
+    hint: 'Rank the ground against what your mission needs',
     legend: 'Ground that meets every limit, brightest where it fits best. Slope from LOLA; long-term sunlight, Earth view and permanent shadow from NASA GSFC.',
   },
-  { label: 'Sunlight now', value: 'natural', legend: 'Sunlight and shadow at the selected time, from LOLA terrain and the JPL DE440 ephemeris.' },
+  { label: 'Sun now', value: 'natural', hint: 'Light and shadow at the selected time', legend: 'Sunlight and shadow at the selected time, from LOLA terrain and the JPL DE440 ephemeris.' },
   {
-    label: 'Average sunlight',
+    label: 'Sun avg',
     value: 'sunavg',
+    hint: 'Share of time the Sun is visible',
     legend: 'Share of time the Sun is visible, averaged over 18.6 years. NASA GSFC (Mazarico et al. 2011).',
     ramp: 'linear-gradient(90deg,#08051a,#59197a,#e66633,#fff299)',
     ends: ['never', 'always'],
   },
   {
-    label: 'Average Earth view',
+    label: 'Earth avg',
     value: 'earthavg',
+    hint: 'Share of time Earth is visible',
     legend: 'Share of time Earth is visible, averaged over 18.6 years. NASA GSFC (Mazarico et al. 2011).',
     ramp: 'linear-gradient(90deg,#0a0a0f,#1a4d99,#bfebff)',
     ends: ['never', 'always'],
   },
   {
-    label: 'Permanent shadow',
+    label: 'Shadow',
     value: 'psr',
-    legend: 'Blue areas never see the Sun: cold enough for water ice to survive. NASA GSFC LOLA.',
+    hint: 'Ground that never sees the Sun',
+    legend: 'Ice-blue areas are in permanent shadow, they never see the Sun: cold enough for water ice to survive. NASA GSFC LOLA.',
   },
   {
-    label: 'Elevation',
+    label: 'Height',
     value: 'elevation',
+    hint: 'Elevation above the reference sphere',
     legend: 'Height relative to the 1737.4 km reference sphere (LOLA).',
     ramp: 'linear-gradient(90deg,#171c54,#1a738c,#c7b373,#faf7f0)',
     ends: ['−4.5 km', '+4.5 km'],
@@ -109,6 +118,7 @@ const LAYERS: { label: string; value: LayerMode; legend: string; ramp?: string; 
   {
     label: 'Slope',
     value: 'slope',
+    hint: 'How steep the ground is',
     legend: 'Surface slope over a ~160 m baseline (LOLA 80 m).',
     ramp: 'linear-gradient(90deg,#1a8c4d,#8cbf40 27%,#f2b326 50%,#bf1f1a)',
     ends: ['0°', '30°+'],
@@ -127,20 +137,27 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
   useEffect(() => {
     if (tMs < lo || tMs > hi) setCentre(tMs)
   }, [tMs, lo, hi])
+  const [editing, setEditing] = useState(false)
+  const dateInput = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (!editing) return
+    dateInput.current?.focus()
+    try {
+      dateInput.current?.showPicker()
+    } catch {
+      // no picker to open (or not allowed here): the field can still be typed into
+    }
+  }, [editing])
   return (
-    <div className="timebar">
-      <button className="play" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pause' : 'Play'}>
-        {playing ? '❚❚' : '▶'}
+    <div className="timebar panel-surface">
+      <button className="btn ghost icon play" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pause' : 'Play'}>
+        <svg viewBox="0 0 16 16" aria-hidden="true" className="solid">
+          <path d={playing ? 'M4 3h3v10H4zM9 3h3v10H9z' : 'M5 3l8 5-8 5z'} />
+        </svg>
       </button>
-      <div className="rates">
-        {RATES.map((r) => (
-          <button key={r.value} className={r.value === rate ? 'on' : ''} onClick={() => setRate(r.value)}>
-            {r.label}
-          </button>
-        ))}
-      </div>
+      <Segmented className="rates" label="Playback speed" options={RATES} value={rate} onChange={setRate} />
       <input
-        className="scrub"
+        className="slider scrub"
         type="range"
         min={lo}
         max={hi}
@@ -148,23 +165,32 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
         value={tMs}
         onChange={(e) => setTime(Number(e.target.value))}
         aria-label="Time"
+        aria-valuetext={fmtDateTime(tMs)}
       />
-      <input
-        className="date"
-        type="datetime-local"
-        value={toInput(tMs)}
-        min={toInput(ephemStartMs(ephem))}
-        max={toInput(ephemEndMs(ephem))}
-        onChange={(e) => {
-          const t = Date.parse(`${e.target.value}Z`)
-          if (!Number.isNaN(t)) {
-            setTime(t)
-            setCentre(t)
-          }
-        }}
-        aria-label="Date and time (UTC)"
-      />
-      <span className="utc">UTC</span>
+      {editing ? (
+        <input
+          ref={dateInput}
+          className="date"
+          type="datetime-local"
+          value={toInput(tMs)}
+          min={toInput(ephemStartMs(ephem))}
+          max={toInput(ephemEndMs(ephem))}
+          onChange={(e) => {
+            const t = Date.parse(`${e.target.value}Z`)
+            if (!Number.isNaN(t)) {
+              setTime(t)
+              setCentre(t)
+            }
+          }}
+          onBlur={() => setEditing(false)}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === 'Escape') && setEditing(false)}
+          aria-label="Date and time (UTC)"
+        />
+      ) : (
+        <button className="btn date" onClick={() => setEditing(true)} aria-label={`Date and time: ${fmtDateTime(tMs)}. Change`}>
+          {fmtDateTime(tMs)}
+        </button>
+      )}
     </div>
   )
 }
@@ -172,15 +198,14 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
 function PinMarkers({ elevation }: { elevation: (lat: number, lon: number) => number }) {
   const pins = useStore((s) => s.pins)
   const active = useStore((s) => s.activePin)
-  const map = useMemo(ringTexture, [])
+  const maps = useMemo(() => SITE_COLORS.map((c, i) => badgeTexture(SITE_LETTERS[i], c)), [])
   return (
     <>
       {pins.map((p) => (
-        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={p.id === active ? [0.058, 0.058, 1] : [0.046, 0.046, 1]} renderOrder={6}>
+        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={p.id === active ? [0.05, 0.05, 1] : [0.04, 0.04, 1]} renderOrder={6}>
           <spriteMaterial
-            map={map}
-            color={SITE_COLORS[p.slot]}
-            opacity={p.id === active ? 1 : 0.75}
+            map={maps[p.slot]}
+            opacity={p.id === active ? 1 : 0.8}
             sizeAttenuation={false}
             depthTest={false}
             transparent
@@ -209,14 +234,14 @@ function numberTexture(n: number): THREE.Texture {
   const c = document.createElement('canvas')
   c.width = c.height = 96
   const g = c.getContext('2d')!
-  g.fillStyle = '#0b0c0f'
+  g.fillStyle = ON_ACCENT
   g.beginPath()
   g.arc(48, 48, 40, 0, Math.PI * 2)
   g.fill()
   g.lineWidth = 6
-  g.strokeStyle = '#fff26b'
+  g.strokeStyle = INK
   g.stroke()
-  g.fillStyle = '#fff'
+  g.fillStyle = INK
   g.font = '600 52px system-ui, sans-serif'
   g.textAlign = 'center'
   g.textBaseline = 'middle'
@@ -236,47 +261,68 @@ interface SitesPanelProps {
 /** Right-hand panel: one card per pinned site, or the comparison once there are two or more. */
 function SitesPanel({ pins, activePin, ephem, terrain, patchOf, global }: SitesPanelProps) {
   const [mode, setMode] = useState<'compare' | 'cards'>('compare')
-  const p = [pins[0] ?? null, pins[1] ?? null, pins[2] ?? null]
+  const setTab = useStore((s) => s.setTab)
+  // Sites are listed in badge order (A, B, C), whatever order they were pinned in.
+  const p = useMemo(() => {
+    const sorted = [...pins].sort((x, y) => x.slot - y.slot)
+    return [sorted[0] ?? null, sorted[1] ?? null, sorted[2] ?? null]
+  }, [pins])
   // Always three calls (hooks cannot be called in a loop of changing length).
   const a0 = useSiteAnalysis(p[0], ephem, terrain, p[0] ? patchOf(p[0].lat, p[0].lon) : null, global)
   const a1 = useSiteAnalysis(p[1], ephem, terrain, p[1] ? patchOf(p[1].lat, p[1].lon) : null, global)
   const a2 = useSiteAnalysis(p[2], ephem, terrain, p[2] ? patchOf(p[2].lat, p[2].lon) : null, global)
   const sites = [a0, a1, a2].filter((a): a is SiteAnalysis => a !== null)
   const comparing = sites.length >= 2 && mode === 'compare'
+  // A newly pinned point brings this panel forward where only one panel fits (phone, tablet).
+  const newest = pins.at(-1)?.id ?? null
+  useEffect(() => {
+    if (newest !== null) setTab('sites')
+  }, [newest, setTab])
   return (
-    <aside className={`panel ${comparing ? 'wide' : ''}`}>
-      {sites.length === 0 && <p className="hint">Click the surface or a mission marker to pin a point. Pin two or three to compare them.</p>}
+    <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
+      {sites.length === 0 && <p className="hint">Click or tap the surface, or a mission marker, to pin a point. Pin two or three to compare them.</p>}
       {sites.length >= 2 && (
-        <div className="tabs" role="tablist">
-          <button role="tab" aria-selected={mode === 'compare'} className={mode === 'compare' ? 'on' : ''} onClick={() => setMode('compare')}>
+        <div className="tabs panel-head" role="tablist">
+          <button role="tab" aria-selected={mode === 'compare'} onClick={() => setMode('compare')}>
             Compare
           </button>
-          <button role="tab" aria-selected={mode === 'cards'} className={mode === 'cards' ? 'on' : ''} onClick={() => setMode('cards')}>
+          <button role="tab" aria-selected={mode === 'cards'} onClick={() => setMode('cards')}>
             Site by site
           </button>
         </div>
       )}
-      {comparing ? <Compare sites={sites} /> : sites.map((a) => <SiteCard key={a.pin.id} a={a} active={a.pin.id === activePin} />)}
+      {comparing ? (
+        <Compare sites={sites} />
+      ) : (
+        sites.length > 0 && (
+          <div className="cards">
+            {sites.map((a) => (
+              <SiteCard key={a.pin.id} a={a} active={a.pin.id === activePin} />
+            ))}
+          </div>
+        )
+      )}
     </aside>
   )
 }
 
-function ringTexture(): THREE.Texture {
+/** A pinned site's marker: its letter on its colour, with a dark outline so it reads on any ground. */
+function badgeTexture(letter: string, color: string): THREE.Texture {
   const c = document.createElement('canvas')
   c.width = c.height = 96
   const g = c.getContext('2d')!
-  g.lineWidth = 9
-  g.strokeStyle = '#0b0c0f'
   g.beginPath()
-  g.arc(48, 48, 34, 0, Math.PI * 2)
-  g.stroke()
-  g.lineWidth = 5
-  g.strokeStyle = '#fff'
-  g.stroke()
-  g.fillStyle = '#fff'
-  g.beginPath()
-  g.arc(48, 48, 5, 0, Math.PI * 2)
+  g.arc(48, 48, 38, 0, Math.PI * 2)
+  g.fillStyle = color
   g.fill()
+  g.lineWidth = 8
+  g.strokeStyle = ON_ACCENT
+  g.stroke()
+  g.fillStyle = ON_ACCENT
+  g.font = '600 50px system-ui, sans-serif'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.fillText(letter, 48, 51)
   return new THREE.CanvasTexture(c)
 }
 
@@ -294,6 +340,16 @@ export default function App() {
   const goTo = useStore((s) => s.goTo)
   const quality = useStore((s) => s.quality)
   const setQuality = useStore((s) => s.setQuality)
+  // Interface-only state: the phone's bottom sheet, the panel in view, and the header's pop-up menus.
+  const sheet = useStore((s) => s.sheet)
+  const setSheet = useStore((s) => s.setSheet)
+  const tab = useStore((s) => s.tab)
+  const setTab = useStore((s) => s.setTab)
+  const viewKind = useStore((s) => s.view.kind)
+  const rate = useStore((s) => s.rate)
+  const setRate = useStore((s) => s.setRate)
+  const [menu, setMenu] = useState<'layers' | 'more' | null>(null)
+  const expandOnTap = useExpandOnTap()
   const detail = DETAIL[quality]
   // The 3D view is drawn only when something changes (not 60 times a second), so every
   // React update asks for one fresh frame.
@@ -426,105 +482,184 @@ export default function App() {
   const onHover = useCallback((m: Mission | null, x: number, y: number) => setHover(m ? { m, x, y } : null), [])
   const current = LAYERS.find((l) => l.value === layer)!
 
+  const chooseLayer = (l: LayerMode) => {
+    setLayer(l)
+    setMenu(null)
+    if (l === 'finder') {
+      setTab('find')
+      if (sheet === 'peek' && isPhone()) setSheet('half')
+    }
+  }
+
   return (
-    <div className="app">
-      <Canvas
-        frameloop="demand"
-        camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }}
-        gl={{ antialias: quality !== 'low', powerPreference: 'high-performance' }}
-        dpr={[1, detail.dpr]}
-      >
-        <color attach="background" args={['#000']} />
-        <Globe sunDir={sun.dir} cuts={cuts} map={globeMap} relief={globeRelief} segments={detail.globe} onPick={pick} />
-        {terrain && (
-          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} score={score} dataBase={BASE} map={globeMap} relief={globeRelief} overlays cuts={patchCuts} detail={detail} onPick={pick} />
-        )}
-        {shownPatches.map((t) => (
-          <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} detail={detail} onPick={pick} />
-        ))}
-        <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
-        <PinMarkers elevation={elevation} />
-        {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} />}
-        <Rig />
-      </Canvas>
-
-      <header className="top">
-        <h1>Lunar Landing Site Navigator</h1>
-        <div className="layers" role="group" aria-label="View">
-          <button onClick={() => goTo({ kind: 'pole' })}>South Pole</button>
-          <button onClick={() => goTo({ kind: 'globe' })}>Whole Moon</button>
-        </div>
-        <select
-          className="missions"
-          aria-label="Go to a mission site"
-          value=""
-          onChange={(e) => {
-            const m = missions.find((x) => x.id === e.target.value)
-            if (m) selectMission(m)
-            const place = patchIndex?.patches.find((x) => `place:${x.id}` === e.target.value)
-            if (place) {
-              pick(place.lat, place.lon, place.name ?? place.id)
-              goTo({ kind: 'site', lat: place.lat, lon: place.lon, hM: elevation(place.lat, place.lon) })
-            }
-          }}
+    <div className="app" data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'}>
+      <div className="viewport">
+        <Canvas
+          frameloop="demand"
+          camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }}
+          gl={{ antialias: quality !== 'low', powerPreference: 'high-performance' }}
+          dpr={[1, detail.dpr]}
         >
-          <option value="">Go to a mission site or place…</option>
-          {(['landed', 'crashed', 'planned'] as const).map((st) => (
-            <optgroup key={st} label={st === 'landed' ? 'Landed' : st === 'crashed' ? 'Lost on landing' : 'Planned (target area)'}>
-              {missions
-                .filter((m) => m.status === st)
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.date_utc.slice(0, 4)})
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-          {patchIndex?.patches.some((x) => x.kind === 'crest20') && (
-            <optgroup label="Crests and rims (20 m terrain)">
-              {patchIndex.patches
-                .filter((x) => x.kind === 'crest20')
-                .map((x) => (
-                  <option key={x.id} value={`place:${x.id}`}>
-                    {x.name ?? x.id}
-                  </option>
-                ))}
-            </optgroup>
+          <color attach="background" args={['#000']} />
+          <Globe sunDir={sun.dir} cuts={cuts} map={globeMap} relief={globeRelief} segments={detail.globe} onPick={pick} />
+          {terrain && (
+            <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} score={score} dataBase={BASE} map={globeMap} relief={globeRelief} overlays cuts={patchCuts} detail={detail} onPick={pick} />
           )}
-        </select>
-        <label className="quality">
-          <span>Detail</span>
-          <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} aria-label="3D detail level">
-            <option value="low">Low (phones)</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </label>
-        <div className="layers" role="group" aria-label="Map layer">
-          {LAYERS.map((l) => (
-            <button key={l.value} className={l.value === layer ? 'on' : ''} onClick={() => setLayer(l.value)}>
-              {l.label}
-            </button>
+          {shownPatches.map((t) => (
+            <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} detail={detail} onPick={pick} />
           ))}
-        </div>
-      </header>
-
-      {finderOn && <FinderPanel result={finderResult} onPick={pickCandidate} onCompareTop={(cs) => cs.forEach((k) => pickCandidate(k, false))} />}
-
-      <div className="legend" hidden={finderOn}>
-        {current.ramp && (
-          <div className="ramp">
-            <span>{current.ends![0]}</span>
-            <i style={{ background: current.ramp }} />
-            <span>{current.ends![1]}</span>
-          </div>
-        )}
-        <p>{current.legend}</p>
+          <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
+          <PinMarkers elevation={elevation} />
+          {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} />}
+          <Rig />
+        </Canvas>
       </div>
 
-      {ephem && terrain ? (
-        <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} global={globeRelief ? globeRelief.dem : null} />
-      ) : null}
+      <div className="chrome">
+        {menu && <div className="scrim" onClick={() => setMenu(null)} />}
+        <header className="top" onKeyDown={(e) => e.key === 'Escape' && setMenu(null)}>
+          <h1>
+            <span className="not-phone">Lunar Landing Site Navigator</span>
+            <span className="phone-only">Lunar Navigator</span>
+          </h1>
+          <button
+            className="btn phone-only layers-btn"
+            aria-haspopup="true"
+            aria-expanded={menu === 'layers'}
+            aria-label={`Map layer: ${current.label}. Change`}
+            onClick={() => setMenu(menu === 'layers' ? null : 'layers')}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M8 2l6 3-6 3-6-3zM2 8l6 3 6-3M2 11l6 3 6-3" />
+            </svg>
+            {current.label}
+          </button>
+          <button
+            className="btn ghost icon phone-only"
+            aria-haspopup="true"
+            aria-expanded={menu === 'more'}
+            aria-label="More: view, missions, detail and playback speed"
+            onClick={() => setMenu(menu === 'more' ? null : 'more')}
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="solid">
+              <circle cx="3" cy="8" r="1.5" />
+              <circle cx="8" cy="8" r="1.5" />
+              <circle cx="13" cy="8" r="1.5" />
+            </svg>
+          </button>
+
+          <div className="menu" data-open={menu === 'more'}>
+            <Segmented
+              label="View"
+              options={[
+                ['pole', 'South Pole'],
+                ['globe', 'Whole Moon'],
+              ]}
+              value={viewKind === 'site' ? null : viewKind}
+              onChange={(k) => {
+                goTo({ kind: k })
+                setMenu(null)
+              }}
+            />
+            {finderOn && <TabSwitch finderOn className="tablet-only" />}
+            <select
+              className="missions"
+              aria-label="Go to a mission site"
+              value=""
+              onChange={(e) => {
+                const m = missions.find((x) => x.id === e.target.value)
+                if (m) selectMission(m)
+                const place = patchIndex?.patches.find((x) => `place:${x.id}` === e.target.value)
+                if (place) {
+                  pick(place.lat, place.lon, place.name ?? place.id)
+                  goTo({ kind: 'site', lat: place.lat, lon: place.lon, hM: elevation(place.lat, place.lon) })
+                }
+                setMenu(null)
+              }}
+            >
+              <option value="">Go to a mission site or place…</option>
+              {(['landed', 'crashed', 'planned'] as const).map((st) => (
+                <optgroup key={st} label={st === 'landed' ? 'Landed' : st === 'crashed' ? 'Lost on landing' : 'Planned (target area)'}>
+                  {missions
+                    .filter((m) => m.status === st)
+                    .map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} ({m.date_utc.slice(0, 4)})
+                      </option>
+                    ))}
+                </optgroup>
+              ))}
+              {patchIndex?.patches.some((x) => x.kind === 'crest20') && (
+                <optgroup label="Crests and rims (20 m terrain)">
+                  {patchIndex.patches
+                    .filter((x) => x.kind === 'crest20')
+                    .map((x) => (
+                      <option key={x.id} value={`place:${x.id}`}>
+                        {x.name ?? x.id}
+                      </option>
+                    ))}
+                </optgroup>
+              )}
+            </select>
+            <label className="quality">
+              <span>Detail</span>
+              <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} aria-label="3D detail level">
+                <option value="low">Low (phones)</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+            <div className="quality phone-only">
+              <span>Speed</span>
+              <Segmented label="Playback speed" options={RATES} value={rate} onChange={setRate} />
+            </div>
+          </div>
+
+          <i className="brk" />
+          <div className="layerbar seg" role="group" aria-label="Map layer" data-open={menu === 'layers'}>
+            {LAYERS.map((l) => (
+              <button key={l.value} aria-pressed={l.value === layer} title={l.legend} onClick={() => chooseLayer(l.value)}>
+                <span>{l.label}</span>
+                <small>{l.hint}</small>
+                {l.value === layer && l.ramp && (
+                  <span className="ramp">
+                    <span>{l.ends![0]}</span>
+                    <i style={{ background: l.ramp }} />
+                    <span>{l.ends![1]}</span>
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        <div className="stage">
+          <SheetHead finderOn={finderOn} />
+          <div className="dock dock-left" onClick={expandOnTap}>
+            {finderOn ? (
+              <FinderPanel result={finderResult} onPick={pickCandidate} onCompareTop={(cs) => cs.forEach((k) => pickCandidate(k, false))} />
+            ) : (
+              <div className="legend panel-surface">
+                {current.ramp && (
+                  <div className="ramp">
+                    <span>{current.ends![0]}</span>
+                    <i style={{ background: current.ramp }} />
+                    <span>{current.ends![1]}</span>
+                  </div>
+                )}
+                <p>{current.legend}</p>
+              </div>
+            )}
+          </div>
+          <div className="dock dock-right" onClick={expandOnTap}>
+            {ephem && terrain ? (
+              <SitesPanel pins={pins} activePin={activePin} ephem={ephem} terrain={terrain} patchOf={patchOf} global={globeRelief ? globeRelief.dem : null} />
+            ) : null}
+          </div>
+        </div>
+
+        {ephem && <TimeBar ephem={ephem} />}
+      </div>
 
       {hover && (
         <div className="tip" style={{ left: hover.x + 12, top: hover.y + 12 }}>
@@ -533,15 +668,19 @@ export default function App() {
             {hover.m.name}
           </b>
           <span>
-            {hover.m.agency} · {hover.m.date_utc.slice(0, 10)} · {hover.m.status}
+            {hover.m.agency} · {/^\d{4}-\d\d-\d\d/.test(hover.m.date_utc) ? hover.m.date_utc.slice(0, 10) : hover.m.date_utc} · {hover.m.status}
           </span>
           <span>{hover.m.summary}</span>
         </div>
       )}
 
-      {(!ephem || !terrain) && !error && <div className="status">Loading NASA terrain and ephemeris…</div>}
-      {error && <div className="status error">{error}</div>}
-      {ephem && <TimeBar ephem={ephem} />}
+      {(!ephem || !terrain) && !error && <div className="status panel-surface">Loading NASA terrain and ephemeris…</div>}
+      {error && (
+        <div className="status panel-surface error" role="alert">
+          <i className="dot danger" />
+          {error}
+        </div>
+      )}
     </div>
   )
 }

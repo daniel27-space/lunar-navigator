@@ -42,8 +42,12 @@ function initialQuality(): Quality {
   return cores <= 4 || memory <= 4 ? 'medium' : 'high'
 }
 
-/** One colour per pinned site, used everywhere that site appears. */
-export const SITE_COLORS = ['#b79bff', '#5fd38d', '#ff8f6b']
+/** One colour per pinned site (A, B, C), used for its 3D marker; panels use the CSS tokens --site-a/b/c. */
+export const SITE_COLORS = ['#6afbcb', '#826afb', '#cb4dcb']
+
+/** Phone layout: how far the bottom sheet is pulled up, and which panel it shows. */
+export type SheetState = 'peek' | 'half' | 'full'
+export type PanelTab = 'find' | 'sites'
 
 /** Where the camera should go. `seq` changes on every request so repeats still animate. */
 export type ViewGoal =
@@ -89,6 +93,11 @@ interface State {
   addPin: (p: Omit<Pin, 'id' | 'label' | 'slot'> & { label?: string }) => void
   removePin: (id: number) => void
   setActivePin: (id: number | null) => void
+  /** interface only: bottom sheet height (phone) and the panel in view (phone and tablet) */
+  sheet: SheetState
+  setSheet: (s: SheetState) => void
+  tab: PanelTab
+  setTab: (t: PanelTab) => void
 }
 
 const MAX_PINS = 3
@@ -142,4 +151,8 @@ export const useStore = create<State>((set) => ({
       return { pins, activePin: s.activePin === id ? (pins.at(-1)?.id ?? null) : s.activePin }
     }),
   setActivePin: (activePin) => set({ activePin }),
+  sheet: 'peek',
+  setSheet: (sheet) => set({ sheet }),
+  tab: 'sites',
+  setTab: (tab) => set({ tab }),
 }))
