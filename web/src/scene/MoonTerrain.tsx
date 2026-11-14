@@ -1,32 +1,49 @@
-// The south pole surface. Geometry is built on the real sphere (body-fixed km), so the Sun's
-// body-fixed direction lights it directly. Shadows are ray-marched through the elevation
+// A detailed terrain surface: the south-pole tiles or an 80 m patch around a mission site.
+// Geometry is built on the real sphere (body-fixed km), so the Sun's body-fixed direction
+// lights it directly. Shadows are ray-marched through the elevation
 // texture in the fragment shader, including the curvature of the Moon.
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { useThree, type ThreeEvent } from '@react-three/fiber'
-import { latLonOf, spDirection, type Vec3 } from '../lib/geo'
-import { sampleXY, type Level, type Terrain } from '../lib/terrain'
+import { latLonOf, R2D, type Vec3 } from '../lib/geo'
+import { globalHeightAt, type GlobalDem } from '../lib/globalDem'
+import { frameDirection, sampleXY, type Level, type Terrain } from '../lib/terrain'
 import type { LayerMode, SiteFilter } from '../store'
-import { CUT_INSET_KM } from './Globe'
-import { applyGlobeMap, exposureFor, SHADING_GLSL, shadingUniforms, type GlobeMap, type GlobeRelief } from './shading'
+import {
+  applyCuts,
+  applyGlobeMap,
+  CUT_GLSL,
+  CUT_INSET_KM,
+  cutUniforms,
+  exposureFor,
+  SHADING_GLSL,
+  shadingUniforms,
+  type Cut,
+  type GlobeMap,
+  type GlobeRelief,
+} from './shading'
 
-const GRID = 768
 /**
- * Width in km of the ring, just inside the 80S circle where the terrain data ends, over which
- * the terrain fades into the smooth globe. The fade is round, so the detailed area reads as a
- * polar cap rather than a square tile.
+ * Width of the ring at the edge of the data over which the detailed terrain fades into the
+ * whole-Moon relief, as a share of the map's half-width. The fade is round, so the detailed
+ * area reads as a cap rather than a square tile.
  */
-const FADE_KM = 50
+const FADE_SHARE = 0.165
+const fadeKmOf = (t: Terrain) => Math.max((t.levels[0].xMax / 1000) * FADE_SHARE, 4)
 
-/** 0 inside, rising to 1 where the globe takes over. x, y and edge in km. */
-function edgeFade(xKm: number, yKm: number, edgeKm: number): number {
+/** 0 inside, rising to 1 where the globe takes over. x, y, edge and fade in km. */
+function edgeFade(xKm: number, yKm: number, edgeKm: number, fadeKm: number): number {
   const m = Math.hypot(xKm, yKm)
-  const k = Math.min(Math.max((m - (edgeKm - FADE_KM)) / (FADE_KM - 2), 0), 1)
+  const k = Math.min(Math.max((m - (edgeKm - fadeKm)) / (fadeKm - 2), 0), 1)
   return k * k * (3 - 2 * k)
 }
 
-function buildGeometry(t: Terrain): THREE.BufferGeometry {
+const globalAt = (g: GlobalDem, d: Vec3) =>
+  globalHeightAt(g, Math.asin(Math.min(1, Math.max(-1, d[2]))) * R2D, Math.atan2(d[1], d[0]) * R2D)
+
+function buildGeometry(t: Terrain, global: GlobalDem | null, GRID: number): THREE.BufferGeometry {
   const l0 = t.levels[0]
+  const fadeKm = fadeKmOf(t)
   const n = GRID + 1
   const pos = new Float32Array(n * n * 3)
   const xy = new Float32Array(n * n * 2)
@@ -41,11 +58,15 @@ function buildGeometry(t: Terrain): THREE.BufferGeometry {
       // Pull edge vertices half a pixel inward so they sample real data.
       const xs = Math.min(Math.max(x, l0.xMin + l0.pixel), l0.xMax - l0.pixel)
       const ys = Math.min(Math.max(y, l0.yMin + l0.pixel), l0.yMax - l0.pixel)
-      const h = sampleXY(t, xs, ys)
-      valid[k] = Number.isNaN(h) ? 0 : 1
-      const d = spDirection(x, y, t.radiusM)
-      // Relief flattens to the reference sphere at the edge, so it joins the globe without a step.
-      const r = rKm + (Number.isNaN(h) ? 0 : (h / 1000) * (1 - edgeFade(x / 1000, y / 1000, edgeKm)))
+      const d = frameDirection(t.frame, x, y, t.radiusM)
+      // The globe's own height here (0 until the whole-Moon map has loaded).
+      const hg = global ? globalAt(global, d) : 0
+      let h = sampleXY(t, xs, ys)
+      valid[k] = Number.isNaN(h) && !global ? 0 : 1
+      if (Number.isNaN(h)) h = hg
+      // Heights ease into the globe's at the edge, so the two surfaces join without a step.
+      const w = edgeFade(x / 1000, y / 1000, edgeKm, fadeKm)
+      const r = rKm + (h * (1 - w) + hg * w) / 1000
       pos[k * 3] = d[0] * r
       pos[k * 3 + 1] = d[1] * r
       pos[k * 3 + 2] = d[2] * r
@@ -72,10 +93,20 @@ function buildGeometry(t: Terrain): THREE.BufferGeometry {
   return g
 }
 
-function heightTexture(l: Level, linear: boolean): THREE.DataTexture {
-  // NaN would poison filtering; store a very low value and let the shader treat it as no data.
+function heightTexture(t: Terrain, l: Level, global: GlobalDem | null, linear: boolean): THREE.DataTexture {
+  // NaN would poison filtering. Gaps in the data take the whole-Moon map's height (for the
+  // picture only; the numbers never use filled values), or a very low value the shader
+  // treats as no data when that map is not loaded.
   const data = new Float32Array(l.h.length)
-  for (let i = 0; i < data.length; i++) data[i] = Number.isNaN(l.h[i]) ? -20000 : l.h[i]
+  for (let i = 0; i < data.length; i++) {
+    if (!Number.isNaN(l.h[i])) data[i] = l.h[i]
+    else if (!global) data[i] = -20000
+    else {
+      const x = l.xMin + ((i % l.size) + 0.5) * l.pixel
+      const y = l.yMax - (Math.floor(i / l.size) + 0.5) * l.pixel
+      data[i] = globalAt(global, frameDirection(t.frame, x, y, t.radiusM))
+    }
+  }
   const tex = new THREE.DataTexture(data, l.size, l.size, THREE.RedFormat, THREE.FloatType)
   tex.minFilter = tex.magFilter = linear ? THREE.LinearFilter : THREE.NearestFilter
   tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping
@@ -103,6 +134,9 @@ uniform vec4 uExt1;
 uniform float uPix0;  // km
 uniform float uPix1;
 uniform float uR;     // km
+uniform vec3 uAx;     // the map's x axis, y axis and centre direction, body-fixed
+uniform vec3 uAy;
+uniform vec3 uUp;
 uniform vec3 uSun;    // unit, body-fixed, towards the Sun
 uniform float uSunRad; // angular radius, radians
 uniform int uMode;    // 0 natural, 1 elevation, 2 slope, 3 avg sunlight, 4 avg Earth, 5 PSR, 6 site filter
@@ -115,6 +149,7 @@ uniform float uEdge;   // km, where the globe takes over
 uniform float uFade;   // km, width of the fade into the globe
 varying vec2 vXY;
 ${SHADING_GLSL}
+${CUT_GLSL}
 
 vec2 uvOf(vec2 xy, vec4 ext) {
   return vec2((xy.x - ext.x) / (ext.z - ext.x), (ext.w - xy.y) / (ext.w - ext.y));
@@ -131,15 +166,15 @@ float hAt(vec2 xy) {
   }
   return max(texture2D(uH0, uvOf(xy, uExt0)).r, -10000.0) * 0.001;
 }
-// South polar stereographic <-> body-fixed, written without trig so it stays exact at the pole.
+// Stereographic map <-> body-fixed, written without trig so it stays exact at the centre.
 vec3 dirOf(vec2 xy) {
   float rho2 = dot(xy, xy) / (4.0 * uR * uR);
   float k = 1.0 / (1.0 + rho2);
-  return vec3(xy.y / uR * k, xy.x / uR * k, -(1.0 - rho2) * k);
+  return uAx * (xy.x / uR * k) + uAy * (xy.y / uR * k) + uUp * ((1.0 - rho2) * k);
 }
 vec2 xyOf(vec3 p) {
   vec3 d = normalize(p);
-  return 2.0 * uR / (1.0 - d.z) * vec2(d.y, d.x);
+  return 2.0 * uR / (1.0 + dot(d, uUp)) * vec2(dot(d, uAx), dot(d, uAy));
 }
 vec3 surf(vec2 xy) { return dirOf(xy) * (uR + hAt(xy)); }
 
@@ -185,6 +220,7 @@ void main() {
 
   vec3 p0 = surf(vXY);
   vec3 up = normalize(p0);
+  if (inCut(up, uR)) discard; // a finer terrain is drawn here
   vec3 n = normalize(cross(surf(vXY + vec2(e, 0.0)) - surf(vXY - vec2(e, 0.0)),
                            surf(vXY + vec2(0.0, e)) - surf(vXY - vec2(0.0, e))));
   if (dot(n, up) < 0.0) n = -n;
@@ -277,12 +313,17 @@ interface Props {
   dataBase: string
   map: GlobeMap | null
   relief: GlobeRelief | null
+  /** true for the south-pole tiles, which have the NASA overlay layers; a site patch has none */
+  overlays: boolean
+  /** finer terrains drawn on top of this one; this surface is skipped under them */
+  cuts?: Cut[]
   onPick: (lat: number, lon: number) => void
 }
 
-export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, map, relief, onPick }: Props) {
+export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, map, relief, overlays, cuts, onPick }: Props) {
   const gl = useThree((s) => s.gl)
-  const geometry = useMemo(() => buildGeometry(terrain), [terrain])
+  const global = relief ? relief.dem : null
+  const geometry = useMemo(() => buildGeometry(terrain, global, overlays ? 768 : 384), [terrain, global, overlays])
   const material = useMemo(() => {
     const linear = !!gl.getContext().getExtension('OES_texture_float_linear')
     const [l0, l1] = [terrain.levels[0], terrain.levels[terrain.levels.length - 1]]
@@ -292,10 +333,14 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
       fragmentShader,
       uniforms: {
         ...shadingUniforms(),
+        ...cutUniforms(),
         uEdge: { value: l0.xMax / 1000 - CUT_INSET_KM },
-        uFade: { value: FADE_KM },
-        uH0: { value: heightTexture(l0, linear) },
-        uH1: { value: heightTexture(l1, linear) },
+        uFade: { value: fadeKmOf(terrain) },
+        uAx: { value: new THREE.Vector3(...terrain.frame.ax) },
+        uAy: { value: new THREE.Vector3(...terrain.frame.ay) },
+        uUp: { value: new THREE.Vector3(...terrain.frame.up) },
+        uH0: { value: heightTexture(terrain, l0, global, linear) },
+        uH1: { value: heightTexture(terrain, l1, global, linear) },
         uExt0: { value: extentKm(l0) },
         uExt1: { value: extentKm(l1) },
         uPix0: { value: l0.pixel / 1000 },
@@ -311,7 +356,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
         uLitNow: { value: 0 },
       },
     })
-  }, [terrain, gl])
+  }, [terrain, global, gl])
 
   useEffect(
     () => () => {
@@ -324,12 +369,15 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
   )
 
   applyGlobeMap(material.uniforms as never, map, relief)
+  applyCuts(material.uniforms as never, cuts ?? [])
   material.uniforms.uSun.value.set(sunDir[0], sunDir[1], sunDir[2])
   material.uniforms.uSunRad.value = sunRad
-  material.uniforms.uMode.value = MODE[layer]
-  const file = OVERLAY_FILE[layer]
+  // A site patch has no overlay layers: it shows sunlight for those, elevation and slope as usual.
+  const shown: LayerMode = overlays || layer === 'elevation' || layer === 'slope' ? layer : 'natural'
+  material.uniforms.uMode.value = MODE[shown]
+  const file = overlays ? OVERLAY_FILE[layer] : undefined
   material.uniforms.uOverlay.value = file ? overlayTexture(dataBase, file) : blankOverlay
-  if (layer === 'filter') {
+  if (shown === 'filter') {
     material.uniforms.uSunAvg.value = overlayTexture(dataBase, 'sun_avg.png')
     material.uniforms.uEarthAvg.value = overlayTexture(dataBase, 'earth_avg.png')
     material.uniforms.uCrit.value.set(filter.maxSlopeDeg, filter.minSunAvg, filter.minEarthAvg)
@@ -349,7 +397,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, filter, dataBase, 
       material={material}
       onClick={handleClick}
       onBeforeRender={(_r, _s, camera) => {
-        material.uniforms.uExpo.value = exposureFor(camera.position)
+        material.uniforms.uExpo.value = exposureFor(camera.position, material.uniforms.uSun.value)
       }}
     />
   )

@@ -312,11 +312,125 @@ def test_real_tiles_roundtrip_against_source():
 
 @needs_tiles
 @pytest.mark.skipif(not (TILES / "horizon_testvectors.json").exists(), reason="vectors not built")
-def test_testvectors_reproduce_from_tiles():
+def test_testvectors_reproduce_from_lookup_chain():
+    # Since the site-patch work the vectors come from the lookup chain without a patch
+    # (L1 -> L0 -> whole-Moon map), so rays carry on past the edge of the tiles.
     vec = json.loads((TILES / "horizon_testvectors.json").read_text())
     assert len(vec) >= 6
     for v in vec:
         assert {"name", "lat", "lon", "observer_height_m", "az_step_deg", "elev_deg"} <= set(v)
-        e = hz.horizon_from_tiles(v["lat"], v["lon"], v["observer_height_m"], v["az_step_deg"])
+        e, _, h0, _ = hz.horizon_chain(v["lat"], v["lon"], v["observer_height_m"], v["az_step_deg"],
+                                       return_details=True)
         assert len(v["elev_deg"]) == round(360 / v["az_step_deg"])
         assert np.allclose(e, v["elev_deg"], atol=1e-6)
+        assert h0 == pytest.approx(v["surface_h_m"], abs=1e-3)
+        # the tiles-only horizon can only be lower or equal: the chain sees the same samples
+        # plus the ones beyond the edge of the tiles
+        e_old = hz.horizon_from_tiles(v["lat"], v["lon"], v["observer_height_m"], v["az_step_deg"])
+        assert np.all(e >= e_old - 1e-12)
+
+
+# --------------------------------------------------------------------------
+# lookup chain: site patch -> L1 -> L0 -> whole-Moon map
+# --------------------------------------------------------------------------
+def _flat_grids(h_tiles=0.0, h_global=0.0):
+    """Synthetic (L0, L1, whole-Moon) with the real extents and constant heights."""
+    l0 = hz.Grid(np.full((64, 64), h_tiles, np.float32), -304000.0, 304000.0, 9500.0)
+    l1 = hz.Grid(np.full((64, 64), h_tiles, np.float32), -163840.0, 163840.0, 5120.0)
+    return l0, l1, np.full((90, 180), h_global, np.float32)
+
+
+@pytest.mark.parametrize("lat,lon", [(90.0, 0.0), (89.9, 77.0), (40.0, 100.0), (0.0, 180.0),
+                                     (0.0, -180.0), (-30.0, -100.0), (-88.0, 12.0), (-90.0, 0.0)])
+def test_chain_flat_moon_gives_geometric_dip_anywhere(lat, lon):
+    elev, dist, h0, lev = hz.horizon_chain(lat, lon, 2.0, 10.0, grids=_flat_grids(),
+                                           return_details=True)
+    assert h0 == 0.0
+    assert np.all(np.isfinite(elev))
+    assert np.allclose(elev, -math.degrees(math.acos(R / (R + 2.0))), atol=2e-5)
+
+
+def test_chain_levels_and_priority():
+    grids = _flat_grids(h_tiles=500.0, h_global=-200.0)
+    # northern hemisphere: tiles never count, even though the sphere is the same height there
+    assert hz.height_chain(60.0, 10.0, grids=grids, return_level=True) == (-200.0, 3)
+    assert hz.height_chain(90.0, 0.0, grids=grids, return_level=True) == (-200.0, 3)
+    assert hz.height_chain(-70.0, 10.0, grids=grids, return_level=True) == (-200.0, 3)
+    assert hz.height_chain(-89.0, 10.0, grids=grids, return_level=True) == (500.0, 1)
+    assert hz.height_chain(-81.0, 10.0, grids=grids, return_level=True) == (500.0, 2)
+    # a patch wins over everything where it has data, and falls through where it has none
+    data = np.full((768, 768), 1000.0, np.float32)
+    data[:, 384:] = np.nan                                   # east half has no data
+    for lat0, lon0 in [(-89.0, 10.0), (20.0, 30.0)]:
+        patch = hz.Patch(data, lat0, lon0)
+        below = 500.0 if lat0 < -85 else -200.0
+        lev_below = 1 if lat0 < -85 else 3
+        w = destination(lat0, lon0, 270.0, 10000.0)
+        e = destination(lat0, lon0, 90.0, 10000.0)
+        far = destination(lat0, lon0, 0.0, 40000.0)
+        assert hz.height_chain(*w, patch=patch, grids=grids, return_level=True) == (1000.0, 0)
+        assert hz.height_chain(*e, patch=patch, grids=grids, return_level=True) == (below, lev_below)
+        assert hz.height_chain(*far, patch=patch, grids=grids, return_level=True)[1] != 0
+        # the far side of the Moon is not "in" the patch
+        assert hz.height_chain(-lat0, lon0 + 180.0, patch=patch, grids=grids, return_level=True)[1] != 0
+
+
+def test_chain_patch_orientation_and_observer_height():
+    # a 1 km mesa over the northern third of the patch only: the horizon is raised to the
+    # north, not to the south; the observer stands on the patch's own height
+    data = np.zeros((768, 768), np.float32)
+    data[:256, :] = 1000.0                                   # rows 0..255 = north
+    patch = hz.Patch(data, 26.0, 3.6)
+    elev, dist, h0, lev = hz.horizon_chain(26.0, 3.6, 2.0, 90.0, patch=patch, grids=_flat_grids(),
+                                           return_details=True)
+    assert h0 == 0.0
+    # mesa edge between pixel rows 255 and 256: full height at the centre of row 255, y = 10280 m
+    assert elev[0] == pytest.approx(curved_elevation_deg(1000.0, 10280.0, 2.0), abs=0.02)
+    assert lev[0] == 0
+    assert np.allclose(elev[1:], -math.degrees(math.acos(R / (R + 2.0))), atol=2e-5)
+    # east side raised instead -> azimuth 90
+    patch_e = hz.Patch(np.ascontiguousarray(data.T[:, ::-1]), 26.0, 3.6)
+    elev_e = hz.horizon_chain(26.0, 3.6, 2.0, 90.0, patch=patch_e, grids=_flat_grids())
+    assert elev_e[1] == pytest.approx(elev[0], abs=1e-3) and elev_e[0] < 0 and elev_e[3] < 0
+
+
+def test_chain_without_patch_or_with_empty_patch_is_the_same():
+    grids = _flat_grids(300.0, 50.0)
+    empty = hz.Patch(np.full((768, 768), np.nan, np.float32), -80.5, 20.0)
+    a = hz.horizon_chain(-80.5, 20.0, 2.0, 15.0, grids=grids)
+    b = hz.horizon_chain(-80.5, 20.0, 2.0, 15.0, patch=empty, grids=grids)
+    assert np.array_equal(a, b)
+
+
+def test_chain_equals_tiles_only_where_tiles_cover_the_whole_ray():
+    # same samples -> identical numbers (short range so no ray leaves L0)
+    l0, l1 = hz.load_tile_grids() if (TILES / "sp_meta.json").exists() else (None, None)
+    if l0 is None:
+        pytest.skip("tiles not built")
+    g = np.zeros((90, 180), np.float32)
+    a = hz.horizon(l0, -88.0, 40.0, 2.0, 5.0, hi=l1, max_range_m=100000.0)
+    b = hz.horizon_chain(-88.0, 40.0, 2.0, 5.0, max_range_m=100000.0, grids=(l0, l1, g))
+    assert np.array_equal(a, b)
+
+
+def test_chain_whole_moon_sampler_matches_globe_pipeline():
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "globe"))
+    import build_global_dem as gd
+
+    path = hz.DEFAULT_GLOBAL_DEM
+    if not path.exists():
+        pytest.skip("whole-Moon map not built")
+    from PIL import Image
+
+    ref = gd.decode_height(np.asarray(Image.open(path)))
+    g = hz.load_global_dem()
+    assert np.array_equal(g.astype(np.float64), ref)
+    l0, l1, _ = _flat_grids(np.nan)                          # tiles without data
+    rng = np.random.default_rng(3)
+    pts = [(90.0, 0.0), (-90.0, 0.0), (89.99, 179.99), (0.0, 180.0), (0.0, -180.0), (12.3, 179.97),
+           (12.3, -179.97), (-89.97, 45.0), (30.0, -100.0)]
+    pts += list(zip(rng.uniform(-90, 90, 300), rng.uniform(-180, 180, 300)))
+    for lat, lon in pts:
+        h, lev = hz.height_chain(lat, lon, grids=(l0, l1, g), return_level=True)
+        assert lev == 3
+        assert h == pytest.approx(gd.sample(ref, lat, lon), abs=0.02), (lat, lon)

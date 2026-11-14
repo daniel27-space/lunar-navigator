@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import * as THREE from 'three'
 import { loadGlobalDem, type GlobalDem } from '../lib/globalDem'
 import { R_KM } from '../lib/geo'
+import type { Frame } from '../lib/terrain'
 
 export interface GlobeMap {
   tex: THREE.Texture
@@ -101,11 +102,18 @@ const EXPO_FAR = 1.32 // the full sunlit disc
 const ALT_NEAR_KM = 700
 const ALT_FAR_KM = 3500
 
-/** Exposure for a camera at this position (km, Moon-centred). */
-export function exposureFor(position: THREE.Vector3): number {
-  const alt = Math.max(position.length() - R_KM, 1)
+/**
+ * Exposure for a camera at this position (km, Moon-centred) with the Sun in direction `sun`.
+ * Close to the surface it is set for the ground under the camera: high where the Sun is low
+ * (the poles, or near sunrise), normal where the Sun is high. Far away it is set for the full disc.
+ */
+export function exposureFor(position: THREE.Vector3, sun: THREE.Vector3): number {
+  const len = position.length()
+  const alt = Math.max(len - R_KM, 1)
+  const sinSunElevation = position.dot(sun) / len
+  const near = THREE.MathUtils.clamp(EXPO_FAR / Math.max(sinSunElevation, 1e-3), EXPO_FAR, EXPO_NEAR)
   const s = THREE.MathUtils.smoothstep(Math.log(alt), Math.log(ALT_NEAR_KM), Math.log(ALT_FAR_KM))
-  return Math.exp(THREE.MathUtils.lerp(Math.log(EXPO_NEAR), Math.log(EXPO_FAR), s))
+  return Math.exp(THREE.MathUtils.lerp(Math.log(near), Math.log(EXPO_FAR), s))
 }
 
 /** GLSL: surface brightness from the colour map and the tone curve. `d` is a unit body-fixed direction. */
@@ -151,5 +159,56 @@ float globeDirect(vec3 d, vec3 sun) {
 }
 vec3 tone(vec3 albedo, float direct) {
   return 1.0 - exp(-albedo * direct * uExpo) + albedo * 0.03;
+}
+`
+
+// Cut-outs: where a more detailed terrain is drawn, the coarser surface under it is skipped.
+export const MAX_CUTS = 5
+/** The cut-out sits this far inside the detailed terrain's edge, so that terrain always covers the hole. */
+export const CUT_INSET_KM = 1.5
+
+export interface Cut {
+  frame: Frame
+  /** half-size in km of the square the terrain covers in its own map */
+  halfKm: number
+}
+
+const vectors = () => Array.from({ length: MAX_CUTS }, () => new THREE.Vector3(0, 0, 1))
+export const cutUniforms = () => ({
+  uCutN: { value: 0 },
+  uCutAx: { value: vectors() },
+  uCutAy: { value: vectors() },
+  uCutUp: { value: vectors() },
+  uCutHalf: { value: new Array<number>(MAX_CUTS).fill(0) },
+})
+
+export function applyCuts(u: ReturnType<typeof cutUniforms>, cuts: Cut[]) {
+  const n = Math.min(cuts.length, MAX_CUTS)
+  u.uCutN.value = n
+  for (let i = 0; i < n; i++) {
+    u.uCutAx.value[i].set(...cuts[i].frame.ax)
+    u.uCutAy.value[i].set(...cuts[i].frame.ay)
+    u.uCutUp.value[i].set(...cuts[i].frame.up)
+    u.uCutHalf.value[i] = Math.max(cuts[i].halfKm - CUT_INSET_KM, 0)
+  }
+}
+
+/** GLSL: `inCut(d, radiusKm)` is true where unit direction d falls inside any cut-out square. */
+export const CUT_GLSL = /* glsl */ `
+uniform int uCutN;
+uniform vec3 uCutAx[${MAX_CUTS}];
+uniform vec3 uCutAy[${MAX_CUTS}];
+uniform vec3 uCutUp[${MAX_CUTS}];
+uniform float uCutHalf[${MAX_CUTS}];   // km, half-size of each square in its own map x/y
+bool inCut(vec3 d, float radiusKm) {
+  for (int i = 0; i < ${MAX_CUTS}; i++) {
+    if (i >= uCutN) break;
+    float c = dot(d, uCutUp[i]);
+    if (c > 0.5) {
+      vec2 xy = 2.0 * radiusKm / (1.0 + c) * vec2(dot(d, uCutAx[i]), dot(d, uCutAy[i]));
+      if (abs(xy.x) < uCutHalf[i] && abs(xy.y) < uCutHalf[i]) return true;
+    }
+  }
+  return false;
 }
 `

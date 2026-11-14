@@ -3,13 +3,22 @@ import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { bodyVectors, ephemEndMs, ephemStartMs, loadEphem, type Ephem } from './lib/ephem'
 import { sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
-import { heightAt, loadTerrain, terrainTier, type Terrain } from './lib/terrain'
+import {
+  heightAt,
+  loadPatch,
+  loadPatchIndex,
+  loadTerrain,
+  patchCovering,
+  terrainTier,
+  type PatchIndex,
+  type Terrain,
+} from './lib/terrain'
 import { Globe } from './scene/Globe'
 import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
 import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
 import { globalHeightAt } from './lib/globalDem'
-import { useGlobeMap, useGlobeRelief } from './scene/shading'
+import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
 import { useStore, type LayerMode } from './store'
 import { SiteCard } from './ui/SiteCard'
 import './App.css'
@@ -21,14 +30,16 @@ function useData() {
   const [terrain, setTerrain] = useState<Terrain | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [missions, setMissions] = useState<Mission[]>([])
+  const [patchIndex, setPatchIndex] = useState<PatchIndex | null>(null)
   useEffect(() => {
     fetch(`${BASE}missions.json`)
       .then((r) => r.json())
       .then(setMissions, () => setMissions([]))
     loadEphem(BASE).then(setEphem, (e) => setError(`Ephemeris failed to load: ${e.message}`))
     loadTerrain(BASE).then(setTerrain, (e) => setError(`Terrain failed to load: ${e.message}`))
+    loadPatchIndex(BASE).then(setPatchIndex, () => setPatchIndex(null))
   }, [])
-  return { ephem, terrain, error, missions }
+  return { ephem, terrain, error, missions, patchIndex }
 }
 
 /** Advances simulated time while playing. */
@@ -153,14 +164,14 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
   )
 }
 
-function PinMarkers() {
+function PinMarkers({ elevation }: { elevation: (lat: number, lon: number) => number }) {
   const pins = useStore((s) => s.pins)
   const active = useStore((s) => s.activePin)
   const map = useMemo(ringTexture, [])
   return (
     <>
       {pins.map((p) => (
-        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, p.hM + 250)} scale={[0.05, 0.05, 1]} renderOrder={6}>
+        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={[0.05, 0.05, 1]} renderOrder={6}>
           <spriteMaterial
             map={map}
             color={p.id === active ? '#ffcf4a' : '#6fd3ff'}
@@ -194,7 +205,7 @@ function ringTexture(): THREE.Texture {
 }
 
 export default function App() {
-  const { ephem, terrain, error, missions } = useData()
+  const { ephem, terrain, error, missions, patchIndex } = useData()
   useClock(ephem)
   const globeMap = useGlobeMap(BASE)
   const globeRelief = useGlobeRelief(BASE)
@@ -214,14 +225,62 @@ export default function App() {
     return { dir: unit(v), rad: Math.asin(SUN_RADIUS_KM / Math.hypot(v[0], v[1], v[2])) }
   }, [ephem, tMs])
 
+  // 80 m patches around mission sites, fetched when a pinned point needs one.
+  const [patches, setPatches] = useState<Record<string, Terrain>>({})
+  const patchIdFor = useCallback(
+    (lat: number, lon: number) => {
+      if (!patchIndex || !terrain || terrainTier(terrain, lat, lon) === 'fine') return null
+      return patchCovering(patchIndex, lat, lon)?.id ?? null
+    },
+    [patchIndex, terrain],
+  )
+  useEffect(() => {
+    if (!patchIndex) return
+    for (const p of pins) {
+      const id = patchIdFor(p.lat, p.lon)
+      const entry = id && !(id in patches) ? patchIndex.patches.find((e) => e.id === id) : null
+      if (!entry) continue
+      loadPatch(BASE, patchIndex, entry).then(
+        (t) => setPatches((m) => (entry.id in m ? m : { ...m, [entry.id]: t })),
+        () => {}, // the point keeps the coarser data
+      )
+    }
+  }, [pins, patchIndex, patchIdFor, patches])
+  const patchOf = useCallback(
+    (lat: number, lon: number) => {
+      const id = patchIdFor(lat, lon)
+      return id ? (patches[id] ?? null) : null
+    },
+    [patchIdFor, patches],
+  )
+  // Patches on screen: those under the pinned points.
+  const shownPatches = useMemo(() => {
+    const ids = new Set<string>()
+    for (const p of pins) {
+      const id = patchIdFor(p.lat, p.lon)
+      if (id && patches[id]) ids.add(id)
+    }
+    return [...ids].map((id) => patches[id])
+  }, [pins, patchIdFor, patches])
+  const patchCuts: Cut[] = useMemo(
+    () => shownPatches.map((t) => ({ frame: t.frame, halfKm: t.levels[0].xMax / 1000 })),
+    [shownPatches],
+  )
+  const cuts: Cut[] = useMemo(
+    () => [...(terrain ? [{ frame: terrain.frame, halfKm: terrain.levels[0].xMax / 1000 }] : []), ...patchCuts],
+    [terrain, patchCuts],
+  )
+
   const elevation = useCallback(
     (lat: number, lon: number) => {
-      const h = terrain ? heightAt(terrain, lat, lon) : NaN
+      const patch = patchOf(lat, lon)
+      let h = patch ? heightAt(patch, lat, lon) : NaN
+      if (Number.isNaN(h)) h = terrain ? heightAt(terrain, lat, lon) : NaN
       if (!Number.isNaN(h)) return h
       // Outside the south-pole tiles: the whole-Moon map (about 2.7 km per pixel).
       return globeRelief ? globalHeightAt(globeRelief.dem, lat, lon) : 0
     },
-    [terrain, globeRelief],
+    [terrain, globeRelief, patchOf],
   )
   const pick = useCallback(
     (lat: number, lon: number, label?: string) => addPin({ lat, lon, hM: elevation(lat, lon), label }),
@@ -230,13 +289,13 @@ export default function App() {
   const selectMission = useCallback(
     (m: Mission) => {
       pick(m.lat, m.lon, m.name)
-      if (terrain && terrainTier(terrain, m.lat, m.lon) !== 'none') {
+      if (terrain && (terrainTier(terrain, m.lat, m.lon) !== 'none' || patchIdFor(m.lat, m.lon))) {
         goTo({ kind: 'site', lat: m.lat, lon: m.lon, hM: elevation(m.lat, m.lon) })
       } else {
         goTo({ kind: 'globe', lat: m.lat, lon: m.lon })
       }
     },
-    [pick, goTo, terrain, elevation],
+    [pick, goTo, terrain, elevation, patchIdFor],
   )
   const missionHeights = useMemo(() => missions.map((m) => elevation(m.lat, m.lon)), [missions, elevation])
   const [hover, setHover] = useState<{ m: Mission; x: number; y: number } | null>(null)
@@ -247,12 +306,15 @@ export default function App() {
     <div className="app">
       <Canvas camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }} gl={{ antialias: true }} dpr={[1, 2]}>
         <color attach="background" args={['#000']} />
-        <Globe sunDir={sun.dir} cutKm={terrain ? terrain.levels[0].xMax / 1000 : 0} map={globeMap} relief={globeRelief} onPick={pick} />
+        <Globe sunDir={sun.dir} cuts={cuts} map={globeMap} relief={globeRelief} onPick={pick} />
         {terrain && (
-          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} relief={globeRelief} onPick={pick} />
+          <MoonTerrain terrain={terrain} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} relief={globeRelief} overlays cuts={patchCuts} onPick={pick} />
         )}
+        {shownPatches.map((t) => (
+          <MoonTerrain key={t.id} terrain={t} sunDir={sun.dir} sunRad={sun.rad} layer={layer} filter={filter} dataBase={BASE} map={globeMap} relief={globeRelief} overlays={false} onPick={pick} />
+        ))}
         <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
-        <PinMarkers />
+        <PinMarkers elevation={elevation} />
         <Rig />
       </Canvas>
 
@@ -330,7 +392,17 @@ export default function App() {
         )}
         {ephem &&
           terrain &&
-          pins.map((p) => <SiteCard key={p.id} pin={p} ephem={ephem} terrain={terrain} active={p.id === activePin} />)}
+          pins.map((p) => (
+            <SiteCard
+              key={p.id}
+              pin={p}
+              ephem={ephem}
+              terrain={terrain}
+              patch={patchOf(p.lat, p.lon)}
+              global={globeRelief ? globeRelief.dem : null}
+              active={p.id === activePin}
+            />
+          ))}
       </aside>
 
       {hover && (

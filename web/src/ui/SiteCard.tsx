@@ -2,7 +2,9 @@
 import { useMemo, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { computeHorizon, discVisibleFraction, horizonAt } from '../lib/horizon'
-import { slopeAt, terrainTier, type Terrain } from '../lib/terrain'
+import { upVector } from '../lib/geo'
+import type { GlobalDem } from '../lib/globalDem'
+import { slopeAt, sourceHeight, terrainTier, type HeightSource, type Terrain } from '../lib/terrain'
 import {
   computeSeries,
   eclipseFactor,
@@ -26,8 +28,11 @@ const fmtDur = (h: number | null) =>
 const pct = (v: number) => `${Math.round(v * 100)}%`
 
 const TIER_NOTE = {
+  patch: 'Horizon from 80 m terrain within about 30 km of this site, and the whole-Moon map (2.7 km pixels) beyond.',
   fine: 'Horizon from LOLA 80 m terrain.',
   coarse: 'Horizon from LOLA terrain at about 300 m: rise and set times are less certain here.',
+  global:
+    'Horizon from the whole-Moon map only (2.7 km pixels): hills smaller than a few km are missed, so treat times as rough.',
   none: 'No terrain data here: smooth-sphere horizon, so real hills are ignored.',
 }
 
@@ -185,19 +190,38 @@ function Panorama({
 interface Props {
   pin: Pin
   ephem: Ephem
+  /** the south-pole tiles */
   terrain: Terrain
+  /** the 80 m site patch covering this point, once loaded */
+  patch: Terrain | null
+  /** the whole-Moon elevation map, once loaded */
+  global: GlobalDem | null
   active: boolean
 }
 
-export function SiteCard({ pin, ephem, terrain, active }: Props) {
+export function SiteCard({ pin, ephem, terrain, patch, global, active }: Props) {
   const tMs = useStore((s) => s.tMs)
   const setTime = useStore((s) => s.setTime)
   const removePin = useStore((s) => s.removePin)
   const setActivePin = useStore((s) => s.setActivePin)
-  const hM = Number.isNaN(pin.hM) ? 0 : pin.hM
+  // Height lookup order: site patch, south-pole tiles, whole-Moon map.
+  const source: HeightSource = useMemo(
+    () => ({ terrains: patch ? [patch, terrain] : [terrain], global }),
+    [patch, terrain, global],
+  )
+  const hM = useMemo(() => {
+    const u = upVector(pin.lat, pin.lon)
+    const h = sourceHeight(source, u[0], u[1], u[2])
+    return Number.isNaN(h) ? 0 : h
+  }, [source, pin.lat, pin.lon])
+  const polarTier = terrainTier(terrain, pin.lat, pin.lon)
+  const tier = patch ? 'patch' : polarTier !== 'none' ? polarTier : global ? 'global' : 'none'
 
-  const slope = useMemo(() => slopeAt(terrain, pin.lat, pin.lon), [terrain, pin.lat, pin.lon])
-  const horizon = useMemo(() => computeHorizon(terrain, pin.lat, pin.lon), [terrain, pin.lat, pin.lon])
+  const slope = useMemo(() => {
+    const s = patch ? slopeAt(patch, pin.lat, pin.lon) : NaN
+    return Number.isNaN(s) ? slopeAt(terrain, pin.lat, pin.lon) : s
+  }, [patch, terrain, pin.lat, pin.lon])
+  const horizon = useMemo(() => computeHorizon(source, pin.lat, pin.lon), [source, pin.lat, pin.lon])
 
   // The analysis window only moves when the clock leaves it, so playback stays smooth.
   const [anchor, setAnchor] = useState(() => Math.floor(tMs / 3600000) * 3600000 - 2 * DAY)
@@ -306,7 +330,7 @@ export function SiteCard({ pin, ephem, terrain, active }: Props) {
       </details>
       <p className="muted small">
         Stats cover 60 days from {new Date(anchor).toISOString().slice(0, 10)}. Observer {horizon.observerHeightM} m above the
-        surface. {TIER_NOTE[terrainTier(terrain, pin.lat, pin.lon)]}
+        surface. {TIER_NOTE[tier]}
       </p>
     </section>
   )

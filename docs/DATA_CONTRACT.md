@@ -76,3 +76,43 @@ Built by `pipeline/globe/build_global_dem.py` from NASA SVS CGI Moon Kit `ldem_1
   points outside the south-pole tiles, never for horizons.
 - Checks: `pipeline/globe/test_globe.py` (against the source and against the polar LOLA tile)
   and `web/src/lib/globalDem.test.ts` (browser lookup against the Python values).
+
+## Site terrain patches (`web/public/data/patches/`)
+
+High-detail elevation around mission sites that the south-pole 80 m tile (L1) does not cover.
+Built by `pipeline/patches/build_patches.py`.
+
+**Projection ("site stereographic").** Each patch is a stereographic map centred on its own
+centre point (lat0, lon0), true scale at the centre. With E, N, U the east/north/up unit
+vectors at the centre (same formulas as the local frame above) and `d` a body-fixed unit vector:
+
+    x = 2R (d.E) / (1 + d.U)        y = 2R (d.N) / (1 + d.U)        (metres, x east, y north)
+
+    inverse:  rho2 = (x^2 + y^2) / (4 R^2),  k = 1 / (1 + rho2)
+              d = E (x/R) k + N (y/R) k + U (1 - rho2) k
+
+The south-pole tiles are the special case E = body +Y, N = body +X, U = body -Z.
+
+**Grid.** 768 x 768 pixels of 80 m: x and y run from -30720 m to +30720 m. Row 0 is maximum y
+(north edge), column 0 is minimum x (west edge), pixel-centre registered exactly like the
+terrain levels. PNG height encoding is the same (`h_m = (R*256 + G) * 0.5 - 10000`, raw 0 =
+no data).
+
+**`patches.json`**
+
+    { "radius_m": 1737400, "size": 768, "pixel_m": 80,
+      "patches": [ { "id": "luna-21", "lat": 25.9994, "lon": 30.4076, "file": "luna-21.png",
+                     "sites": ["luna-21", "lunokhod-2"],
+                     "source": "...", "nodata_fraction": 0.0, "min_m": -2700, "max_m": -300 } ] }
+
+`sites` lists the mission ids (from `missions.json`) the patch serves; a mission within 15 km
+of another patch's centre shares that patch.
+
+**Height lookup order (everywhere: browser and Python reference).** For a body-fixed direction:
+1. the site patch in use, if the point is inside it and has data;
+2. south-pole tile L1, then L0;
+3. the whole-Moon elevation map (never missing).
+
+**Horizon with this lookup.** Same march as before (same step schedule, 300 km, observer
+height, elevation formula). Because step 3 never fails, a ray no longer stops at the edge of
+the detailed data: it carries on over the whole-Moon map to 300 km.

@@ -1,51 +1,44 @@
-// The browser horizon code, run on the real LOLA web tiles, must reproduce the Python
-// reference implementation (pipeline/terrain/horizon.py) at the published test points.
-import { readFileSync } from 'node:fs'
-import { PNG } from 'pngjs'
+// The browser horizon code, run on the published data files with the full height lookup chain
+// (site patch, south-pole tiles, whole-Moon map), must reproduce the Python reference
+// implementation (pipeline/terrain/horizon.py) at the published test points.
 import { describe, expect, it } from 'vitest'
 import { computeHorizon } from './horizon'
-import { decodeHeights, type Terrain } from './terrain'
+import { readGlobalDem, readPatch, readPatchIndex, readPolarTerrain, readVectors, type HorizonVector } from './testData'
 
-const dir = new URL('../../public/data/terrain/', import.meta.url)
-const meta = JSON.parse(readFileSync(new URL('sp_meta.json', dir), 'utf8'))
+const polar = readPolarTerrain()
+const global = readGlobalDem()
 
-function load(): Terrain {
-  return {
-    radiusM: meta.radius_m,
-    levels: meta.levels.map((l: Record<string, number | string>) => {
-      const png = PNG.sync.read(readFileSync(new URL(l.file as string, dir)))
-      return {
-        size: l.size,
-        xMin: l.x_min_m,
-        xMax: l.x_max_m,
-        yMin: l.y_min_m,
-        yMax: l.y_max_m,
-        pixel: l.pixel_m,
-        h: decodeHeights(new Uint8ClampedArray(png.data.buffer, png.data.byteOffset, png.data.length), png.width * png.height),
-      }
-    }),
-  }
+function worstDifference(v: HorizonVector, terrains = [polar]): number {
+  const hz = computeHorizon({ terrains, global }, v.lat, v.lon, {
+    observerHeightM: v.observer_height_m,
+    azStepDeg: v.az_step_deg,
+  })
+  let worst = 0
+  for (let i = 0; i < v.elev_deg.length; i++) worst = Math.max(worst, Math.abs(hz.elevDeg[i] - v.elev_deg[i]))
+  return worst
 }
 
-const vectors: {
-  name: string
-  lat: number
-  lon: number
-  observer_height_m: number
-  az_step_deg: number
-  elev_deg: number[]
-}[] = JSON.parse(readFileSync(new URL('horizon_testvectors.json', dir), 'utf8'))
-
-describe('horizon on real LOLA tiles vs the Python reference', () => {
-  const terrain = load()
-  for (const v of vectors) {
+describe('horizon at south-pole points vs the Python reference', () => {
+  for (const v of readVectors('terrain/horizon_testvectors.json')!) {
     it(`${v.name} matches to 0.001 degrees`, () => {
-      const hz = computeHorizon(terrain, v.lat, v.lon, {
-        observerHeightM: v.observer_height_m,
-        azStepDeg: v.az_step_deg,
-      })
-      let worst = 0
-      for (let i = 0; i < v.elev_deg.length; i++) worst = Math.max(worst, Math.abs(hz.elevDeg[i] - v.elev_deg[i]))
+      const worst = worstDifference(v)
+      console.log(`${v.name}: worst difference ${worst.toExponential(2)} deg`)
+      expect(worst).toBeLessThan(0.001)
+    })
+  }
+})
+
+describe('horizon at mission-site patches vs the Python reference', () => {
+  const index = readPatchIndex()
+  const vectors = readVectors('patches/patch_testvectors.json')
+  it('has patches and reference vectors published', () => {
+    expect(index?.patches.length ?? 0).toBeGreaterThan(0)
+    expect(vectors?.length ?? 0).toBeGreaterThan(0)
+  })
+  for (const v of vectors ?? []) {
+    it(`${v.name} matches to 0.001 degrees`, () => {
+      const terrains = v.patch ? [readPatch(index!, v.patch), polar] : [polar]
+      const worst = worstDifference(v, terrains)
       console.log(`${v.name}: worst difference ${worst.toExponential(2)} deg`)
       expect(worst).toBeLessThan(0.001)
     })

@@ -16,7 +16,8 @@ Pick any point near the Moon's south pole and any date from 2024 to 2036, and se
 - sunlight and Earth-visibility windows over the next 60 days, the longest night and the
   longest communication outage;
 - up to three points side by side, to compare sites or dates;
-- 41 past, failed and planned landing sites across the whole Moon.
+- 41 past, failed and planned landing sites across the whole Moon, each with 80 m terrain
+  around it, so the same analysis works at Apollo 15 or Chang'e 4 as at the pole.
 
 Map layers: sunlight now, average sunlight, average Earth visibility, permanently shadowed
 regions, elevation and slope.
@@ -39,8 +40,11 @@ regions, elevation and slope.
 
 - Sun and Earth angles agree with **JPL Horizons** to better than 0.001° at 6 sites and 8 dates
   between 2025 and 2034 (`docs/research/ephemeris-validation.md`).
-- The browser horizon code reproduces the Python reference on real LOLA tiles to within 0.001°
-  at six test points (`web/src/lib/horizon.real.test.ts`).
+- The browser horizon code reproduces the Python reference to within 0.001° at six south-pole
+  points and six mission-site and whole-Moon points (`web/src/lib/horizon.real.test.ts`).
+- Each mission-site terrain patch is checked against the whole-Moon map for position and
+  orientation (correlation 0.94 to 0.998); at Apollo 15 the Apennine front, Mons Hadley and
+  Hadley Rille fall where they should.
 - Over a full 18.6-year cycle at 185 points, our share of time in sunlight correlates with
   **NASA GSFC's published illumination map** at r = 0.988 (RMS difference 2.7 percentage
   points); Earth visibility at r = 0.993. All tested permanently shadowed crater floors come
@@ -56,13 +60,14 @@ regions, elevation and slope.
 
 ## Known limits
 
-- Detailed terrain covers 80°S to 90°S. North of that the globe shows relief from a whole-Moon
-  elevation map (about 2.7 km per pixel, slope lighting only, no cast shadows) and a pinned
-  point gets its height from that map, but its horizon is still a smooth sphere and the card
-  says so.
+- Detailed terrain (80 m) covers 80°S to 90°S and a 61 km square around each mission site.
+  Everywhere else the globe uses a whole-Moon elevation map (about 2.7 km per pixel, slope
+  lighting only, no cast shadows). A point pinned there gets a horizon from that map alone,
+  which misses hills smaller than a few km; the card says so.
+- At a mission site the horizon uses 80 m terrain out to about 30 km and the whole-Moon map
+  beyond, so a distant peak can be underestimated.
 - Inside about 84.6°S the browser uses 80 m terrain. Outside it uses about 300 m terrain, where
   the horizon can be wrong by a degree or more; rise and set times there are less certain.
-- Points close to 80°S are missing part of their northern horizon.
 - On ridge crests the result is very sensitive to observer height: a mast a metre taller can
   halve the longest night.
 - When Earth eclipses the Sun, sunlight refracted through Earth's atmosphere is ignored.
@@ -81,6 +86,7 @@ regions, elevation and slope.
 | Average sunlight, average Earth visibility, permanently shadowed regions (`AVGVISIB_75S_120M_201608.TIF`, `AVGVISIB_75S_120M_201608_EARTH.TIF`, `LPSR_75S_120M_201608.TIF`) | NASA GSFC PGDA product 69, https://pgda.gsfc.nasa.gov/products/69 (Mazarico et al. 2011) |
 | JPL Horizons, used as the independent check on Sun and Earth angles | https://ssd.jpl.nasa.gov/horizons/ |
 | Whole-Moon colour map (LROC WAC) and whole-Moon elevation `ldem_16.tif` (LOLA, 16 pixels per degree), CGI Moon Kit | NASA's Scientific Visualization Studio, https://svs.gsfc.nasa.gov/4720 |
+| 80 m terrain around mission sites: SLDEM2015 (LOLA + Kaguya, 512 pixels per degree) between 60°S and 60°N; LOLA polar grids `LDEM_60S_60M`, `LDEM_60N_60M` beyond | NASA PDS LOLA node, https://imbrium.mit.edu/DATA/SLDEM2015/ and https://imbrium.mit.edu/DATA/LOLA_GDR/POLAR/ (also linked from NASA GSFC PGDA product 54); exact file per site in `web/public/data/patches/patches.json` |
 | Landing and impact site coordinates | NASA NSSDCA, https://nssdc.gsfc.nasa.gov/planetary/lunar/lunar_artifact_impacts.html (per-site sources in `web/public/data/missions.json`) |
 
 ## References
@@ -88,6 +94,8 @@ regions, elevation and slope.
 - Mazarico, E. et al. (2011), Illumination conditions of the lunar polar regions using LOLA
   topography, Icarus 211, 1066–1081.
 - Barker, M. K. et al. (2023), LOLA south pole high-resolution topography (PGDA product 78).
+- Barker, M. K. et al. (2016), A new lunar digital elevation model from the Lunar Orbiter Laser
+  Altimeter and SELENE Terrain Camera (SLDEM2015), Icarus 273, 346–355.
 - Gläser, P. et al. (2014), Illumination conditions at the lunar south pole using high
   resolution Digital Terrain Models from LOLA, Icarus 243, 78–90.
 - Acton, C. H. (1996), Ancillary data services of NASA's Navigation and Ancillary Information

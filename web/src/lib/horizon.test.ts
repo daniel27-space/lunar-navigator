@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { R2D, spProject } from './geo'
 import { computeHorizon, discVisibleFraction, horizonAt } from './horizon'
-import type { Terrain } from './terrain'
+import { POLAR_FRAME, type Terrain } from './terrain'
 
 const R = 1737400
 
@@ -11,7 +11,7 @@ function synthetic(fn: (x: number, y: number) => number, size = 1024, half = 310
   const h = new Float32Array(size * size)
   for (let r = 0; r < size; r++)
     for (let c = 0; c < size; c++) h[r * size + c] = fn(-half + (c + 0.5) * pixel, half - (r + 0.5) * pixel)
-  return { radiusM: R, levels: [{ size, xMin: -half, xMax: half, yMin: -half, yMax: half, pixel, h }] }
+  return { radiusM: R, levels: [{ size, xMin: -half, xMax: half, yMin: -half, yMax: half, pixel, h }], frame: POLAR_FRAME }
 }
 
 describe('terrain horizon', () => {

@@ -2,7 +2,7 @@
 // terrain reaches. Rays follow great circles on the sphere and elevation angles are computed
 // in 3D, so the curvature of the Moon is included (no flat-map shortcut).
 import { D2R, localFrame, R2D, upVector } from './geo'
-import { sampleXY, type Terrain } from './terrain'
+import { sourceHeight, type HeightSource, type Terrain } from './terrain'
 
 export interface Horizon {
   lat: number
@@ -25,8 +25,12 @@ export interface HorizonOptions {
 const FIRST_STEP_M = 20
 const GROWTH = 0.002
 
+/**
+ * `source` is either one terrain (rays then stop where its data ends) or the full lookup
+ * chain, whose whole-Moon map carries every ray on to the maximum range.
+ */
 export function computeHorizon(
-  t: Terrain,
+  source: Terrain | HeightSource,
   latDeg: number,
   lonDeg: number,
   opts: HorizonOptions = {},
@@ -34,11 +38,11 @@ export function computeHorizon(
   const observerHeightM = opts.observerHeightM ?? 2
   const azStepDeg = opts.azStepDeg ?? 0.5
   const maxRangeM = (opts.maxRangeKm ?? 300) * 1000
-  const R = t.radiusM
+  const src: HeightSource = 'levels' in source ? { terrains: [source], global: null } : source
+  const R = src.terrains.length ? src.terrains[0].radiusM : 1737400
   const up = upVector(latDeg, lonDeg)
   const f = localFrame(latDeg, lonDeg)
-  const rho = 2 * R
-  const ground = sampleXY(t, (rho / (1 - up[2])) * up[1], (rho / (1 - up[2])) * up[0])
+  const ground = sourceHeight(src, up[0], up[1], up[2])
   const rp = R + (Number.isNaN(ground) ? 0 : ground) + observerHeightM
 
   const n = Math.round(360 / azStepDeg)
@@ -65,8 +69,7 @@ export function computeHorizon(
       const dx = up[0] * c + hx * s
       const dy = up[1] * c + hy * s
       const dz = up[2] * c + hz * s
-      const k = rho / (1 - dz)
-      const h = sampleXY(t, k * dy, k * dx)
+      const h = sourceHeight(src, dx, dy, dz)
       if (Number.isNaN(h)) {
         if (seen) break // ran off the edge of the elevation data
         continue
