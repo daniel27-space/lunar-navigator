@@ -37,18 +37,18 @@ const CARDS: { title: string; text: string; img: string; alt: string }[] = [
   },
 ]
 
-const MODES: { id: Mode; title: string; text: string; points: string[] }[] = [
+const MODES: { id: Mode; title: string; text: string; point: string }[] = [
   {
     id: 'explore',
     title: 'Explorer',
     text: 'Fly around, discover places and learn as you go.',
-    points: ['Starts with a one-minute hands-on tour', 'The essentials, in plain language'],
+    point: 'Starts with a one-minute hands-on tour.',
   },
   {
     id: 'plan',
     title: 'Mission planner',
     text: 'Every layer, exact figures and the assumptions behind them.',
-    points: ['Height and slope layers, coordinate entry, export', 'Adjustable sunlight and Earth-link rules'],
+    point: 'Height and slope layers, coordinate entry and export.',
   },
 ]
 
@@ -93,14 +93,12 @@ export function Welcome({ ready }: { ready: boolean }) {
             <p>Same Moon and same data either way. You can switch at any time under Guides and settings.</p>
             <div className="welcome-modes">
               {MODES.map((m) => (
-                <button key={m.id} type="button" onClick={() => choose(m.id)}>
+                // Focus moves to the suggested choice: "Next", which had it, is gone on this card.
+                <button key={m.id} type="button" className={m.id === 'explore' ? 'recommended' : undefined} autoFocus={m.id === 'explore'} onClick={() => choose(m.id)}>
                   <b>{m.title}</b>
                   <span>{m.text}</span>
-                  <ul>
-                    {m.points.map((x) => (
-                      <li key={x}>{x}</li>
-                    ))}
-                  </ul>
+                  <small>{m.point}</small>
+                  {m.id === 'explore' && <small className="caption">Recommended for a first visit</small>}
                 </button>
               ))}
             </div>
@@ -122,8 +120,9 @@ export function Welcome({ ready }: { ready: boolean }) {
           )}
           {card && (
             <>
-              <button type="button" className="btn ghost" onClick={() => setI(last)}>
-                Skip
+              {/* Straight to the Moon in the Explorer view. Held until the data is in, because the guide starts with it. */}
+              <button type="button" className="btn ghost" onClick={() => choose('explore')} disabled={!ready}>
+                Skip to the Moon
               </button>
               <button type="button" className="btn primary" onClick={() => setI(i + 1)} autoFocus>
                 Next

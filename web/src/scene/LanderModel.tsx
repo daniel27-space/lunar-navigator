@@ -13,6 +13,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { earthMaterial, earthOrientation } from './landers/earth'
+import { glowTexture } from './SkyBodies'
 import { makeGround, seedFrom, startViewAz, type Ground, type GroundStyle, type Rest } from './landers/ground'
 import { DISH_DEPTH, wreckLayout, type Wreck, type WreckMat, type WreckPiece } from './landers/wreck'
 
@@ -714,8 +715,8 @@ function Ghost({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const g = group.current
     if (!g) return
-    const body = new THREE.MeshBasicMaterial({ color: GHOST_INK, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide })
-    const line = new THREE.LineBasicMaterial({ color: GHOST_INK, transparent: true, opacity: 0.75 })
+    const body = new THREE.MeshBasicMaterial({ color: GHOST_INK, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide, toneMapped: false })
+    const line = new THREE.LineBasicMaterial({ color: GHOST_INK, transparent: true, opacity: 0.75, toneMapped: false })
     const made: THREE.BufferGeometry[] = []
     const meshes: THREE.Mesh[] = []
     g.traverse((o) => {
@@ -818,6 +819,9 @@ function Scene({ model, fallback, baseUrl, seed, style, wrecked, planned, sky, d
   useEffect(() => () => groundGeo.dispose(), [groundGeo])
   useEffect(() => () => skyline.dispose(), [skyline])
   useEffect(() => () => grain.dispose(), [grain])
+  // This canvas is its own WebGL context, so it needs its own copy of the Sun's glare texture.
+  const sunGlow = useMemo(glowTexture, [])
+  useEffect(() => () => sunGlow.dispose(), [sunGlow])
   // A new light, skyline or body position is one new frame, not a running loop.
   useEffect(() => invalidate(), [sky, invalidate])
   const [skyGroup, setSkyGroup] = useState<THREE.Group | null>(null)
@@ -904,6 +908,13 @@ function Scene({ model, fallback, baseUrl, seed, style, wrecked, planned, sky, d
           <circleGeometry args={[sunDisc.r, 40]} />
           <meshBasicMaterial color="#fff8e0" side={THREE.DoubleSide} toneMapped={false} />
         </mesh>
+        {/* The glare around the Sun, as in the globe view. Depth-tested at the disc's distance, so
+            the skyline hides it with the disc; it is a still picture and nothing moves. */}
+        {sky.sun.up && (
+          <sprite position={sunDisc.p} scale={[sunDisc.r * 22, sunDisc.r * 22, 1]}>
+            <spriteMaterial map={sunGlow} transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+          </sprite>
+        )}
         {/* Earth: a small globe lit from the true Sun direction, so its phase is the real one */}
         <mesh position={earthDisc.p} quaternion={earthTurn} material={earthGlobe}>
           <sphereGeometry args={[earthDisc.r, 48, 32]} />

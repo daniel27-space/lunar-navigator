@@ -5,6 +5,7 @@ import { fmtAngle, fmtCoord, fmtDegrees, fmtDuration, fmtPeriod, fmtElevation, f
 import type { Series } from '../lib/windows'
 import { useAssumptions, useStore } from '../store'
 import { Badge } from './controls'
+import { siteSentence } from './siteSentence'
 import { SiteTimeline } from './Timeline'
 import { WhenToLand } from './WhenToLand'
 import { TIER_NOTE, TIER_SHORT, terrainTag } from './tiers'
@@ -144,6 +145,7 @@ export function SiteCard({ a, active, all }: Props) {
   const pano = panoChoice ?? active
   const [tierShort, rough] = TIER_SHORT[tier]
   const until = (event: string, h: number | null) => (h === null ? `${event} ${fmtDuration(null, WINDOW_DAYS)}` : `${event} in ${fmtDuration(h)}`)
+  const head = siteSentence(summary, WINDOW_DAYS)
   const partial = sunFrac > 0.005 && sunFrac < 0.995
 
   return (
@@ -167,6 +169,10 @@ export function SiteCard({ a, active, all }: Props) {
           {Number.isNaN(slope) ? '' : ` · slope ${fmtSlope(slope)}`}
         </span>
       </header>
+
+      <p className="headline">
+        <b>{head.lead}</b> {head.rest} {head.earth}
+      </p>
 
       <button
           type="button"

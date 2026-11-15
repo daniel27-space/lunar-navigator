@@ -23,6 +23,18 @@ import { isPhone } from './Sheet'
 
 const STATUS_WORD: Record<Mission['status'], string> = { landed: 'Landed', crashed: 'Lost on landing', planned: 'Planned', candidate: 'Candidate site' }
 
+/** The label over a mission's date in the panel's strip of three facts. */
+const WHEN_WORD: Record<Mission['status'], string> = { landed: 'Landed', crashed: 'Lost', planned: 'Planned', candidate: 'Date' }
+/** Facts the panel's header and strip already show, so the list below does not repeat them. */
+const IN_HEADER = new Set(['Landed', 'Impact', 'Planned landing', 'Operator', 'Country'])
+
+/** The date for the strip: a real date as "20 Jul 1969"; a planned one in the words of its own fact ("Not before 2027"). */
+function whenText(m: Mission): string {
+  const planned = m.status === 'planned' ? m.facts?.find(([label]) => label === 'Planned landing')?.[1] : undefined
+  const text = planned ?? fmtMissionDate(m.date_utc).replace(/\s*\(planned\)$/, '')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
 /** How long the scene and panel take to fade out, ms (the same figure as the CSS animation). */
 const LEAVE_MS = 550
 /** The cross-fade starts this long before the approach ends, ms, so the two moves read as one. */
@@ -154,12 +166,6 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
   const [narrow] = useState(isPhone)
   return (
     <div className={leaving ? 'mission-hero leaving' : 'mission-hero'} data-ground={style}>
-      <div className="hero-title">
-        <h2>{m.name}</h2>
-        <p>
-          {m.agency} · {fmtMissionDate(m.date_utc)}
-        </p>
-      </div>
       <LanderView
         key={m.id}
         model={model}
@@ -230,6 +236,8 @@ export function ShowcasePanel({ mission: m, baseUrl }: { mission: Mission; baseU
   const leaving = useStore((s) => s.showcasePhase === 'leaving')
   const [badImage, setBadImage] = useState<string | null>(null)
   const image = m.image && m.image.file !== badImage ? m.image : null
+  // The strip under the name already gives the date and country, and the line under it the operator.
+  const facts = (m.facts ?? []).filter(([label]) => !IN_HEADER.has(label))
   const toSite = (landing: boolean) => {
     if (pin) {
       setActivePin(pin.id)
@@ -239,6 +247,26 @@ export function ShowcasePanel({ mission: m, baseUrl }: { mission: Mission; baseU
   }
   return (
     <aside className={leaving ? 'panel showcase leaving' : 'panel showcase'} aria-label={`${m.name}: mission details`}>
+      {image && (
+        <figure className="showcase-cover">
+          {/* The caption below says what the picture shows, so the picture itself is not read out twice. */}
+          <img src={`${baseUrl}data/${image.file}`} alt={image.caption ? '' : m.name} onError={() => setBadImage(image.file)} />
+          <figcaption>
+            {image.caption && <span>{image.caption}</span>}
+            <span className="credit">
+              Picture:{' '}
+              {image.source_url ? (
+                <a href={image.source_url} target="_blank" rel="noreferrer">
+                  {image.credit ?? 'source'}
+                </a>
+              ) : (
+                (image.credit ?? 'credit not recorded')
+              )}
+              {image.license ? ` · ${image.license}` : ''}
+            </span>
+          </figcaption>
+        </figure>
+      )}
       <header className="panel-head showcase-head">
         <h2>{m.name}</h2>
         <span className="chip">
@@ -249,32 +277,27 @@ export function ShowcasePanel({ mission: m, baseUrl }: { mission: Mission; baseU
           ×
         </button>
         <p className="caption">
-          {m.agency} · {fmtMissionDate(m.date_utc)} · {m.kind}
+          {m.agency} · {m.kind}
         </p>
       </header>
       <div className="panel-body showcase-body">
-        {image && (
-          <figure>
-            <img src={`${baseUrl}data/${image.file}`} alt={image.caption ?? m.name} onError={() => setBadImage(image.file)} />
-            <figcaption>
-              {image.caption && <span>{image.caption}</span>}
-              <span className="credit">
-                Picture:{' '}
-                {image.source_url ? (
-                  <a href={image.source_url} target="_blank" rel="noreferrer">
-                    {image.credit ?? 'source'}
-                  </a>
-                ) : (
-                  (image.credit ?? 'credit not recorded')
-                )}
-                {image.license ? ` · ${image.license}` : ''}
-              </span>
-            </figcaption>
-          </figure>
-        )}
-        {m.facts && m.facts.length > 0 && (
+        <dl className="showcase-stats">
+          <div>
+            <dt>{WHEN_WORD[m.status]}</dt>
+            <dd>{whenText(m)}</dd>
+          </div>
+          <div>
+            <dt>Craft height</dt>
+            <dd>{(m.model ?? defaultModel(m)).height_m} m</dd>
+          </div>
+          <div>
+            <dt>Country</dt>
+            <dd>{m.country}</dd>
+          </div>
+        </dl>
+        {facts.length > 0 && (
           <dl className="facts">
-            {m.facts.slice(0, 6).map(([label, value]) => (
+            {facts.slice(0, 6).map(([label, value]) => (
               <div key={label}>
                 <dt>{label}</dt>
                 <dd>{value}</dd>

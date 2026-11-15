@@ -16,7 +16,7 @@ const EARTH_RADIUS_KM = EARTH_AT_KM * Math.tan((0.95 * 2 * Math.PI) / 180)
 /** The Sun's real radius is 0.27 degrees; its disc is drawn at three times that, plus a glow. */
 const SUN_DISC_KM = SUN_AT_KM * Math.tan((0.27 * 3 * Math.PI) / 180)
 
-function glowTexture(): THREE.Texture {
+export function glowTexture(): THREE.Texture {
   const c = document.createElement('canvas')
   c.width = c.height = 256
   const g = c.getContext('2d')!
