@@ -196,6 +196,9 @@ interface State {
   /** counts each opening of the guide, so opening it again starts it afresh */
   helpSeq: number
   setHelp: (on: boolean) => void
+  /** interface only: the first-run tour's step (0 welcome, 1-5 the actions, 6 the finish), or null when it is not running */
+  tour: number | null
+  setTour: (step: number | null) => void
 }
 
 export interface Replaced {
@@ -355,7 +358,13 @@ export const useStore = create<State>((set, get) => ({
   resetAssumptions: () => set({ criteria: DEFAULT_ASSUMPTIONS.criteria, observerM: DEFAULT_ASSUMPTIONS.observerM }),
   assumeOpen: false,
   setAssumeOpen: (assumeOpen) => set({ assumeOpen }),
-  help: firstVisit(),
+  // A first visit opens with the tour; the start card is what Help (or skipping the tour) shows.
+  help: false,
+  tour: firstVisit() ? 0 : null,
+  setTour: (tour) => {
+    if (tour === null) rememberIntroSeen()
+    set({ tour })
+  },
   helpSeq: 0,
   setHelp: (help) => {
     if (!help) rememberIntroSeen()

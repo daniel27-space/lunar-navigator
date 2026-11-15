@@ -36,6 +36,7 @@ import { ErrorBoundary } from './ui/ErrorBoundary'
 import { FinderPanel } from './ui/FinderPanel'
 import { PRESET_IDS } from './ui/CopyLink'
 import { CRATER_LABEL, Intro } from './ui/Intro'
+import { Tutorial } from './ui/Tutorial'
 import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
 import { ShowcaseHero, ShowcasePanel, usePreloadModel, useShowcaseSequence } from './ui/Showcase'
@@ -621,7 +622,7 @@ export default function App() {
       if (terrainTier(terrain, last.lat, last.lon) !== 'none' || patchIdFor(last.lat, last.lon)) goTo({ kind: 'site', lat: last.lat, lon: last.lon, hM: elevation(last.lat, last.lon) })
       else goTo({ kind: 'globe', lat: last.lat, lon: last.lon })
       // The sites are what was shared: show them rather than the start card (it is not marked as seen).
-      useStore.setState({ help: false })
+      useStore.setState({ help: false, tour: null })
       if (isPhone()) st.setSheet('half')
     } else if (shared.layer === 'finder') st.setTab('find')
     history.replaceState(history.state, '', location.pathname + location.search)
@@ -890,6 +891,16 @@ export default function App() {
 
         {ephem && <TimeBar ephem={ephem} />}
       </div>
+
+      {ephem && terrain && !showcaseId && (
+        <Tutorial
+          onPlan={() => chooseLayer('finder')}
+          onMission={() => {
+            const m = missions.find((x) => x.id === 'apollo-11')
+            if (m) selectMission(m)
+          }}
+        />
+      )}
 
       {hover && (
         <div className="tip" style={{ left: hover.x + 12, top: hover.y + 12 }}>

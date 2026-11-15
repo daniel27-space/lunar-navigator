@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { invalidate, useFrame, useThree } from '@react-three/fiber'
+import { addSlide, sampleCamera, skipSample } from '../lib/tour'
 import { OrbitControls } from '@react-three/drei'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { localFrame, R_KM, sitePosKm, upVector } from '../lib/geo'
@@ -241,6 +242,7 @@ export function Rig({ elevation }: RigProps) {
       // Looking at the whole Moon, north stays up; over the surface, up turns with the ground.
       if (!wholeMoon) camera.up.applyQuaternion(q).normalize()
       camera.lookAt(c.target)
+      addSlide(Math.hypot(dx, dy) / el.clientHeight)
       invalidate()
     }
     const up = (e: PointerEvent) => {
@@ -271,7 +273,7 @@ export function Rig({ elevation }: RigProps) {
   // gone into it, and bring the near clipping distance in as it gets low, so the ground close
   // to the camera is not cut away.
   useFrame(() => {
-    if (move.current) return
+    if (move.current) return skipSample()
     const p = camera.position
     const lat = Math.asin(Math.min(Math.max(p.z / p.length(), -1), 1)) * (180 / Math.PI)
     const lon = Math.atan2(p.y, p.x) * (180 / Math.PI)
@@ -289,6 +291,8 @@ export function Rig({ elevation }: RigProps) {
       cam.updateProjectionMatrix()
       invalidate()
     }
+    // The first-run tour watches what the user does with the camera.
+    if (controls.current) sampleCamera({ pos: p.toArray(), target: controls.current.target.toArray() })
   })
 
   useFrame((_, dt) => {

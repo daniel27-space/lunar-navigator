@@ -3,6 +3,7 @@
 // A card in the sites panel (the phone sheet), never a dialog over the Moon.
 import { useEffect, useRef, useState } from 'react'
 import { assumptionsText } from '../lib/assumptions'
+import { clearProgress } from '../lib/tour'
 import { coarsePointer, rememberIntroSeen, useAssumptions, useStore } from '../store'
 import { Badge } from './controls'
 
@@ -125,6 +126,20 @@ function StartCard({ onRidge, ridgeLabel, onCrater, onPlan }: Props) {
               }}
             >
               Plan a landing
+            </button>
+          </div>
+          <div className="intro-plan">
+            <p className="caption">New here? Learn the controls by using them.</p>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setHelp(false)
+                clearProgress()
+                useStore.getState().setTour(1)
+              }}
+            >
+              Take the 1-minute tour
             </button>
           </div>
           <details className="disclosure">

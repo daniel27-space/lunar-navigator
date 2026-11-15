@@ -2678,3 +2678,241 @@ h2.panel-head {
     height: var(--touch);
   }
 }
+
+/* The first-run tour: a small card over the map, never a dialog. */
+.tour {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--timebar-h) + var(--sp-6));
+  transform: translateX(-50%);
+  z-index: 5;
+  width: min(420px, calc(100vw - 2 * var(--sp-3)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  color: var(--text-2);
+  border-color: var(--border-strong);
+  pointer-events: auto;
+}
+.tour h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+}
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.tour-main {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.tour-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.tour-ask {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-medium);
+  color: var(--text-1);
+}
+.tour-glyph {
+  flex: none;
+  width: 48px;
+  height: 48px;
+}
+.tour-glyph .g-line {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.5;
+}
+.tour-glyph .g-on {
+  fill: var(--accent);
+}
+.tour-glyph .g-dim {
+  fill: var(--text-3);
+}
+.tour-glyph .g-wheel {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.5;
+}
+.tour-glyph.g-sweep,
+.tour-glyph .g-sweep {
+  animation: tour-sweep 1.8s ease-in-out infinite;
+}
+.tour-glyph .g-roll {
+  animation: tour-roll 1.2s ease-in-out infinite;
+}
+.tour-glyph .g-pulse {
+  transform-origin: 24px 24px;
+  animation: tour-pulse 1.4s ease-in-out infinite;
+}
+.tour-glyph .g-ring {
+  transform-origin: 24px 24px;
+  animation: tour-ring 1.4s ease-out infinite;
+}
+.tour-glyph .g-apart-a {
+  animation: tour-apart-a 1.6s ease-in-out infinite;
+}
+.tour-glyph .g-apart-b {
+  animation: tour-apart-b 1.6s ease-in-out infinite;
+}
+@keyframes tour-sweep {
+  0%,
+  100% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+@keyframes tour-roll {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(3px);
+  }
+}
+@keyframes tour-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.7);
+  }
+}
+@keyframes tour-ring {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+@keyframes tour-apart-a {
+  0%,
+  100% {
+    transform: translateX(4px);
+  }
+  50% {
+    transform: translateX(-6px);
+  }
+}
+@keyframes tour-apart-b {
+  0%,
+  100% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+.tour-tick {
+  flex: none;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-full);
+  background: var(--data-ok);
+  position: relative;
+}
+.tour-tick::after {
+  content: '';
+  position: absolute;
+  left: 34%;
+  top: 18%;
+  width: 26%;
+  height: 48%;
+  border: solid var(--scene);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.tour-tick.big {
+  width: 36px;
+  height: 36px;
+  margin: 6px;
+  animation: tour-pop 0.35s ease-out;
+}
+@keyframes tour-pop {
+  0% {
+    transform: scale(0.3);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.tour-meter {
+  height: 3px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+.tour-meter i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.15s linear;
+}
+.tour.done .tour-meter i {
+  background: var(--data-ok);
+}
+.tour-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.tour-dots {
+  display: flex;
+  gap: var(--sp-1);
+  list-style: none;
+  margin-right: auto;
+}
+.tour-dots li {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+}
+.tour-dots li.now {
+  background: var(--text-2);
+}
+.tour-dots li.on {
+  background: var(--data-ok);
+}
+.tour-foot .link:disabled {
+  background: none;
+}
+@media (max-width: 760px) {
+  .tour {
+    bottom: auto;
+    top: calc(var(--header-h) + var(--sp-7));
+    padding: var(--sp-3);
+    gap: var(--sp-2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-glyph *,
+  .tour-glyph,
+  .tour-tick.big {
+    animation: none !important;
+  }
+}
