@@ -702,6 +702,64 @@ function StandingCamera({ heightM, ground, stand, shift, motion, leaving, sky }:
   return null
 }
 
+const GHOST_INK = '#eceef2' // the app's neutral ink, which also marks planned missions on the map
+
+/**
+ * Draws whatever is inside it as a "not there yet" outline: a faint see-through body with its
+ * edges picked out, lit by nothing and casting no shadow, so it reads the same by day and night.
+ */
+function Ghost({ children }: { children: ReactNode }) {
+  const group = useRef<THREE.Group>(null)
+  const invalidate = useThree((s) => s.invalidate)
+  useLayoutEffect(() => {
+    const g = group.current
+    if (!g) return
+    const body = new THREE.MeshBasicMaterial({ color: GHOST_INK, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide })
+    const line = new THREE.LineBasicMaterial({ color: GHOST_INK, transparent: true, opacity: 0.75 })
+    const made: THREE.BufferGeometry[] = []
+    const meshes: THREE.Mesh[] = []
+    g.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh) meshes.push(o as THREE.Mesh)
+    })
+    for (const m of meshes) {
+      m.material = body
+      m.castShadow = false
+      m.receiveShadow = false
+      const edges = new THREE.EdgesGeometry(m.geometry, 25)
+      made.push(edges)
+      m.add(new THREE.LineSegments(edges, line))
+    }
+    invalidate()
+    return () => {
+      for (const e of made) e.dispose()
+      body.dispose()
+      line.dispose()
+    }
+  }, [invalidate])
+  return <group ref={group}>{children}</group>
+}
+
+/** A dashed circle laid on the ground round the target: the landing spot is a plan, and approximate. */
+function LandingRing({ ground, radius }: { ground: Ground; radius: number }) {
+  const dashes = 40
+  const arc = (2 * Math.PI * radius) / dashes
+  return (
+    <>
+      {Array.from({ length: dashes / 2 }, (_, i) => {
+        const a = (i * 2 * 2 * Math.PI) / dashes
+        const x = Math.cos(a) * radius
+        const z = Math.sin(a) * radius
+        return (
+          <mesh key={i} position={[x, ground.height(x, z) + 0.06, z]} rotation={[0, -a, 0]}>
+            <boxGeometry args={[radius * 0.012 + 0.05, 0.04, arc * 0.8]} />
+            <meshBasicMaterial color={GHOST_INK} transparent opacity={0.7} toneMapped={false} />
+          </mesh>
+        )
+      })}
+    </>
+  )
+}
+
 interface SceneProps {
   model: MissionModel
   fallback: Archetype
@@ -709,6 +767,7 @@ interface SceneProps {
   seed: string
   style: GroundStyle
   wrecked: boolean
+  planned: boolean
   sky: SceneSky
   detail: SceneDetail
   stand: React.RefObject<Stand>
@@ -718,14 +777,14 @@ interface SceneProps {
   onState: (s: ModelState) => void
 }
 
-function Scene({ model, fallback, baseUrl, seed, style, wrecked, sky, detail, stand, shift, motion, leaving, onState }: SceneProps) {
+function Scene({ model, fallback, baseUrl, seed, style, wrecked, planned, sky, detail, stand, shift, motion, leaving, onState }: SceneProps) {
   const invalidate = useThree((s) => s.invalidate)
   const h = model.height_m
   const d = DETAIL[detail]
 
   // The craft: a model file when there is one and it loads, otherwise the simplified stand-in.
   // A wreck is always drawn from the stand-in's parts, so no model file is fetched for it.
-  const file = model.kind === 'glb' && !wrecked ? model.file : null
+  const file = model.kind === 'glb' && !wrecked && !planned ? model.file : null
   const [loaded, setLoaded] = useState<{ file: string; object: THREE.Object3D | null } | null>(null)
   useEffect(() => {
     if (!file) return
@@ -854,8 +913,18 @@ function Scene({ model, fallback, baseUrl, seed, style, wrecked, sky, detail, st
       {/* the craft stands (or lies) on the ground at the centre, wherever that ground is */}
       {wreck && <WreckModel wreck={wreck} seed={seed} />}
       <group position={[0, ground.height(0, 0), 0]}>
-        {wreck ? null : state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} rest={ground.rest} /> : null}
+        {wreck ? null : planned ? (
+          // Nothing has landed here yet: the craft is an outline, with no shadow on the ground.
+          <Ghost>
+            <ArchetypeModel archetype={archetype} heightM={h} rest={ground.rest} />
+          </Ghost>
+        ) : state === 'file' && mine?.object ? (
+          <primitive object={mine.object} />
+        ) : state === 'simplified' ? (
+          <ArchetypeModel archetype={archetype} heightM={h} rest={ground.rest} />
+        ) : null}
       </group>
+      {planned && <LandingRing ground={ground} radius={Math.max(h * 1.8, 5)} />}
     </>
   )
 }
@@ -872,6 +941,8 @@ interface Props {
   style: GroundStyle
   /** the craft was lost on landing: draw its wreckage, not the craft */
   wrecked?: boolean
+  /** a mission that has not flown: the craft is drawn as an outline inside a landing ring */
+  planned?: boolean
   sky: SceneSky
   detail: SceneDetail
   /** craft left of centre by this share of the view */
@@ -890,7 +961,7 @@ interface Props {
  * a frame is drawn only when the user drags (look round the craft, raise or lower the camera)
  * or scrolls (closer or further), or when the light changes with the clock.
  */
-export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = false, sky, detail, shift, back, motion, leaving, onState }: Props) {
+export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = false, planned = false, sky, detail, shift, back, motion, leaving, onState }: Props) {
   const h = model.height_m
   const lim = limits(h)
   const stand = useRef<Stand>({ viewAz: startViewAz(sky.sun, sky.earth, seed), eye: 2, dist: Math.min(Math.max(h * back, lim.dist[0]), lim.dist[1]) })
@@ -930,7 +1001,7 @@ export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = fa
           redraw.current = s.invalidate
         }}
       >
-        <Scene model={model} fallback={fallback} baseUrl={baseUrl} seed={seed} style={style} wrecked={wrecked} sky={sky} detail={detail} stand={stand} shift={shift} motion={motion} leaving={leaving} onState={onState} />
+        <Scene model={model} fallback={fallback} baseUrl={baseUrl} seed={seed} style={style} wrecked={wrecked} planned={planned} sky={sky} detail={detail} stand={stand} shift={shift} motion={motion} leaving={leaving} onState={onState} />
       </Canvas>
     </div>
   )

@@ -168,6 +168,7 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
         seed={m.id}
         style={style}
         wrecked={isWrecked(m)}
+        planned={m.status === 'planned'}
         sky={sceneSky}
         detail={quality}
         shift={narrow ? 0 : 0.12}
@@ -187,7 +188,8 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
         </p>
         <p>
           {state === 'loading' && <span role="status">Loading the 3D model…</span>}
-          {state === 'simplified' && !isWrecked(m) && 'Simplified model, not to scale in detail.'}
+          {state === 'simplified' && m.status === 'planned' && 'Planned: nothing has landed here yet. The outline shows the size of the craft at its target area.'}
+          {state === 'simplified' && !isWrecked(m) && m.status !== 'planned' && 'Simplified model, not to scale in detail.'}
           {state === 'simplified' && isWrecked(m) && WRECK_NOTE}
           {restNote(m.id) && <> {restNote(m.id)}</>}
           {state === 'file' && model.kind === 'glb' && (
