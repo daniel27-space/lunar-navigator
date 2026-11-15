@@ -737,7 +737,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-mode={mode} data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'} data-showcase={showcased ? 'on' : 'off'}>
+    <div className="app" data-mode={mode} data-welcome={welcome ? 'on' : 'off'} data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'} data-showcase={showcased ? 'on' : 'off'}>
       <div className="viewport">
         <Canvas
           frameloop="demand"

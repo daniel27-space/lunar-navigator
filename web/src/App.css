@@ -3080,7 +3080,10 @@ h2.panel-head {
   display: grid;
   place-items: center;
   padding: var(--sp-4);
-  background: radial-gradient(120% 90% at 50% 0%, #171a21 0%, var(--scene) 70%);
+  /* The live Moon shows through, blurred and dimmed; the panels are hidden until the welcome ends. */
+  background: rgba(8, 9, 12, 0.55);
+  backdrop-filter: blur(14px) saturate(0.9);
+  -webkit-backdrop-filter: blur(14px) saturate(0.9);
   overflow-y: auto;
 }
 .welcome-card {
@@ -3095,6 +3098,8 @@ h2.panel-head {
 .welcome-art {
   width: 100%;
   aspect-ratio: 3 / 2;
+  height: auto;
+  object-fit: cover;
   border-radius: var(--r-md);
   background: #000;
   animation: welcome-in 0.35s ease-out;
@@ -3162,67 +3167,6 @@ h2.panel-head {
     background: var(--surface-3);
   }
 }
-.w-moon {
-  fill: #8d9099;
-}
-.w-crater {
-  fill: #6c6f78;
-}
-.w-orbit,
-.w-ray,
-.w-leg {
-  fill: none;
-  stroke: var(--text-2);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-.w-ray {
-  stroke: var(--data-sun);
-  stroke-dasharray: 3 6;
-}
-.w-sun {
-  fill: var(--data-sun);
-}
-.w-earth {
-  fill: var(--data-earth);
-}
-.w-ground {
-  fill: #7d8089;
-}
-.w-shadow {
-  fill: #101116;
-}
-.w-cell.h0 {
-  fill: #1b1230;
-}
-.w-cell.h1 {
-  fill: #59197a;
-}
-.w-cell.h2 {
-  fill: #e66633;
-}
-.w-cell.h3 {
-  fill: #fff299;
-}
-.w-pin {
-  stroke: #0b0c0f;
-  stroke-width: 3;
-}
-.w-pin.a {
-  fill: var(--site-a);
-}
-.w-pin.b {
-  fill: var(--site-b);
-}
-.w-pin.c {
-  fill: var(--site-c);
-}
-.w-craft {
-  fill: #c9a94e;
-}
-.w-craft.top {
-  fill: #d6d8de;
-}
 @media (max-width: 760px) {
   .welcome-card {
     padding: var(--sp-4);
@@ -3233,4 +3177,10 @@ h2.panel-head {
 }
 .welcome-load {
   white-space: nowrap;
+}
+
+.app[data-welcome='on'] .chrome,
+.app[data-welcome='on'] .tip,
+.app[data-welcome='on'] .status {
+  visibility: hidden;
 }

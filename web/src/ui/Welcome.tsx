@@ -1,77 +1,39 @@
 // The welcome: four short illustrated cards on what the app is for, then a choice of view.
-// It is shown on every load and covers the app while the terrain downloads, so the first thing
-// a visitor sees is never a half-loaded Moon. The cards say what you can do here; the controls
+// It is shown on every load, over a blurred view of the live Moon, which goes on loading behind
+// it: the blur hides the coarse first seconds, so a visitor never sees a half-loaded Moon. The cards say what you can do here; the controls
 // themselves are taught afterwards by doing (ui/Tutorial.tsx). Borrowed from: game loading
 // screens (a wait is the one moment cards are free), Flight Simulator's first-start choice of
 // assistance, and Kerbal Space Program's modes named for what you do in them.
 // Notes: docs/research/welcome.md.
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore, type Mode } from '../store'
 import { startGuide } from './Tutorial'
 
-const MOON = (
-  <>
-    <circle cx="120" cy="80" r="56" className="w-moon" />
-    <circle cx="100" cy="62" r="11" className="w-crater" />
-    <circle cx="138" cy="96" r="16" className="w-crater" />
-    <circle cx="112" cy="108" r="6" className="w-crater" />
-    <circle cx="146" cy="58" r="5" className="w-crater" />
-  </>
-)
-
-const CARDS: { title: string; text: string; art: ReactNode }[] = [
+// The pictures are captures of this app itself, so each card shows what the visitor is about to get.
+const CARDS: { title: string; text: string; img: string; alt: string }[] = [
   {
     title: 'The real Moon, in 3D',
     text: "Spin it, zoom in to any crater, and fly low over the south pole. The ground is NASA's laser-measured terrain.",
-    art: (
-      <>
-        {MOON}
-        <path d="M40 80a80 30 0 0 0 160 0" className="w-orbit" />
-        <path d="M196 70l5 11 9-8" className="w-orbit" />
-      </>
-    ),
+    img: 'welcome/1.jpg',
+    alt: 'The whole Moon with mission sites marked and the Earth in the distance',
   },
   {
     title: 'See where the Sun shines, and when',
     text: 'Pick any date. Near the pole the Sun skims the horizon, so one ridge is lit for months while the crater beside it never sees daylight.',
-    art: (
-      <>
-        <circle cx="34" cy="92" r="14" className="w-sun" />
-        <path d="M54 92H232" className="w-ray" />
-        <path d="M54 84L232 60" className="w-ray" />
-        <path d="M0 132H70L96 92L118 132H150Q176 150 202 132H240V160H0Z" className="w-ground" />
-        <path d="M118 132H150Q176 150 202 132Z" className="w-shadow" />
-        <circle cx="206" cy="34" r="9" className="w-earth" />
-      </>
-    ),
+    img: 'welcome/2.jpg',
+    alt: 'Long shadows across craters near the south pole',
   },
   {
     title: 'Find the best place to land',
     text: 'Say what a mission needs: sunlight for power, a view of Earth for radio, gentle slopes, ice nearby. The map lights up where the ground fits, and you can compare the best spots side by side.',
-    art: (
-      <>
-        {[0, 1, 2, 3, 4, 5].map((c) =>
-          [0, 1, 2, 3].map((r) => <rect key={`${c}-${r}`} x={36 + c * 28} y={24 + r * 28} width="26" height="26" rx="3" className={`w-cell h${(c * 7 + r * 5 + c * r) % 4}`} />),
-        )}
-        <circle cx="105" cy="65" r="11" className="w-pin a" />
-        <circle cx="161" cy="93" r="11" className="w-pin b" />
-        <circle cx="77" cy="121" r="11" className="w-pin c" />
-      </>
-    ),
+    img: 'welcome/3.jpg',
+    alt: 'Ground that fits a mission lit up in green, with a numbered shortlist',
   },
   {
     title: 'Stand where others landed',
     text: 'Visit the sites of 41 missions, from Apollo 11 to the landers planned next, with the Sun and Earth in the sky where they really were.',
-    art: (
-      <>
-        <circle cx="198" cy="36" r="12" className="w-earth" />
-        <path d="M0 128Q60 112 120 126T240 120V160H0Z" className="w-ground" />
-        <path d="M104 96h32l6 14h-44z" className="w-craft" />
-        <rect x="110" y="78" width="20" height="18" rx="3" className="w-craft top" />
-        <path d="M100 110l-10 16M140 110l10 16M120 110v14" className="w-leg" />
-        <path d="M120 78v-12l10 4" className="w-leg" />
-      </>
-    ),
+    img: 'welcome/4.jpg',
+    alt: 'The Apollo 11 lunar module standing on the surface',
   },
 ]
 
@@ -109,14 +71,16 @@ export function Welcome({ ready }: { ready: boolean }) {
     return () => window.removeEventListener('keydown', key)
   }, [last])
   const card = CARDS[i]
+  // Fetch the other pictures now, so moving to the next card never shows an empty frame.
+  useEffect(() => {
+    for (const c of CARDS) new Image().src = `${import.meta.env.BASE_URL}${c.img}`
+  }, [])
   return (
     <div className="welcome" role="dialog" aria-modal="true" aria-label="Welcome">
       <div className="welcome-card panel-surface">
         {card ? (
           <>
-            <svg viewBox="0 0 240 160" className="welcome-art" aria-hidden="true" key={i}>
-              {card.art}
-            </svg>
+            <img className="welcome-art" src={`${import.meta.env.BASE_URL}${card.img}`} alt={card.alt} width={1200} height={800} key={i} />
             <div className="welcome-text">
               <p className="caption">Lunar Landing Site Navigator</p>
               <h2>{card.title}</h2>

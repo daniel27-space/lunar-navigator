@@ -29,12 +29,12 @@ describe('tour progress', () => {
 
   it('adds up small moves, and a flight in between is not counted', () => {
     sampleCamera(at([5000, 0, 0]))
-    for (let i = 1; i <= 30; i++) sampleCamera(at([5000 * Math.cos((i * Math.PI) / 180), 5000 * Math.sin((i * Math.PI) / 180), 0]))
-    expect(readProgress().turnDeg).toBeCloseTo(30, 4)
+    for (let i = 1; i <= 100; i++) sampleCamera(at([5000 * Math.cos((i * Math.PI) / 180), 5000 * Math.sin((i * Math.PI) / 180), 0]))
+    expect(readProgress().turnDeg).toBeCloseTo(100, 4)
     expect(readProgress().turnDeg).toBeGreaterThan(NEED.turnDeg)
     skipSample()
     sampleCamera(at([0, 0, 9000]))
-    expect(readProgress().turnDeg).toBeCloseTo(30, 4)
+    expect(readProgress().turnDeg).toBeCloseTo(100, 4)
     expect(readProgress().zoom).toBeCloseTo(0, 6)
   })
 

@@ -17,8 +17,11 @@ export interface Progress {
   slide: number
 }
 
-/** How much of each action completes its step: a real try, not an accidental nudge. */
-export const NEED: Progress = { turnDeg: 25, zoom: Math.log(1.25), slide: 0.12 }
+/**
+ * How much of each action completes its step: enough to have got the feel of it, not a first
+ * nudge. A quarter turn, zooming to half or double the distance, and sliding most of a screen.
+ */
+export const NEED: Progress = { turnDeg: 90, zoom: Math.log(2), slide: 0.6 }
 
 const sub = (a: number[], b: number[]) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 const len = (a: number[]) => Math.hypot(a[0], a[1], a[2])

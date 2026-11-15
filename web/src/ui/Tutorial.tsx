@@ -228,7 +228,7 @@ const HINT_AFTER_MS = 8000
 /** How long a finished step's result stays up before the next step. */
 const TICK_MS = 3500
 /** A look-around step moves on once the view has been moved this much (the same units as the camera steps). */
-const LOOKED = 0.35
+const LOOKED = 0.15
 
 function Glyph({ kind, touch }: { kind: Kind; touch: boolean }) {
   if (kind === 'pin')
