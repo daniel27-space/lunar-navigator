@@ -24,7 +24,7 @@ export { ARCHETYPES, type Archetype }
 
 export type MissionModel =
   | { kind: 'glb'; file: string; height_m: number; credit?: string; license?: string; source_url?: string }
-  | { kind: 'archetype'; archetype: string; height_m: number }
+  | { kind: 'archetype'; archetype: string; height_m: number; /** the height is our estimate, not a published figure */ height_estimated?: boolean }
 
 /** Typical heights in metres, used when the data gives no model at all. */
 const TYPICAL_HEIGHT: Record<Archetype, number> = {

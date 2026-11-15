@@ -331,7 +331,8 @@ export function ShowcasePanel({ mission: m, baseUrl }: { mission: Mission; baseU
             <dd>{whenText(m)}</dd>
           </div>
           <div>
-            <dt>Craft height</dt>
+            {/* A height we had to estimate says so; the facts below give the published figure it rests on. */}
+            <dt>{m.model?.kind === 'archetype' && m.model.height_estimated ? 'Craft height (est.)' : 'Craft height'}</dt>
             <dd>{(m.model ?? defaultModel(m)).height_m} m</dd>
           </div>
           <div>

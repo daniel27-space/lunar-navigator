@@ -838,7 +838,8 @@
       ["Operator", "ISRO"],
       ["Time on the surface", "about 12 days of operation (one lunar day)"],
       ["Launch mass", "about 3,900 kg with its propulsion module"],
-      ["Rover", "Pragyan, 26 kg"]
+      ["Rover", "Pragyan, 26 kg"],
+      ["Height", "about 1.7 m standing (estimated); the body is 1.2 m (ISRO)"]
     ],
     "image": {
       "file": "missions/img/chandrayaan-3.jpg",
@@ -850,7 +851,8 @@
     "model": {
       "kind": "archetype",
       "archetype": "small-lander",
-      "height_m": 1.2
+      "height_m": 1.7,
+      "height_estimated": true
     }
   },
   {

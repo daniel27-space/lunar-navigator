@@ -149,6 +149,8 @@ projection and pixel registration, with per-entry overrides in `patches.json`:
     "model": { "kind": "glb", "file": "missions/models/apollo-lm.glb", "height_m": 7.0,
                "credit": "NASA", "license": "...", "source_url": "https://..." }
           or { "kind": "archetype", "archetype": "surveyor", "height_m": 3.0 }
+          (add "height_estimated": true when no source gives the standing height and the
+          figure is our estimate; the panel then labels it "(est.)")
 
 - `facts`: at most six label/value pairs, values as display strings, each traceable to
   `source_url` or the sources listed in `docs/research/mission-media.md`.

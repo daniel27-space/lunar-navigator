@@ -23,7 +23,7 @@ export interface Mission {
   image?: { file: string; caption?: string; credit?: string; license?: string; source_url?: string }
   model?:
     | { kind: 'glb'; file: string; height_m: number; credit?: string; license?: string; source_url?: string }
-    | { kind: 'archetype'; archetype: string; height_m: number }
+    | { kind: 'archetype'; archetype: string; height_m: number; height_estimated?: boolean }
 }
 
 export const STATUS_COLOR: Record<Mission['status'], string> = {
