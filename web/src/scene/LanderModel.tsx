@@ -397,7 +397,8 @@ const ZOOM_S = 0.1
 
 /** How far the user may move the camera: never under the ground, never losing the craft. */
 function limits(h: number) {
-  return { eye: [1, Math.max(4, h * 1.3)] as const, dist: [Math.max(6, h * 2.2), Math.max(18, h * 6)] as const }
+  // A very small craft (Luna 9 is 0.6 m) can be walked up to and looked at from lower down.
+  return { eye: [Math.min(1, Math.max(0.5, h)), Math.max(4, h * 1.3)] as const, dist: [Math.max(Math.min(6, 2 + h * 2), h * 2.2), Math.max(18, h * 6)] as const }
 }
 
 interface CameraProps {
@@ -734,7 +735,7 @@ export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = fa
   const h = model.height_m
   const lim = limits(h)
   const dist0 = Math.min(Math.max(h * back, lim.dist[0]), lim.dist[1])
-  const stand = useRef<Stand>({ viewAz: startViewAz(sky.sun, sky.earth, seed), eye: 2, dist: dist0, distGoal: dist0, spin: 0 })
+  const stand = useRef<Stand>({ viewAz: startViewAz(sky.sun, sky.earth, seed), eye: Math.min(2, Math.max(lim.eye[0], h * 1.6)), dist: dist0, distGoal: dist0, spin: 0 })
   const drag = useRef<{ x: number; y: number; az: number; eye: number; lastX: number; lastT: number; vel: number } | null>(null)
   const redraw = useRef<() => void>(() => {})
   const clamp = (v: number, [lo, hi]: readonly [number, number]) => Math.min(Math.max(v, lo), hi)
