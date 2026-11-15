@@ -327,12 +327,17 @@ function TourCard({ guide, step }: { guide: Guide; step: number }) {
     if (!met || done || !s) return
     setDone(true)
     lookFrom.current = moved(readProgress())
-    if (s.lookAround) return
-    const t = setTimeout(() => go(step + 1), TICK_MS)
-    return () => clearTimeout(t)
-    // `done` is left out on purpose: setting it must not cancel the timer that moves on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [met, s, step])
+  // Once a step is done it stays done and moves on after a pause. The pause hangs on `done`
+  // alone: it used to hang on the step's test, so undoing the action during the pause (dragging
+  // the clock back, say) cancelled the move and the guide sat on "Done" for good.
+  useEffect(() => {
+    if (!done || !s || s.lookAround) return
+    const t = setTimeout(() => go(step + 1), TICK_MS)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done, s, step])
   // Look-around steps: the result stays until the user has moved the view, which says they have
   // read it and started exploring.
   const waiting = done && !!s?.lookAround
