@@ -10,35 +10,35 @@ Singapore Local Event. Built from scratch during the hackathon (14–15 November
 
 Pick any point near the Moon's south pole and any date from 4 January 2024 to 1 November 2035, and see:
 
-- the surface in 3D, lit by the Sun where it really is, with terrain shadows;
-- where the Sun and Earth sit relative to that point's real terrain horizon;
-- whether the point is in sunlight and whether Earth is in view, and how long until that changes;
-- sunlight and Earth-visibility windows over the next 60 days, the longest night and the
-  longest communication outage;
-- **a site finder**: say what the mission needs (slope limit, how much sunlight, how much Earth
+- The surface in 3D, lit by the Sun where it really is, with terrain shadows.
+- Where the Sun and Earth sit relative to that point's real terrain horizon.
+- Whether the point is in sunlight and whether Earth is in view, and how long until that changes.
+- Sunlight and Earth-visibility windows over the next 60 days, the longest night and the
+  longest communication outage.
+- **A site finder**: say what the mission needs (slope limit, how much sunlight, how much Earth
   view, in or near permanent shadow) or pick a goal such as "Ice prospecting", and the map
   shades the ground that qualifies, brightest where it fits best, with a ranked shortlist. With
   your own limits you can also say what matters most (flat ground, sunlight, Earth view), which
-  changes the order of the shortlist;
-- **when to land**: for any pinned site, the next year on one strip, the best landing dates
+  changes the order of the shortlist.
+- **When to land**: for any pinned site, the next year on one strip, the best landing dates
   ranked for a 7, 14 or 30-day stay, and the selected date compared with them. Keep one date
-  as a baseline and the app states what a slip to another date gains and loses;
-- pin a point by typing its latitude and longitude, as well as by clicking the map;
-- **assumptions you can change**: what counts as sunlit (any part, half or all of the Sun's
+  as a baseline and the app states what a slip to another date gains and loses.
+- Pin a point by typing its latitude and longitude, as well as by clicking the map.
+- **Assumptions you can change**: what counts as sunlit (any part, half or all of the Sun's
   disc), how high Earth must be for a radio link, and the height of the panel and antenna.
   Every card, comparison and landing-date ranking follows them, and a marker shows when they
-  are not the defaults;
-- **export and share**: one CSV with the sites, the period, the assumptions, the data used and
+  are not the defaults.
+- **Export and share**: one CSV with the sites, the period, the assumptions, the data used and
   every sunrise, sunset, earthrise and earthset in UTC; and a link that reopens the same sites,
   date and settings. The same link is kept in the address bar as you work, so a reload or a
-  bookmark comes back to your sites;
-- two ways in for a first visit: "Explore" (a sunlit ridge against a permanently shadowed
-  crater floor) and "Plan a landing" (straight to the site finder);
-- **a comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
-  one shared timeline, and one row per measure with the winner marked;
+  bookmark comes back to your sites.
+- Two ways in for a first visit: "Explore" (a sunlit ridge against a permanently shadowed
+  crater floor) and "Plan a landing" (straight to the site finder).
+- **A comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
+  one shared timeline, and one row per measure with the winner marked.
 - 41 past, failed and planned landing sites across the whole Moon, each with detailed terrain
-  around it, so the same analysis works at Apollo 15 or Chang'e 4 as at the pole;
-- **a mission view** for each of them: the camera flies to the site and down to a ground-level
+  around it, so the same analysis works at Apollo 15 or Chang'e 4 as at the pole.
+- **A mission view** for each of them: the camera flies to the site and down to a ground-level
   view of the craft, with the real skyline from the terrain data around it and the Sun and
   Earth where they are in the sky, beside a picture (where a freely licensed one exists), key
   facts and what the mission did.
