@@ -84,9 +84,12 @@ export function WhenToLand({ a, sites }: { a: SiteAnalysis; /** every pinned sit
   const series = useMemo(() => yearSeries(a, anchor), [a.horizon, a.hM, a.ephem, anchor]) // eslint-disable-line react-hooks/exhaustive-deps
   const latestStartMs = useStore((s) => (s.timeRange ? s.timeRange[1] : Infinity))
   const earliestMs = useStore((s) => (s.timeRange ? s.timeRange[0] : -Infinity))
-  const ranked = useMemo(() => rankWindows(series, stay, wants, { latestStartMs, criteria }), [series, stay, wants, latestStartMs, criteria])
-  const everLit = useMemo(() => series.sunFrac.some((_, i) => isSunlit(series, i, criteria)), [series, criteria])
   const hasBaseline = baselineMs !== undefined
+  // With a baseline kept, the question is "what if we slip?", so only dates from the selected
+  // time onward are suggested: a delayed landing cannot be moved to a date that has passed.
+  const earliestStartMs = hasBaseline ? Math.floor(tMs / HOUR) * HOUR : -Infinity
+  const ranked = useMemo(() => rankWindows(series, stay, wants, { latestStartMs, earliestStartMs, criteria }), [series, stay, wants, latestStartMs, earliestStartMs, criteria])
+  const everLit = useMemo(() => series.sunFrac.some((_, i) => isSunlit(series, i, criteria)), [series, criteria])
   // With a baseline kept the grid is Baseline | Selected | best 1 | best 2, so it still fits the card.
   const top = ranked.slice(0, hasBaseline ? 2 : 3).map((r) => r.stats)
   const selected = windowStats(series, tMs, stay, criteria)

@@ -12,7 +12,7 @@ export const PRESET_IDS = PRESETS.map((p) => p.id)
 export function shareUrl(sites: SiteAnalysis[]): string {
   const s = useStore.getState()
   const state = shareStateOf(
-    { sites: sites.map((a) => ({ lat: a.pin.lat, lon: a.pin.lon, label: a.pin.label })), tMs: s.tMs, layer: s.layer, preset: s.preset, assumptions: assumptionsOf(s) },
+    { sites: sites.map((a) => ({ lat: a.pin.lat, lon: a.pin.lon, label: a.pin.label })), tMs: s.tMs, layer: s.layer, preset: s.preset, assumptions: assumptionsOf(s), finder: s.finder, baselines: sites.map((a) => s.baselines[a.pin.id]) },
     PRESET_IDS,
   )
   return `${location.origin}${location.pathname}#${encodeShare(state)}`

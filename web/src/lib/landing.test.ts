@@ -128,5 +128,20 @@ describe('landing times the clock can reach', () => {
     expect(limited.length).toBeGreaterThan(0)
     for (const w of limited) expect(w.stats.startMs).toBeLessThanOrEqual(latest)
   })
-})
 
+  it('never offers a landing before the earliest time allowed, and is unchanged without one', () => {
+    // Lit for the first 10 days, then dark: the best 5-day stays all start in the first days.
+    const lit = Array.from({ length: 40 * 24 }, (_, i) => i < 10 * 24)
+    const s = series(lit)
+    const free = rankWindows(s, 5, { sunHigh: true, earthHigh: true })
+    expect(free[0].stats.startMs).toBe(T0)
+    expect(rankWindows(s, 5, { sunHigh: true, earthHigh: true }, { earliestStartMs: -Infinity })).toEqual(free)
+    const earliest = T0 + 8 * 24 * H
+    const slipped = rankWindows(s, 5, { sunHigh: true, earthHigh: true }, { earliestStartMs: earliest })
+    expect(slipped.length).toBeGreaterThan(0)
+    for (const w of slipped) expect(w.stats.startMs).toBeGreaterThanOrEqual(earliest)
+    // the scoring itself is the same: the stay starting on day 8 gets the score it had before
+    expect(slipped[0].stats.startMs).toBe(earliest)
+    expect(slipped[0].stats.sunShare).toBeCloseTo(2 / 5, 9)
+  })
+})

@@ -664,12 +664,23 @@ export default function App() {
       ...(shared.observerM !== undefined ? { observerM: shared.observerM } : {}),
     })
     if (shared.preset) st.applyPreset(shared.preset)
+    // Custom finder limits come back as they were (this also marks the finder as custom).
+    if (shared.finder) st.setFinder(shared.finder)
     if (shared.tMs !== undefined) {
       const [first, last] = clockRange(ephem)
       st.setTime(Math.min(Math.max(shared.tMs, first), last))
     }
     if (shared.layer) st.setLayer(shared.layer)
-    for (const s of shared.sites) pick(s.lat, s.lon, s.label)
+    shared.sites.forEach((s, i) => {
+      pick(s.lat, s.lon, s.label)
+      // A baseline date kept for this site is kept again, within the dates the clock can reach.
+      const b = shared.baselines?.[i]
+      const id = useStore.getState().activePin
+      if (b !== undefined && id !== null) {
+        const [first, last] = clockRange(ephem)
+        useStore.getState().setBaseline(id, Math.min(Math.max(b, first), last))
+      }
+    })
     const last = shared.sites.at(-1)
     if (last) {
       if (terrainTier(terrain, last.lat, last.lon) !== 'none' || patchIdFor(last.lat, last.lon)) goTo({ kind: 'site', lat: last.lat, lon: last.lon, hM: elevation(last.lat, last.lon) })

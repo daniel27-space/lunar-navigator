@@ -76,4 +76,43 @@ describe('share link', () => {
       expect(decodeShare(hash, PRESETS), hash).toBeNull()
     }
   })
+
+  it('carries custom finder limits and kept baselines, and leaves both out of a default link', () => {
+    const finder = { maxSlopeDeg: 10, sunMin: 0.35, sunMax: 1, sunPrefer: 'high' as const, earthMin: 0.9, earthMax: 1, earthPrefer: 'high' as const, psr: 'outside' as const, maxPsrKm: null }
+    const base = Date.UTC(2026, 10, 15, 5, 49)
+    const sites = full.sites
+    const state = shareStateOf({ sites, tMs: full.tMs!, layer: 'finder', preset: 'custom', assumptions: DEFAULT_ASSUMPTIONS, finder, baselines: [undefined, base, undefined] }, PRESETS)
+    const hash = encodeShare(state)
+    expect(hash).toContain('f=10_35_100_h_90_100_h_o_x')
+    expect(hash).toContain('b1=2026-11-15T05%3A49Z')
+    expect(hash).not.toMatch(/b0=|b2=|goal=/)
+    const back = decodeShare(hash, PRESETS)!
+    expect(back.finder).toEqual(finder)
+    expect(back.baselines).toEqual([undefined, base, undefined])
+    expect(back.sites).toEqual(sites)
+    // a named preset carries no limits, and no baseline means no b key
+    const plain = encodeShare(shareStateOf({ sites, tMs: full.tMs!, layer: 'finder', preset: 'solar', assumptions: DEFAULT_ASSUMPTIONS, finder, baselines: [undefined, undefined, undefined] }, PRESETS))
+    expect(plain).not.toMatch(/(^|&)f=|(^|&)b\d=/)
+    // a shadow distance and the other letters
+    const ice = { ...finder, sunPrefer: 'low' as const, earthPrefer: 'none' as const, psr: 'inside' as const, maxPsrKm: 5 }
+    expect(decodeShare(encodeShare({ sites: [], finder: ice }), PRESETS)!.finder).toEqual(ice)
+  })
+
+  it('ignores malformed finder limits and baselines but keeps the rest', () => {
+    const site = 's=-85.3000%2C31.2000%2CPoint+A'
+    for (const f of ['10_35_100_h_90_100_h_o', '10_35_100_q_90_100_h_o_x', '10_135_100_h_90_100_h_o_x', '10_60_40_h_90_100_h_o_x', 'x', '10,35,100,h,90,100,h,o,x', '1e1_35_100_h_90_100_h_o_x']) {
+      const d = decodeShare(`${site}&f=${f}`, PRESETS)!
+      expect(d.finder).toBeUndefined()
+      expect(d.sites.length).toBe(1)
+    }
+    for (const b of ['yesterday', '2026-11-15', '2026-13-45T99%3A99Z', '<script>']) {
+      const d = decodeShare(`${site}&b0=${b}`, PRESETS)!
+      expect(d.baselines).toBeUndefined()
+      expect(d.sites.length).toBe(1)
+    }
+    // a baseline for a site that is not in the link is dropped
+    expect(decodeShare(`${site}&b2=2026-11-15T05%3A49Z`, PRESETS)!.baselines).toBeUndefined()
+    // limits alone are a usable link
+    expect(decodeShare('f=10_35_100_h_90_100_h_o_x', PRESETS)!.finder!.earthMin).toBe(0.9)
+  })
 })
