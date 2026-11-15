@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, invalidate } from '@react-three/fiber'
+import { invalidate } from '@react-three/fiber'
 import * as THREE from 'three'
 import { fmtDateTime, fmtLat, fmtLon, fmtTick } from './lib/format'
 import { bodyVectors, clockRange, loadEphem, type Ephem } from './lib/ephem'
@@ -23,7 +23,9 @@ import { Globe } from './scene/Globe'
 import { insideDisc, MARKER } from './scene/markers'
 import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
 import { MoonTerrain, preloadOverlays } from './scene/MoonTerrain'
-import { POLE_POSE, Rig } from './scene/Rig'
+import { Rig } from './scene/Rig'
+import { MoonCanvas } from './scene/MoonCanvas'
+import { MovingDetail } from './scene/MovingDetail'
 import { SkyBodies } from './scene/SkyBodies'
 import { SkyCompassChips, SkyCompassDriver } from './scene/SkyCompass'
 import { globalHeightAt } from './lib/globalDem'
@@ -809,12 +811,7 @@ export default function App() {
   return (
     <div className="app" data-mode={mode} data-welcome={welcome ? 'on' : 'off'} data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'} data-showcase={showcased ? 'on' : 'off'}>
       <div className="viewport">
-        <Canvas
-          frameloop="demand"
-          camera={{ position: POLE_POSE.pos, up: POLE_POSE.up, near: 1, far: 30000, fov: 40 }}
-          gl={{ antialias: quality !== 'low', powerPreference: 'high-performance' }}
-          dpr={[1, detail.dpr]}
-        >
+        <MoonCanvas quality={quality}>
           <color attach="background" args={['#000']} />
           <Globe sunDir={sun.dir} cuts={cuts} map={globeMap} relief={globeRelief} segments={detail.globe} onPick={pick} />
           {terrain && (
@@ -828,8 +825,9 @@ export default function App() {
           <PinMarkers elevation={elevation} />
           {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} onPick={(k) => pickCandidates([k])} />}
           <Rig elevation={elevation} />
+          <MovingDetail />
           {bodies && <SkyCompassDriver sun={bodies.sun} earth={bodies.earth} />}
-        </Canvas>
+        </MoonCanvas>
         <SkyCompassChips />
       </div>
 

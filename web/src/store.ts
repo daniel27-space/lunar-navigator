@@ -100,6 +100,9 @@ interface State {
   /** current simulated UTC time, ms since epoch */
   tMs: number
   playing: boolean
+  /** interface only: the 3D view is turning, zooming or flying, so frames are drawn more cheaply (scene/MovingDetail.tsx) */
+  moving: boolean
+  setMoving: (moving: boolean) => void
   /** simulated seconds per real second */
   rate: number
   layer: LayerMode
@@ -239,6 +242,8 @@ let nextId = 1
 export const useStore = create<State>((set, get) => ({
   tMs: Date.now(),
   playing: false,
+  moving: false,
+  setMoving: (moving) => set({ moving }),
   rate: 6 * 3600,
   layer: 'natural',
   quality: initialQuality(),

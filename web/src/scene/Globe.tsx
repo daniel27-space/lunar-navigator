@@ -5,12 +5,15 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { overMarker } from './markers'
+import { sphereHit } from './pickRay'
+import { frameProject } from '../lib/terrain'
 import type { ThreeEvent } from '@react-three/fiber'
 import { latLonOf, R_KM, type Vec3 } from '../lib/geo'
 import {
   applyCuts,
   applyGlobeMap,
   CUT_GLSL,
+  CUT_INSET_KM,
   cutUniforms,
   exposureFor,
   SHADING_GLSL,
@@ -75,6 +78,26 @@ export function Globe({ sunDir, cuts, map, relief, segments, onPick }: Props) {
   material.uniforms.uSun.value.set(sunDir[0], sunDir[1], sunDir[2])
   applyCuts(material.uniforms as never, cuts)
 
+  // On the CPU the globe is a plain sphere (its relief is added when it is drawn), so the
+  // pointer's ray is tested against the sphere itself, not against its triangles. Where a
+  // detailed terrain covers the ground the globe is not drawn, so it is not hit there either.
+  const raycast = useMemo(
+    () =>
+      function (this: THREE.Mesh, rc: THREE.Raycaster, hits: THREE.Intersection[]) {
+        const t = sphereHit(rc.ray.origin, rc.ray.direction, R_KM)
+        if (t === null || t < rc.near || t > rc.far) return
+        const point = rc.ray.at(t, new THREE.Vector3())
+        const u = point.clone().normalize()
+        for (const c of cuts) {
+          const xy = frameProject(c.frame, u.x, u.y, u.z, R_KM)
+          const half = Math.max(c.halfKm - CUT_INSET_KM, 0)
+          if (xy && Math.abs(xy[0]) <= half && Math.abs(xy[1]) <= half) return
+        }
+        hits.push({ distance: t, point, object: this })
+      },
+    [cuts],
+  )
+
   const handleClick = (ev: ThreeEvent<MouseEvent>) => {
     if (ev.delta > 4) return
     if (overMarker(ev.intersections)) return // the click belongs to a marker drawn over this ground
@@ -87,6 +110,7 @@ export function Globe({ sunDir, cuts, map, relief, segments, onPick }: Props) {
     // Exposure is set at draw time, so the globe and the terrain always use the same camera position.
     <mesh
       material={material}
+      raycast={raycast}
       onClick={handleClick}
       frustumCulled={false}
       onBeforeRender={(_r, _s, camera) => {

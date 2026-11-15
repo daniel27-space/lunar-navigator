@@ -8,7 +8,9 @@ import { overMarker } from './markers'
 import { invalidate, useThree, type ThreeEvent } from '@react-three/fiber'
 import { latLonOf, R2D, type Vec3 } from '../lib/geo'
 import { globalHeightAt, type GlobalDem } from '../lib/globalDem'
-import { frameDirection, sampleXY, type Level, type Terrain } from '../lib/terrain'
+import { frameDirection, sampleDir, sampleXY, type Level, type Terrain } from '../lib/terrain'
+import { heightfieldHit } from './pickRay'
+import { useBusy } from './MoonCanvas'
 import type { Detail, LayerMode } from '../store'
 import {
   applyCuts,
@@ -183,7 +185,7 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`
 
-const fragmentShader = (steps: number, growth: number) => /* glsl */ `
+const fragmentShader = (steps: number) => /* glsl */ `
 precision highp float;
 uniform sampler2D uH0;
 uniform sampler2D uH1;
@@ -197,6 +199,8 @@ uniform vec3 uAy;
 uniform vec3 uUp;
 uniform vec3 uSun;    // unit, body-fixed, towards the Sun
 uniform float uSunRad; // angular radius, radians
+uniform int uSteps;    // shadow steps to take this frame (fewer while the view is moving)
+uniform float uGrowth; // how much each step is longer than the last
 uniform int uMode;    // 0 natural, 1 elevation, 2 slope, 3 avg sunlight, 4 avg Earth, 5 PSR, 6 site finder
 uniform sampler2D uOverlay; // 8-bit layer on the L0 grid
 uniform sampler2D uScore;  // site finder: 0 = eliminated, else 1..255 = how well the cell fits
@@ -288,6 +292,7 @@ void main() {
   float t = max(e * 0.75, 0.02);
   vec3 start = p0 + up * 0.003;
   for (int i = 0; i < ${steps}; i++) {
+    if (i >= uSteps) break;
     vec3 q = start + uSun * t;
     float rq = length(q);
     if (rq - uR > 11.0) break;
@@ -295,7 +300,7 @@ void main() {
     if (!inside(uvOf(xy, uExt0), 0.0)) break;
     minA = min(minA, (rq - (uR + hAt(xy))) / t);
     if (minA < -uSunRad) break;
-    t *= ${growth.toFixed(3)};
+    t *= uGrowth;
   }
   float lit = clamp(minA / uSunRad * 0.5 + 0.5, 0.0, 1.0);
   float direct = max(dot(n, uSun), 0.0) * lit;
@@ -388,7 +393,11 @@ interface Props {
   onPick: (lat: number, lon: number) => void
 }
 
+/** Shadow tracing while the view is moving: as many steps, and as long, as the Low setting uses all the time. */
+const MOVING = { steps: 48, growth: 1.2 }
+
 export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, map, relief, overlays, cuts, detail, onPick }: Props) {
+  const moving = useBusy()
   const gl = useThree((s) => s.gl)
   const global = relief ? relief.dem : null
   const grid = overlays ? detail.grid : Math.min(detail.grid, 384)
@@ -401,7 +410,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, m
     return new THREE.ShaderMaterial({
       side: THREE.DoubleSide,
       vertexShader,
-      fragmentShader: fragmentShader(detail.steps, detail.growth),
+      fragmentShader: fragmentShader(detail.steps),
       uniforms: {
         ...shadingUniforms(),
         ...cutUniforms(),
@@ -419,6 +428,8 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, m
         uR: { value: terrain.radiusM / 1000 },
         uSun: { value: new THREE.Vector3(1, 0, 0) },
         uSunRad: { value: 0.00465 },
+        uSteps: { value: detail.steps },
+        uGrowth: { value: detail.growth },
         uMode: { value: 0 },
         uOverlay: { value: blankOverlay },
         uScore: { value: blankOverlay },
@@ -441,6 +452,10 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, m
   applyCuts(material.uniforms as never, cuts ?? [])
   material.uniforms.uSun.value.set(sunDir[0], sunDir[1], sunDir[2])
   material.uniforms.uSunRad.value = sunRad
+  // While the view is moving the shadow is traced in fewer, longer steps (the Low setting's), which
+  // is most of the cost of a frame; at rest it is traced in full.
+  material.uniforms.uSteps.value = moving ? Math.min(detail.steps, MOVING.steps) : detail.steps
+  material.uniforms.uGrowth.value = moving ? Math.max(detail.growth, MOVING.growth) : detail.growth
   // A site patch has no overlay layers: it shows sunlight for those, elevation and slope as usual.
   const shown: LayerMode = overlays || layer === 'elevation' || layer === 'slope' ? layer : 'natural'
   material.uniforms.uMode.value = MODE[shown]
@@ -448,6 +463,18 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, m
   material.uniforms.uOverlay.value = file ? overlayTexture(dataBase, file) : blankOverlay
   material.uniforms.uScore.value = score ? score.tex : blankOverlay
   material.uniforms.uScoreRange.value.set(score ? score.min : 0, score ? score.max : 1)
+
+  // The pointer's ray is tested against the height map itself, not against the mesh's triangles
+  // (see pickRay.ts): far cheaper, and it is the true ground.
+  const raycast = useMemo(() => {
+    const rKm = terrain.radiusM / 1000
+    const heightKm = (x: number, y: number, z: number) => sampleDir(terrain, x, y, z) / 1000
+    return function (this: THREE.Mesh, rc: THREE.Raycaster, hits: THREE.Intersection[]) {
+      const t = heightfieldHit(rc.ray.origin, rc.ray.direction, rKm, heightKm)
+      if (t === null || t < rc.near || t > rc.far) return
+      hits.push({ distance: t, point: rc.ray.at(t, new THREE.Vector3()), object: this })
+    }
+  }, [terrain])
 
   const handleClick = (ev: ThreeEvent<MouseEvent>) => {
     if (ev.delta > 4) return // it was a drag, not a click
@@ -461,6 +488,7 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, m
     <mesh
       geometry={geometry}
       material={material}
+      raycast={raycast}
       onClick={handleClick}
       onBeforeRender={(_r, _s, camera) => {
         material.uniforms.uExpo.value = exposureFor(camera.position, material.uniforms.uSun.value)
