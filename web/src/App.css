@@ -2905,13 +2905,15 @@ body[data-over='marker'] .viewport canvas {
 .tour-tick::after {
   content: '';
   position: absolute;
-  left: 34%;
-  top: 18%;
+  /* Centred on the disc: the box is placed by its middle, then nudged up, because a tick's
+     weight sits in its lower corner once it is turned. */
+  left: 50%;
+  top: 44%;
   width: 26%;
   height: 48%;
   border: solid var(--scene);
   border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 .tour-tick.big {
   width: 36px;
