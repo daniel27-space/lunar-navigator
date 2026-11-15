@@ -223,6 +223,24 @@ export function reverseTurn(target: THREE.Vector3, y: number): boolean {
   return target.length() > 1 && y < 0.5
 }
 
+/** How quickly a wheel zoom catches up and a slide dies away after it is let go, seconds (the time to lose about two thirds). */
+const ZOOM_S = 0.1
+const GLIDE_S = 0.25
+/** How much one unit of wheel movement zooms (a mouse wheel notch is about 100 units, a trackpad sends many small ones). */
+const WHEEL_ZOOM = 0.0008
+const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * The camera's new distance from the point it looks at after zooming by `logStep` (the natural
+ * log of the factor). Looking at the whole Moon the factor acts on the height above the surface,
+ * not on the distance to the centre, so zooming stays fine when close in.
+ */
+export function zoomedDistance(distance: number, wholeMoon: boolean, logStep: number, min: number, max: number): number {
+  const k = Math.exp(logStep)
+  const d = wholeMoon ? R_KM + Math.max(distance - R_KM, 1) * k : distance * k
+  return Math.min(Math.max(d, min), max)
+}
+
 interface RigProps {
   /** elevation in metres above the 1737.4 km sphere at a latitude and longitude */
   elevation?: (lat: number, lon: number) => number
@@ -234,6 +252,10 @@ export function Rig({ elevation }: RigProps) {
   const controls = useRef<OrbitControlsImpl>(null)
   const goal = useStore((s) => s.view)
   const move = useRef<Move | null>(null)
+  // Zoom still to be applied (natural log of the factor): the wheel adds to it and each frame takes a share, so zooming is smooth.
+  const zoomLeft = useRef(0)
+  // A slide that was let go while moving: its speed in screen pixels a second, which dies away.
+  const glide = useRef<{ vx: number; vy: number } | null>(null)
   // The controls read the camera's up only when created, so each move ends by creating new ones.
   const [ctl, setCtl] = useState({ key: 0, target: POLE_TARGET.toArray(), minDistance: 8 })
 
@@ -268,15 +290,26 @@ export function Rig({ elevation }: RigProps) {
   // the surface stays the same however far you go.
   useEffect(() => {
     const el = gl.domElement
-    let last: { x: number; y: number } | null = null
+    let last: { x: number; y: number; t: number; vx: number; vy: number } | null = null
+    // A glide ends by handing the view back to the controls, rebuilt so they orbit about the up direction it ended with.
+    const settle = () => {
+      const c = controls.current
+      if (!glide.current || !c) return
+      glide.current = null
+      const target = c.target.toArray()
+      setCtl((k) => ({ key: k.key + 1, target, minDistance: k.minDistance }))
+    }
+    endGlide.current = settle
     const down = (e: PointerEvent) => {
+      // Any new press stops a glide where it is.
+      settle()
       if (e.button === 0 && controls.current) {
         const box = el.getBoundingClientRect()
         controls.current.reverseHorizontalOrbit = reverseTurn(controls.current.target, (e.clientY - box.top) / box.height)
       }
       if ((e.button !== 1 && e.button !== 2) || move.current || !controls.current) return
       e.preventDefault()
-      last = { x: e.clientX, y: e.clientY }
+      last = { x: e.clientX, y: e.clientY, t: e.timeStamp, vx: 0, vy: 0 }
       el.setPointerCapture(e.pointerId)
       controls.current.enabled = false
     }
@@ -285,7 +318,14 @@ export function Rig({ elevation }: RigProps) {
       if (!last || !c) return
       const dx = e.clientX - last.x
       const dy = e.clientY - last.y
-      last = { x: e.clientX, y: e.clientY }
+      // The speed just now, smoothed, for the glide when the drag is let go.
+      const dt = Math.max(e.timeStamp - last.t, 1) / 1000
+      last = { x: e.clientX, y: e.clientY, t: e.timeStamp, vx: last.vx * 0.5 + (dx / dt) * 0.5, vy: last.vy * 0.5 + (dy / dt) * 0.5 }
+      slideBy.current(dx, dy)
+    }
+    slideBy.current = (dx: number, dy: number) => {
+      const c = controls.current
+      if (!c) return
       const q = surfaceSlide(camera as THREE.PerspectiveCamera, c.target, dx, dy, el.clientHeight)
       const wholeMoon = c.target.length() < 1
       camera.position.applyQuaternion(q)
@@ -299,12 +339,36 @@ export function Rig({ elevation }: RigProps) {
     const up = (e: PointerEvent) => {
       const c = controls.current
       if (!last || !c) return
+      const released = last
       last = null
       if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId)
+      // Let go while still moving: the view glides on and settles, as a left drag does. Held
+      // still first (or reduced motion asked for): it stops where it is.
+      const speed = Math.hypot(released.vx, released.vy)
+      if (e.type === 'pointerup' && e.timeStamp - released.t < 80 && speed > 40 && !reducedMotion()) {
+        const cap = Math.min(1, 3000 / speed)
+        glide.current = { vx: released.vx * cap, vy: released.vy * cap }
+        invalidate()
+        return
+      }
       const target = c.target.toArray()
       // New controls, so they orbit about the up direction the slide ended with.
       setCtl((k) => ({ key: k.key + 1, target, minDistance: k.minDistance }))
     }
+    // The wheel: the controls' own zoom jumps once per notch, so the wheel is taken here and the
+    // zoom is spread over the next few frames. Pinch zoom on a touch screen stays with the controls.
+    const wheel = (e: WheelEvent) => {
+      if (!(e.target instanceof Node) || !el.parentElement?.contains(e.target)) return
+      e.preventDefault()
+      e.stopPropagation()
+      if (move.current || !controls.current) return
+      settle()
+      const px = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1)
+      // A pinch on a trackpad arrives as a wheel with ctrl held, in much smaller amounts.
+      zoomLeft.current += px * (e.ctrlKey ? WHEEL_ZOOM * 8 : WHEEL_ZOOM)
+      invalidate()
+    }
+    window.addEventListener('wheel', wheel, { capture: true, passive: false })
     const noMenu = (e: Event) => e.preventDefault()
     el.addEventListener('pointerdown', down)
     el.addEventListener('pointermove', drag)
@@ -317,8 +381,42 @@ export function Rig({ elevation }: RigProps) {
       el.removeEventListener('pointerup', up)
       el.removeEventListener('pointercancel', up)
       el.removeEventListener('contextmenu', noMenu)
+      window.removeEventListener('wheel', wheel, { capture: true })
     }
   }, [gl, camera])
+
+  const slideBy = useRef<(dx: number, dy: number) => void>(() => {})
+  const endGlide = useRef<() => void>(() => {})
+  // Smooth zoom and the glide after a slide, a share of each per frame.
+  useFrame((_, dt) => {
+    const c = controls.current
+    if (!c || move.current) {
+      zoomLeft.current = 0
+      glide.current = null
+      return
+    }
+    const step = Math.min(dt, 0.05)
+    if (zoomLeft.current !== 0) {
+      const part = reducedMotion() || Math.abs(zoomLeft.current) < 1e-3 ? zoomLeft.current : zoomLeft.current * (1 - Math.exp(-step / ZOOM_S))
+      zoomLeft.current -= part
+      const off = camera.position.clone().sub(c.target)
+      const d = off.length()
+      const next = zoomedDistance(d, c.target.length() < 1, part, c.minDistance, c.maxDistance)
+      // Against a limit there is nothing left to do.
+      if (Math.abs(next - d) < 1e-9) zoomLeft.current = 0
+      camera.position.copy(c.target).add(off.setLength(next))
+      c.update()
+      invalidate()
+    }
+    const g = glide.current
+    if (g) {
+      slideBy.current(g.vx * step, g.vy * step)
+      const k = Math.exp(-step / GLIDE_S)
+      g.vx *= k
+      g.vy *= k
+      if (Math.hypot(g.vx, g.vy) < 15) endGlide.current()
+    }
+  })
 
   // Free roam: after the controls have moved the camera, lift it clear of the ground if it has
   // gone into it, and bring the near clipping distance in as it gets low, so the ground close

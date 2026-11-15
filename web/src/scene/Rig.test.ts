@@ -3,7 +3,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { localFrame, R_KM, sitePosKm } from '../lib/geo'
-import { reverseTurn, aboveGround, CLEARANCE_KM, nearFor, APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt, alongPath, flightSeconds, standSide } from './Rig'
+import { reverseTurn, aboveGround, CLEARANCE_KM, nearFor, APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt, alongPath, flightSeconds, standSide, zoomedDistance } from './Rig'
 
 const cameraAt = (pos: number[], up: number[]) => {
   const c = new THREE.PerspectiveCamera()
@@ -247,5 +247,23 @@ describe('flight pacing and heading', () => {
       // towards the camera, whichever side of the pole it is on
       expect(side.dot(cam.position.clone().sub(site))).toBeGreaterThan(0)
     }
+  })
+})
+
+describe('wheel zoom', () => {
+  it('scales the distance to the point looked at, and many small steps add up to one large one', () => {
+    expect(zoomedDistance(100, false, Math.log(2), 1, 9000)).toBeCloseTo(200, 9)
+    let d = 100
+    for (let i = 0; i < 20; i++) d = zoomedDistance(d, false, Math.log(2) / 20, 1, 9000)
+    expect(d).toBeCloseTo(200, 6)
+  })
+  it('over the whole Moon scales the height above the surface, so it stays fine close in', () => {
+    const near = zoomedDistance(R_KM + 200, true, Math.log(0.5), R_KM + 120, 9000)
+    expect(near).toBeCloseTo(R_KM + 120, 9) // 100 km would be under the floor
+    expect(zoomedDistance(R_KM + 1000, true, Math.log(0.5), R_KM + 120, 9000)).toBeCloseTo(R_KM + 500, 9)
+  })
+  it('stays inside the limits', () => {
+    expect(zoomedDistance(10, false, -5, 8, 9000)).toBe(8)
+    expect(zoomedDistance(8000, false, 5, 8, 9000)).toBe(9000)
   })
 })

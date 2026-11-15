@@ -385,7 +385,15 @@ interface Stand {
   eye: number
   /** distance from the craft, m */
   dist: number
+  /** the distance the wheel has asked for; `dist` eases towards it, so zooming is smooth and not one jump per notch */
+  distGoal: number
+  /** how fast the view is still turning after a drag was let go, degrees a second; it dies away */
+  spin: number
 }
+
+/** How quickly a glide dies away and a zoom catches up, seconds (the time to lose about two thirds). */
+const GLIDE_S = 0.25
+const ZOOM_S = 0.1
 
 /** How far the user may move the camera: never under the ground, never losing the craft. */
 function limits(h: number) {
@@ -429,6 +437,16 @@ function StandingCamera({ heightM, ground, stand, shift, motion, leaving, sky }:
       moving = true
     }
     const s = stand.current
+    // After a drag is let go the view glides on and settles, as the main Moon view does.
+    if (Math.abs(s.spin) > 0.5) {
+      s.viewAz += s.spin * step
+      s.spin *= Math.exp(-step / GLIDE_S)
+      moving = true
+    } else s.spin = 0
+    if (Math.abs(s.distGoal - s.dist) > 0.002) {
+      s.dist += (s.distGoal - s.dist) * (1 - Math.exp(-step / ZOOM_S))
+      moving = true
+    } else s.dist = s.distGoal
     const back = 1 - easeOut(arrive.current)
     const dist = s.dist * (1 + 0.6 * back) * (1 + 0.35 * easeInOut(leave.current))
     const az = (s.viewAz + 180) * D2R
@@ -715,8 +733,9 @@ interface Props {
 export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = false, planned = false, sky, detail, shift, back, motion, leaving, onState }: Props) {
   const h = model.height_m
   const lim = limits(h)
-  const stand = useRef<Stand>({ viewAz: startViewAz(sky.sun, sky.earth, seed), eye: 2, dist: Math.min(Math.max(h * back, lim.dist[0]), lim.dist[1]) })
-  const drag = useRef<{ x: number; y: number; az: number; eye: number } | null>(null)
+  const dist0 = Math.min(Math.max(h * back, lim.dist[0]), lim.dist[1])
+  const stand = useRef<Stand>({ viewAz: startViewAz(sky.sun, sky.earth, seed), eye: 2, dist: dist0, distGoal: dist0, spin: 0 })
+  const drag = useRef<{ x: number; y: number; az: number; eye: number; lastX: number; lastT: number; vel: number } | null>(null)
   const redraw = useRef<() => void>(() => {})
   const clamp = (v: number, [lo, hi]: readonly [number, number]) => Math.min(Math.max(v, lo), hi)
   return (
@@ -726,7 +745,8 @@ export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = fa
       aria-label="The craft seen from the ground. Drag to look around it, scroll to move closer or further."
       onPointerDown={(e) => {
         e.currentTarget.setPointerCapture(e.pointerId)
-        drag.current = { x: e.clientX, y: e.clientY, az: stand.current.viewAz, eye: stand.current.eye }
+        stand.current.spin = 0
+        drag.current = { x: e.clientX, y: e.clientY, az: stand.current.viewAz, eye: stand.current.eye, lastX: e.clientX, lastT: e.timeStamp, vel: 0 }
       }}
       onPointerMove={(e) => {
         const d = drag.current
@@ -734,12 +754,24 @@ export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = fa
         // The craft and the ground near it follow the pointer: dragging right carries the camera round to the left.
         stand.current.viewAz = d.az + (e.clientX - d.x) * 0.35
         stand.current.eye = clamp(d.eye + (e.clientY - d.y) * 0.03, lim.eye)
+        // The turning speed just now, smoothed, for the glide when the drag is let go.
+        const dt = Math.max(e.timeStamp - d.lastT, 1) / 1000
+        d.vel = d.vel * 0.5 + (((e.clientX - d.lastX) * 0.35) / dt) * 0.5
+        d.lastX = e.clientX
+        d.lastT = e.timeStamp
         redraw.current()
       }}
-      onPointerUp={() => (drag.current = null)}
+      onPointerUp={(e) => {
+        const d = drag.current
+        drag.current = null
+        // Let go while still moving: glide on. Held still first, or reduced motion asked for: stop dead.
+        if (d && motion && e.timeStamp - d.lastT < 80) stand.current.spin = Math.min(Math.max(d.vel, -240), 240)
+        redraw.current()
+      }}
       onPointerCancel={() => (drag.current = null)}
       onWheel={(e) => {
-        stand.current.dist = clamp(stand.current.dist * Math.exp(e.deltaY * 0.001), lim.dist)
+        stand.current.distGoal = clamp(stand.current.distGoal * Math.exp(e.deltaY * 0.001), lim.dist)
+        if (!motion) stand.current.dist = stand.current.distGoal
         redraw.current()
       }}
     >
