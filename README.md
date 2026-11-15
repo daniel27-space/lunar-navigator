@@ -171,6 +171,13 @@ Code and documentation in this repository were written with AI assistance (Claud
 Anthropic), directed and reviewed by the team. AI-assisted commits carry a
 `Co-Authored-By: Claude` trailer. No AI-generated images, video or audio are used.
 
+## Licence
+
+The project's own code and text are released under the Apache License 2.0 (see [`LICENSE`](LICENSE)).
+Third-party material keeps its own licence: the mission pictures, the NASA Apollo Lunar Module
+model, the Blue Marble image and the NASA and JPL data are credited in the table above and in
+`docs/research/mission-media.md`.
+
 ## Pre-event disclosure
 
 A learning prototype existed before the event in a separate repository. No code or generated
