@@ -28,7 +28,7 @@ export function CopyLink({ sites }: { sites: SiteAnalysis[] }) {
     navigator.clipboard.writeText(url).then(() => setDone('copied'), shown)
   }
   return (
-    <div className="export-row">
+    <div className="export-row share-row">
       <button type="button" className="btn" title="Copy a link that opens these sites at this time, with this layer, mission and assumptions" onClick={copy}>
         Copy link
       </button>

@@ -6,7 +6,7 @@ import { bodyVectors, clockRange, loadEphem, type Ephem } from './lib/ephem'
 import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
 import { latLonOf, sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
 import { SUN_RULES } from './lib/assumptions'
-import { decodeShare } from './lib/shareLink'
+import { decodeShare, encodeShare, shareStateOf } from './lib/shareLink'
 import type { GlobalDem } from './lib/globalDem'
 import {
   frameDirection,
@@ -30,7 +30,7 @@ import { SkyBodies } from './scene/SkyBodies'
 import { SkyCompassChips, SkyCompassDriver } from './scene/SkyCompass'
 import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
-import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
+import { assumptionsOf, DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
 import { AddByCoords } from './ui/AddByCoords'
 import { AssumptionsHead, AssumptionsPanel, useAssumptionsChanged } from './ui/Assumptions'
 import { Compare } from './ui/Compare'
@@ -654,11 +654,12 @@ export default function App() {
   // A shared link (ui/CopyLink.tsx) is restored once, when the data the pins need has loaded.
   // Everything in it has been checked by decodeShare; then the hash is removed from the address.
   const restored = useRef(false)
+  const [restoredLink, setRestoredLink] = useState(false)
   useEffect(() => {
     if (restored.current || !ephem || !terrain || !reliefSettled) return
     restored.current = true
     const shared = decodeShare(location.hash, PRESET_IDS)
-    if (!shared) return
+    if (!shared) return void setRestoredLink(true)
     const st = useStore.getState()
     st.setAssumptions({
       ...(shared.sun ? { minSunFrac: SUN_RULES.find((r) => r.id === shared.sun)!.minSunFrac } : {}),
@@ -691,8 +692,43 @@ export default function App() {
       useStore.setState({ help: false, tour: null, welcome: false })
       if (isPhone()) st.setSheet('half')
     } else if (shared.layer === 'finder') st.setTab('find')
-    history.replaceState(history.state, '', location.pathname + location.search)
+    setRestoredLink(true)
   }, [ephem, terrain, reliefSettled, pick, goTo, elevation, patchIdFor])
+
+  // The pinned sites, the time and the settings are kept in the address as they change (in the
+  // same form as a copied link), so a reload or a bookmark comes back to them. With nothing
+  // pinned the address is left bare. The clock is written when it rests, not while it runs.
+  const baselines = useStore((s) => s.baselines)
+  const finderLimits = useStore((s) => s.finder)
+  const observerM = useStore((s) => s.observerM)
+  const clockRunning = useStore((s) => s.playing)
+  const clockMs = useStore((s) => s.tMs)
+  useEffect(() => {
+    if (!restoredLink || clockRunning) return
+    const timer = setTimeout(() => {
+      const st = useStore.getState()
+      const sorted = [...st.pins].sort((x, y) => x.slot - y.slot)
+      const hash = sorted.length
+        ? encodeShare(
+            shareStateOf(
+              {
+                sites: sorted.map((x) => ({ lat: x.lat, lon: x.lon, label: x.label })),
+                tMs: st.tMs,
+                layer: st.layer,
+                preset: st.preset,
+                assumptions: assumptionsOf(st),
+                finder: st.finder,
+                baselines: sorted.map((x) => st.baselines[x.id]),
+              },
+              PRESET_IDS,
+            ),
+          )
+        : ''
+      const url = location.pathname + location.search + (hash ? `#${hash}` : '')
+      if (url !== location.pathname + location.search + location.hash) history.replaceState(history.state, '', url)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [restoredLink, clockRunning, pins, layer, preset, baselines, finderLimits, criteria, observerM, clockMs])
 
   const pickCandidates = useCallback(
     (ks: Candidate[], fly = true) => later(() => ks.forEach((k) => {

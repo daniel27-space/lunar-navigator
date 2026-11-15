@@ -278,11 +278,14 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             </button>
             <span className="caption">One CSV file: sites, measures, rise and set times, assumptions and data used.</span>
           </div>
-          <CopyLink sites={sites} />
+          {planner && <CopyLink sites={sites} />}
         </div>
       </details>
         </>
       )}
+
+      {/* Sharing is for everyone, so in Explorer the link sits outside the figures. */}
+      {!planner && <CopyLink sites={sites} />}
 
       <details className="disclosure wtl-in-compare" ref={landRef} open={landOpen} onToggle={(e) => setLandOpen(e.currentTarget.open)}>
         <summary>When to land</summary>

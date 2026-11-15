@@ -5,6 +5,7 @@ import { fmtAngle, fmtCoord, fmtDegrees, fmtDuration, fmtPeriod, fmtElevation, f
 import type { Series } from '../lib/windows'
 import { useAssumptions, useStore } from '../store'
 import { Badge } from './controls'
+import { CopyLink } from './CopyLink'
 import { siteSentence } from './siteSentence'
 import { SiteTimeline } from './Timeline'
 import { WhenToLand } from './WhenToLand'
@@ -347,6 +348,13 @@ export function SiteCard({ a, active, all }: Props) {
         </div>
       )}
 
+
+      {/* One site on its own can be shared too (with several, the comparison carries the link). */}
+      {active && (all?.length ?? 1) <= 1 && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <CopyLink sites={[a]} />
+        </div>
+      )}
 
       <details className="note" onClick={(e) => e.stopPropagation()}>
         <summary>

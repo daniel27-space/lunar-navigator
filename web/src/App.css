@@ -3193,7 +3193,7 @@ body[data-over='marker'] .viewport canvas {
 .app[data-mode='explore'] .pro-only,
 .app[data-mode='explore'] .site details.note,
 .app[data-mode='explore'] .now .aside,
-.app[data-mode='explore'] .export-row,
+.app[data-mode='explore'] .export-row:not(.share-row),
 .app[data-mode='explore'] .finder .basis {
   display: none !important;
 }

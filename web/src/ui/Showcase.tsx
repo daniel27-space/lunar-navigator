@@ -10,7 +10,7 @@
 //   leaving  -> the scene dollies back and fades while the camera flies back up
 // `useShowcaseSequence` moves it on. The camera rig reports the end of each move through
 // `arrivedSeq`; any camera request that is not part of the sequence cancels it.
-import { useMemo, useCallback, useEffect, useState } from 'react'
+import { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { fmtDay, fmtMissionDate } from '../lib/format'
 import { defaultModel, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
@@ -67,6 +67,30 @@ export function useShowcaseSequence() {
   useEffect(() => {
     if (phase && phase !== 'request' && viewSeq !== seq) useStore.getState().setShowcase({ showcase: null, showcasePhase: null })
   }, [phase, viewSeq, seq])
+
+  // The browser's Back button closes the mission view, where it used to leave the site. One
+  // history entry is added while the view is up, and taken away again if it is closed another way.
+  const up = phase === 'ground'
+  const entry = useRef(false)
+  useEffect(() => {
+    const onPop = () => {
+      if (!entry.current) return
+      entry.current = false
+      useStore.getState().closeShowcase()
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+  useEffect(() => {
+    if (isPhone()) return // the phone's sheet keeps its own history entry
+    if (up && !entry.current) {
+      history.pushState({ mission: true }, '')
+      entry.current = true
+    } else if (phase === null && entry.current) {
+      entry.current = false
+      history.back()
+    }
+  }, [up, phase])
 
   // On the way in there is no panel yet and so no close button: Escape still calls it off.
   const inbound = phase === 'flight' || phase === 'approach'

@@ -32,6 +32,16 @@ export const DETAIL: Record<Quality, Detail> = {
 /** True on touch-first devices (phones, tablets): chooses the starting detail level and the wording of gestures. */
 export const coarsePointer = () => typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
 
+// The view last chosen, so a reload (which now brings the pinned sites back) comes back in it.
+const MODE_KEY = 'lunar-navigator.mode'
+function initialMode(): Mode {
+  try {
+    return localStorage.getItem(MODE_KEY) === 'explore' ? 'explore' : 'plan'
+  } catch {
+    return 'plan'
+  }
+}
+
 const QUALITY_KEY = 'lunar-navigator.quality'
 function initialQuality(): Quality {
   try {
@@ -376,9 +386,16 @@ export const useStore = create<State>((set, get) => ({
   tour: null,
   welcome: firstVisit(),
   setWelcome: (welcome) => set({ welcome }),
-  mode: 'plan',
+  mode: initialMode(),
   // The Height and Slope layers have no button in Explorer, so neither is left on when switching to it.
-  setMode: (mode) => set((s) => ({ mode, layer: mode === 'explore' && (s.layer === 'elevation' || s.layer === 'slope') ? 'natural' : s.layer })),
+  setMode: (mode) => {
+    try {
+      localStorage.setItem(MODE_KEY, mode)
+    } catch {
+      // storage can be blocked; the choice then lasts for this visit only
+    }
+    set((s) => ({ mode, layer: mode === 'explore' && (s.layer === 'elevation' || s.layer === 'slope') ? 'natural' : s.layer }))
+  },
   setTour: (tour) => {
     if (tour === null) rememberIntroSeen()
     set({ tour })

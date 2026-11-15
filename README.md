@@ -30,7 +30,8 @@ Pick any point near the Moon's south pole and any date from 4 January 2024 to 1 
   are not the defaults;
 - **export and share**: one CSV with the sites, the period, the assumptions, the data used and
   every sunrise, sunset, earthrise and earthset in UTC; and a link that reopens the same sites,
-  date and settings;
+  date and settings. The same link is kept in the address bar as you work, so a reload or a
+  bookmark comes back to your sites;
 - two ways in for a first visit: "Explore" (a sunlit ridge against a permanently shadowed
   crater floor) and "Plan a landing" (straight to the site finder);
 - **a comparison** of two or three pinned sites: a verdict in plain words, the same 60 days on
