@@ -135,7 +135,7 @@ describe('scenarioCsv', () => {
     const head = csv.split('\r\n\r\n')[0].split('\r\n')
     expect(head.every((l) => l.startsWith('# '))).toBe(true)
     expect(head.slice(0, 11)).toEqual([
-      '# Lunar Landing Site Navigator - scenario export',
+      '# Umbra: Lunar Landing Site Navigator - scenario export',
       '# App: https://daniel27-space.github.io/lunar-navigator/',
       '# Exported (UTC): 2026-11-14T14:01:30Z',
       '# Clock time (UTC): 2026-11-14T13:20:00Z',

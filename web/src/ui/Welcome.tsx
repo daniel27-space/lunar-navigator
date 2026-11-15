@@ -88,7 +88,7 @@ export function Welcome({ ready, error }: { ready: boolean; error?: string | nul
           <>
             <img className="welcome-art" src={`${import.meta.env.BASE_URL}${card.img}`} alt={card.alt} width={1200} height={800} key={i} />
             <div className="welcome-text">
-              <p className="caption">Lunar Landing Site Navigator</p>
+              <p className="caption">Umbra · Lunar Landing Site Navigator</p>
               <h2>{card.title}</h2>
               <p>{card.text}</p>
             </div>

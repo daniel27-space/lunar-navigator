@@ -1,6 +1,6 @@
-# Lunar Landing Site Navigator
+# Umbra: Lunar Landing Site Navigator
 
-Entry for the 2026 NASA Space Apps Challenge, challenge
+Umbra is our entry for the 2026 NASA Space Apps Challenge, challenge
 [Lunar Landing Site Navigator](https://www.spaceappschallenge.org/2026/challenges/lunar-landing-site-navigator/).
 Singapore Local Event. Built from scratch during the hackathon (14–15 November 2026).
 

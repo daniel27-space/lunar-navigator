@@ -6,7 +6,7 @@ import { earthRuleText, isDefaultAssumptions, sunRuleText, type Assumptions } fr
 import type { WindowStats } from './landing'
 import { hasComm, isSunlit, summarise, type Criteria, type Series } from './windows'
 
-export const APP_NAME = 'Lunar Landing Site Navigator'
+export const APP_NAME = 'Umbra: Lunar Landing Site Navigator'
 export const APP_URL = 'https://daniel27-space.github.io/lunar-navigator/'
 
 export interface ExportSite {

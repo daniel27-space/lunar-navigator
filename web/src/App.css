@@ -587,6 +587,14 @@
   line-height: var(--lh-lg);
   font-weight: var(--fw-semibold);
   margin-right: var(--sp-2);
+  white-space: nowrap;
+}
+/* The descriptor beside the name: quieter, so "Umbra" is what is read first. */
+.top h1 .app-sub {
+  margin-left: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  color: var(--text-2);
 }
 .menu {
   display: contents;

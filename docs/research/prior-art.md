@@ -1,4 +1,4 @@
-# Prior art and method notes: Lunar Landing Site Navigator
+# Prior art and method notes: Umbra (Lunar Landing Site Navigator)
 
 Researched 2026-11-14, about 25 minutes, web only. Tags: **[V]** read on the source page today; **[S]** seen only in a search-result summary of the source (page itself blocked or not opened); **[U]** not verified today, treat as a lead.
 

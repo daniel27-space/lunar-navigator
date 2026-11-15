@@ -871,8 +871,9 @@ export default function App() {
         {menu && <div className="scrim" onClick={() => setMenu(null)} />}
         <header className="top" onKeyDown={(e) => e.key === 'Escape' && setMenu(null)}>
           <h1>
-            <span className="not-phone">Lunar Landing Site Navigator</span>
-            <span className="phone-only">Lunar Navigator</span>
+            Umbra{' '}
+            {/* The challenge name stays beside it, so the short name explains itself. */}
+            <span className="not-phone app-sub">Lunar Landing Site Navigator</span>
           </h1>
           <button
             className="btn phone-only layers-btn"
