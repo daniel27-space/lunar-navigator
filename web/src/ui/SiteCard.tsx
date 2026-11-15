@@ -200,8 +200,8 @@ export function SiteCard({ a, active, all }: Props) {
             the ground{horizon.observerHeightM === 2 ? ', about the top of a small lander' : ''}. Taller sees over more hills.
           </li>
           <li>
-            <b>What counts:</b> sunlit means {sunRuleText(criteria)}; Earth in view means {earthRuleText(criteria)}. Change these under Assumptions,
-            at the top of this panel.
+            <b>What counts:</b> sunlit means {sunRuleText(criteria)}; Earth in view means {earthRuleText(criteria)}. Change these under Guides and settings,
+            top right.
           </li>
         </ul>
       )}

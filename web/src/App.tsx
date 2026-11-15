@@ -37,6 +37,7 @@ import { FinderPanel } from './ui/FinderPanel'
 import { PRESET_IDS } from './ui/CopyLink'
 import { CRATER_LABEL, Intro } from './ui/Intro'
 import { GUIDES, startGuide, Tutorial } from './ui/Tutorial'
+import { Welcome } from './ui/Welcome'
 import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
 import { ShowcaseHero, ShowcasePanel, usePreloadModel, useShowcaseSequence } from './ui/Showcase'
@@ -205,7 +206,15 @@ function PinMarkers({ elevation }: { elevation: (lat: number, lon: number) => nu
   return (
     <>
       {pins.map((p) => (
-        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={p.id === active ? [0.05, 0.05, 1] : [0.04, 0.04, 1]} renderOrder={6}>
+        <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={p.id === active ? [0.05, 0.05, 1] : [0.04, 0.04, 1]}
+          renderOrder={6}
+          // Clicking a site's badge selects that site (not a new point beside it).
+          onClick={(e) => {
+            if (e.delta > 4) return
+            e.stopPropagation()
+            useStore.getState().setActivePin(p.id)
+          }}
+        >
           <spriteMaterial
             map={maps[p.slot]}
             opacity={p.id === active ? 1 : 0.8}
@@ -242,12 +251,23 @@ function highestNear(t: Terrain, radiusM: number): { lat: number; lon: number } 
 }
 
 /** Numbered markers for the site finder's shortlist. */
-function CandidateMarkers({ candidates, elevation }: { candidates: Candidate[]; elevation: (lat: number, lon: number) => number }) {
+function CandidateMarkers({ candidates, elevation, onPick }: { candidates: Candidate[]; elevation: (lat: number, lon: number) => number; onPick: (k: Candidate) => void }) {
   const maps = useMemo(() => Array.from({ length: 8 }, (_, i) => numberTexture(i + 1)), [])
   return (
     <>
       {candidates.map((k) => (
-        <sprite key={k.rank} position={sitePosKm(k.lat, k.lon, elevation(k.lat, k.lon) + 250)} scale={[0.04, 0.04, 1]} renderOrder={5}>
+        <sprite
+          key={k.rank}
+          position={sitePosKm(k.lat, k.lon, elevation(k.lat, k.lon) + 250)}
+          scale={[0.04, 0.04, 1]}
+          renderOrder={5}
+          // Clicking the numbered marker pins that shortlisted place (not a new point beside it).
+          onClick={(e) => {
+            if (e.delta > 4) return
+            e.stopPropagation()
+            onPick(k)
+          }}
+        >
           <spriteMaterial map={maps[(k.rank - 1) % 8]} sizeAttenuation={false} depthTest={false} transparent />
         </sprite>
       ))}
@@ -340,7 +360,6 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
     <aside className={`panel sites ${comparing ? 'wide' : ''}`} aria-label="Pinned sites">
       <Intro {...intro} />
       <AssumptionsHead />
-      <AssumptionsPanel />
       {waiting.map((x) => (
         <p key={x.id} className="empty loading" role="status">
           <i className="dot pulse" /> Loading detailed terrain for {x.label}…
@@ -349,7 +368,7 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
       {sites.length === 0 && waiting.length === 0 && (
         <div className="empty">
           <p>Click or tap the surface, or a mission marker, to pin a point. Pin two or three to compare them.</p>
-          <details className="disclosure" onClick={(e) => e.stopPropagation()}>
+          <details className="disclosure pro-only" onClick={(e) => e.stopPropagation()}>
             <summary>Add a point by coordinates</summary>
             <AddByCoords onAdd={onAddCoords} />
           </details>
@@ -622,7 +641,7 @@ export default function App() {
       if (terrainTier(terrain, last.lat, last.lon) !== 'none' || patchIdFor(last.lat, last.lon)) goTo({ kind: 'site', lat: last.lat, lon: last.lon, hM: elevation(last.lat, last.lon) })
       else goTo({ kind: 'globe', lat: last.lat, lon: last.lon })
       // The sites are what was shared: show them rather than the start card (it is not marked as seen).
-      useStore.setState({ help: false, tour: null })
+      useStore.setState({ help: false, tour: null, welcome: false })
       if (isPhone()) st.setSheet('half')
     } else if (shared.layer === 'finder') st.setTab('find')
     history.replaceState(history.state, '', location.pathname + location.search)
@@ -680,6 +699,9 @@ export default function App() {
   // The start card's examples: a polar crest with long sunlight, and a crater floor the Sun never reaches.
   const examplePlace = patchIndex?.patches.find((x) => x.id === 'connecting-ridge') ?? patchIndex?.patches.find((x) => x.kind === 'crest20')
   const mainMenu = useRef<HTMLDetailsElement>(null)
+  const mode = useStore((s) => s.mode)
+  const setMode = useStore((s) => s.setMode)
+  const welcome = useStore((s) => s.welcome)
   const closeMenus = () => {
     if (mainMenu.current) mainMenu.current.open = false
     setMenu(null)
@@ -715,7 +737,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'} data-showcase={showcased ? 'on' : 'off'}>
+    <div className="app" data-mode={mode} data-sheet={sheet} data-tab={finderOn && tab === 'find' ? 'find' : 'sites'} data-finder={finderOn ? 'on' : 'off'} data-showcase={showcased ? 'on' : 'off'}>
       <div className="viewport">
         <Canvas
           frameloop="demand"
@@ -734,7 +756,7 @@ export default function App() {
           <Missions missions={missions} heights={missionHeights} onSelect={selectMission} onHover={onHover} />
           {bodies && <SkyBodies sun={bodies.sun} earth={bodies.earth} tMs={tMs} />}
           <PinMarkers elevation={elevation} />
-          {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} />}
+          {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} onPick={(k) => pickCandidates([k])} />}
           <Rig elevation={elevation} />
         </Canvas>
       </div>
@@ -848,6 +870,18 @@ export default function App() {
                   ))}
                 </ul>
                 <h3 className="section">Settings</h3>
+                <div className="quality">
+                  <span>View</span>
+                  <Segmented
+                    label="View"
+                    options={[
+                      ['explore', 'Explorer'],
+                      ['plan', 'Mission planner'],
+                    ]}
+                    value={mode}
+                    onChange={setMode}
+                  />
+                </div>
                 <label className="quality">
                   <span>3D detail</span>
                   <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} aria-label="3D detail level">
@@ -856,6 +890,10 @@ export default function App() {
                     <option value="high">High</option>
                   </select>
                 </label>
+                <div className="pro-only menu-assume">
+                  <h3 className="section">Assumptions</h3>
+                  <AssumptionsPanel />
+                </div>
                 <button
                   className="btn ghost help-btn"
                   onClick={() => {
@@ -888,6 +926,7 @@ export default function App() {
               {LAYERS.slice(1).map((l) => (
                 <button
                   key={l.value}
+                  className={l.value === 'elevation' || l.value === 'slope' ? 'pro-only' : undefined}
                   aria-pressed={l.value === layer}
                   aria-label={`${l.full ?? l.label}: ${l.hint}`}
                   title={`${l.full ?? l.label}. ${l.legend}`}
@@ -942,7 +981,8 @@ export default function App() {
         {ephem && <TimeBar ephem={ephem} />}
       </div>
 
-      {ephem && terrain && <Tutorial />}
+      {ephem && terrain && !welcome && <Tutorial />}
+      {welcome && <Welcome ready={!!ephem && !!terrain} />}
 
       {hover && (
         <div className="tip" style={{ left: hover.x + 12, top: hover.y + 12 }}>

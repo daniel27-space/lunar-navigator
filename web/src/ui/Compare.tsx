@@ -58,7 +58,6 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
   const goTo = useStore((s) => s.goTo)
   const [onlyDiff, setOnlyDiff] = useState(false)
   const assumptions = useAssumptions()
-  const setAssumeOpen = useStore((s) => s.setAssumeOpen)
   const playing = useStore((s) => s.playing)
   // The terrain behind the figures: one name when every site uses the same, else one per site.
   const sameTerrain = sites.every((a) => TERRAIN[a.tier] === TERRAIN[sites[0].tier])
@@ -260,10 +259,7 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
             Figures cover {fmtPeriod(sites[0].series.t0Ms, WINDOW_DAYS)}, UTC. Differences under 3 points, 0.5 d or 1° are ignored.
           </p>
           <p className="caption">
-            Assumptions: {assumptionsText(assumptions)}{' '}
-            <button type="button" className="link" onClick={() => setAssumeOpen(true)}>
-              Change
-            </button>
+            Assumptions: {assumptionsText(assumptions)} Change them under Guides and settings.
           </p>
           <div className="export-row">
             <button type="button" className="btn" title="Download these sites, their measures and every rise and set in the period as one CSV file" onClick={() => exportScenario(sites)}>

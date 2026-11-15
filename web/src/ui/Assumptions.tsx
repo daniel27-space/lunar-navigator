@@ -10,33 +10,26 @@ export function useAssumptionsChanged(): boolean {
   return useStore((s) => !isDefaultAssumptions(assumptionsOf(s)))
 }
 
-/** The head row of the sites panel: the marker (only when something is changed) and the button. */
+/** In the sites panel: a marker shown only while a setting is not the default, so changed figures are never unexplained. */
 export function AssumptionsHead() {
-  const open = useStore((s) => s.assumeOpen)
-  const setOpen = useStore((s) => s.setAssumeOpen)
   const changed = useAssumptionsChanged()
+  if (!changed) return null
   return (
-    <div className="sites-head panel-head" data-changed={changed}>
-      {changed && (
-        <span className="assume-flag" role="status">
-          <i className="dot warn" /> Assumptions changed
-        </span>
-      )}
-      <button type="button" className="disc" aria-expanded={open} aria-controls="assumptions" onClick={() => setOpen(!open)}>
-        Assumptions
-      </button>
+    <div className="sites-head panel-head" data-changed="true">
+      <span className="assume-flag" role="status">
+        <i className="dot warn" /> Assumptions changed (Guides and settings)
+      </span>
     </div>
   )
 }
 
+/** The assumptions themselves; they live in the Guides and settings menu. */
 export function AssumptionsPanel() {
-  const open = useStore((s) => s.assumeOpen)
   const criteria = useStore((s) => s.criteria)
   const observerM = useStore((s) => s.observerM)
   const set = useStore((s) => s.setAssumptions)
   const reset = useStore((s) => s.resetAssumptions)
   const changed = useAssumptionsChanged()
-  if (!open) return null
   return (
     <section className="assume" id="assumptions" aria-label="Assumptions">
       <div className="field">

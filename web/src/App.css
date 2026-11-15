@@ -3049,3 +3049,188 @@ h2.panel-head {
     box-shadow: none;
   }
 }
+.tour-look {
+  color: var(--text-1);
+}
+
+/* Explorer view: the same app with the specialist controls put away. */
+.app[data-mode='explore'] .pro-only,
+.app[data-mode='explore'] .site details.note,
+.app[data-mode='explore'] .export-row,
+.app[data-mode='explore'] .finder .basis {
+  display: none !important;
+}
+.mainmenu-body .assume {
+  padding: 0;
+  border: 0;
+}
+.mainmenu-body {
+  max-height: calc(100dvh - var(--header-h) - var(--sp-6));
+  overflow-y: auto;
+}
+.mainmenu-body .quality .seg {
+  display: flex;
+}
+
+/* Welcome cards: cover the app while it loads. */
+.welcome {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+  background: radial-gradient(120% 90% at 50% 0%, #171a21 0%, var(--scene) 70%);
+  overflow-y: auto;
+}
+.welcome-card {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  color: var(--text-2);
+  background: var(--surface-1-solid);
+}
+.welcome-art {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--r-md);
+  background: #000;
+  animation: welcome-in 0.35s ease-out;
+}
+@keyframes welcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.welcome-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-height: 112px;
+}
+.welcome-text h2 {
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+}
+.welcome-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.welcome-load {
+  margin-right: auto;
+  margin-left: var(--sp-2);
+  color: var(--text-3);
+}
+.welcome-foot .tour-dots {
+  margin-right: 0;
+}
+.welcome-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+.app .welcome-modes button {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.welcome-modes b {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  color: var(--text-1);
+}
+.welcome-modes ul {
+  padding-left: var(--sp-4);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
+@media (hover: hover) {
+  .app .welcome-modes button:hover {
+    border-color: var(--accent);
+    background: var(--surface-3);
+  }
+}
+.w-moon {
+  fill: #8d9099;
+}
+.w-crater {
+  fill: #6c6f78;
+}
+.w-orbit,
+.w-ray,
+.w-leg {
+  fill: none;
+  stroke: var(--text-2);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.w-ray {
+  stroke: var(--data-sun);
+  stroke-dasharray: 3 6;
+}
+.w-sun {
+  fill: var(--data-sun);
+}
+.w-earth {
+  fill: var(--data-earth);
+}
+.w-ground {
+  fill: #7d8089;
+}
+.w-shadow {
+  fill: #101116;
+}
+.w-cell.h0 {
+  fill: #1b1230;
+}
+.w-cell.h1 {
+  fill: #59197a;
+}
+.w-cell.h2 {
+  fill: #e66633;
+}
+.w-cell.h3 {
+  fill: #fff299;
+}
+.w-pin {
+  stroke: #0b0c0f;
+  stroke-width: 3;
+}
+.w-pin.a {
+  fill: var(--site-a);
+}
+.w-pin.b {
+  fill: var(--site-b);
+}
+.w-pin.c {
+  fill: var(--site-c);
+}
+.w-craft {
+  fill: #c9a94e;
+}
+.w-craft.top {
+  fill: #d6d8de;
+}
+@media (max-width: 760px) {
+  .welcome-card {
+    padding: var(--sp-4);
+  }
+  .welcome-modes {
+    grid-template-columns: 1fr;
+  }
+}
+.welcome-load {
+  white-space: nowrap;
+}

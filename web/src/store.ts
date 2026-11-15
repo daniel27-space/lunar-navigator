@@ -197,6 +197,11 @@ interface State {
   helpSeq: number
   setHelp: (on: boolean) => void
   /** interface only: the guide that is running and its step (0 is the first-visit welcome; past the last step is the finish), or null */
+  /** interface only: the welcome cards are up (they also cover the app while its data loads) */
+  welcome: boolean
+  setWelcome: (on: boolean) => void
+  mode: Mode
+  setMode: (mode: Mode) => void
   tour: { guide: string; step: number } | null
   setTour: (tour: { guide: string; step: number } | null) => void
 }
@@ -208,6 +213,8 @@ export interface Replaced {
   at: number
 }
 
+// Every load is treated as a new visitor: the welcome cards always show. The one exception is
+// this key, which only the automated screen checks set, so they can go straight to the app.
 const HELP_KEY = 'lunar-navigator.intro-seen'
 function firstVisit(): boolean {
   try {
@@ -217,14 +224,11 @@ function firstVisit(): boolean {
   }
 }
 
-/** Remembers that the start card has been used, so it does not open by itself on the next visit. */
-export function rememberIntroSeen() {
-  try {
-    localStorage.setItem(HELP_KEY, '1')
-  } catch {
-    // not remembered; the card just shows again next visit
-  }
-}
+/** Who the app is laid out for: someone exploring, or someone planning a mission. Same data either way. */
+export type Mode = 'explore' | 'plan'
+
+/** Kept for callers; nothing is remembered between visits any more (every load starts with the welcome). */
+export function rememberIntroSeen() {}
 
 /** The current assumptions as one object (for captions and the export). */
 export const assumptionsOf = (s: { criteria: Criteria; observerM: number }): Assumptions => ({ criteria: s.criteria, observerM: s.observerM })
@@ -360,7 +364,11 @@ export const useStore = create<State>((set, get) => ({
   setAssumeOpen: (assumeOpen) => set({ assumeOpen }),
   // A first visit opens with the tour; the start card is what Help (or skipping the tour) shows.
   help: false,
-  tour: firstVisit() ? { guide: 'basics', step: 0 } : null,
+  tour: null,
+  welcome: firstVisit(),
+  setWelcome: (welcome) => set({ welcome }),
+  mode: 'plan',
+  setMode: (mode) => set({ mode }),
   setTour: (tour) => {
     if (tour === null) rememberIntroSeen()
     set({ tour })

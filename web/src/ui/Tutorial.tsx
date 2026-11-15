@@ -33,6 +33,8 @@ interface Step {
   payoff: string
   /** how far along the step is: 1 or more means done */
   share: (c: Ctx) => number
+  /** after the step is done, stay on its result until the user moves the view (they have read it and are looking around) */
+  lookAround?: boolean
   /** a step that is already done when it begins is passed over without a tick */
   skipIfMet?: boolean
 }
@@ -103,6 +105,7 @@ export const GUIDES: Guide[] = [
         hint: ['The bar is top left, under the title: Sun now, Avg sunlight, Avg Earth view, Shadow, Height, Slope.', 'The button with the stack of sheets, next to the title.'],
         payoff: 'Bright ground is sunlit most of the year, dark ground hardly ever. The colour scale is in the legend.',
         share: (c) => (c.layer === 'sunavg' ? 1 : 0),
+        lookAround: true,
       },
       {
         kind: 'pin',
@@ -110,6 +113,7 @@ export const GUIDES: Guide[] = [
         hint: both('Each layer colours the same map by a different measure.'),
         payoff: 'The marked floors never see the Sun. They are the coldest places, where ice could survive.',
         share: (c) => (c.layer === 'psr' ? 1 : 0),
+        lookAround: true,
       },
       {
         kind: 'pin',
@@ -132,6 +136,7 @@ export const GUIDES: Guide[] = [
         payoff: 'Only ground that meets every limit is coloured, brightest where it fits best.',
         share: (c) => (c.layer === 'finder' ? 1 : 0),
         skipIfMet: true,
+        lookAround: true,
       },
       {
         kind: 'pin',
@@ -220,7 +225,10 @@ export function startGuide(id: string) {
 }
 
 const HINT_AFTER_MS = 8000
-const TICK_MS = 1900
+/** How long a finished step's result stays up before the next step. */
+const TICK_MS = 3500
+/** A look-around step moves on once the view has been moved this much (the same units as the camera steps). */
+const LOOKED = 0.35
 
 function Glyph({ kind, touch }: { kind: Kind; touch: boolean }) {
   if (kind === 'pin')
@@ -312,40 +320,32 @@ function TourCard({ guide, step }: { guide: Guide; step: number }) {
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, s])
+  // Camera movement so far when the step was finished, for steps that wait for a look around.
+  const lookFrom = useRef(0)
+  const moved = (p: Progress) => p.turnDeg / NEED.turnDeg + p.zoom / NEED.zoom + p.slide / NEED.slide
   useEffect(() => {
     if (!met || done || !s) return
     setDone(true)
+    lookFrom.current = moved(readProgress())
+    if (s.lookAround) return
     const t = setTimeout(() => go(step + 1), TICK_MS)
     return () => clearTimeout(t)
     // `done` is left out on purpose: setting it must not cancel the timer that moves on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [met, s, step])
+  // Look-around steps: the result stays until the user has moved the view, which says they have
+  // read it and started exploring.
+  const waiting = done && !!s?.lookAround
+  useEffect(() => {
+    if (!waiting) return
+    const t = setInterval(() => {
+      if (moved(readProgress()) - lookFrom.current >= LOOKED) go(step + 1)
+    }, 200)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting, step])
 
   const end = () => setTour(null)
-
-  if (step === 0)
-    return (
-      <section className="tour panel-surface" aria-label="Welcome">
-        <h2>Where would you land on the Moon?</h2>
-        <p>A lander needs sunlight for power and a view of Earth for radio. Near the south pole the hills decide both. This shows them for any place and date.</p>
-        <div className="tour-actions">
-          <button type="button" className="btn primary" onClick={() => startGuide('basics')}>
-            Show me how (1 minute)
-          </button>
-          <button
-            type="button"
-            className="btn ghost"
-            onClick={() => {
-              end()
-              // The start card stays available: two examples and the way into planning.
-              useStore.getState().setHelp(true)
-            }}
-          >
-            Skip the tour
-          </button>
-        </div>
-      </section>
-    )
 
   if (!s) {
     const next = GUIDES[GUIDES.findIndex((g) => g.id === guide.id) + 1]
@@ -377,6 +377,7 @@ function TourCard({ guide, step }: { guide: Guide; step: number }) {
         <div className="tour-text" role="status" aria-live="polite">
           <p className="tour-ask">{done ? 'Done.' : s.ask[which]}</p>
           <p className="caption">{done ? s.payoff : late ? s.hint[which] : '\u00a0'}</p>
+          {waiting && <p className="caption tour-look">Have a look around the map. The guide carries on when you move the view.</p>}
         </div>
       </div>
       <div className="tour-meter" aria-hidden="true">
@@ -391,8 +392,8 @@ function TourCard({ guide, step }: { guide: Guide; step: number }) {
         <span className="caption">
           {step} of {steps.length}
         </span>
-        <button type="button" className="link caption" onClick={() => go(step + 1)} disabled={done}>
-          Skip this step
+        <button type="button" className="link caption" onClick={() => go(step + 1)} disabled={done && !waiting}>
+          {waiting ? 'Continue' : 'Skip this step'}
         </button>
         <button type="button" className="link caption" onClick={end}>
           End guide

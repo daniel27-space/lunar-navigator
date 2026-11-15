@@ -32,6 +32,9 @@ export const STATUS_COLOR: Record<Mission['status'], string> = {
   candidate: '#8e95a1',
 }
 
+/** Width of the unseen disc that takes a marker's clicks, in the same units as a sprite's scale. */
+export const HIT_SCALE = 0.045
+
 function dotTexture(): THREE.Texture {
   const c = document.createElement('canvas')
   c.width = c.height = 64
@@ -66,29 +69,45 @@ export const Missions = memo(function Missions({ missions, heights, onSelect, on
   })
   return (
     <>
-      {missions.map((m, i) => (
-        <sprite
-          key={m.id}
-          ref={(el) => {
-            sprites.current[i] = el
-          }}
-          renderOrder={5}
-          position={sitePosKm(m.lat, m.lon, (heights[i] ?? 0) + 250)}
-          scale={[0.022, 0.022, 1]}
-          onClick={(e) => {
-            if (e.delta > 4) return
-            e.stopPropagation()
-            onSelect(m)
-          }}
-          onPointerOver={(e) => {
-            e.stopPropagation()
-            onHover(m, e.clientX, e.clientY)
-          }}
-          onPointerOut={() => onHover(null, 0, 0)}
-        >
-          <spriteMaterial map={map} color={STATUS_COLOR[m.status]} sizeAttenuation={false} depthTest={false} />
-        </sprite>
-      ))}
+      {missions.map((m, i) => {
+        const at = sitePosKm(m.lat, m.lon, (heights[i] ?? 0) + 250)
+        return (
+          <group key={m.id}>
+            <sprite
+              ref={(el) => {
+                sprites.current[i] = el
+              }}
+              renderOrder={5}
+              position={at}
+              scale={[0.022, 0.022, 1]}
+            >
+              <spriteMaterial map={map} color={STATUS_COLOR[m.status]} sizeAttenuation={false} depthTest={false} />
+            </sprite>
+            {/* The dot is small; what takes the click is an unseen disc about twice its width, so a
+                near miss opens the mission instead of pinning a new point beside it. */}
+            <sprite
+              ref={(el) => {
+                sprites.current[missions.length + i] = el
+              }}
+              position={at}
+              scale={[HIT_SCALE, HIT_SCALE, 1]}
+              onClick={(e) => {
+                if (e.delta > 4 || !e.object.visible) return
+                e.stopPropagation()
+                onSelect(m)
+              }}
+              onPointerOver={(e) => {
+                if (!e.object.visible) return
+                e.stopPropagation()
+                onHover(m, e.clientX, e.clientY)
+              }}
+              onPointerOut={() => onHover(null, 0, 0)}
+            >
+              <spriteMaterial sizeAttenuation={false} depthTest={false} depthWrite={false} transparent opacity={0} />
+            </sprite>
+          </group>
+        )
+      })}
     </>
   )
 })
