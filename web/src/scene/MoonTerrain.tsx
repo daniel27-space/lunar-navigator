@@ -46,7 +46,41 @@ function edgeFade(xKm: number, yKm: number, edgeKm: number, fadeKm: number): num
 const globalAt = (g: GlobalDem, d: Vec3) =>
   globalHeightAt(g, Math.asin(Math.min(1, Math.max(-1, d[2]))) * R2D, Math.atan2(d[1], d[0]) * R2D)
 
-function buildGeometry(t: Terrain, global: GlobalDem | null, GRID: number): THREE.BufferGeometry {
+/**
+ * The height (metres) of the globe as it is actually drawn in a direction. The globe is a
+ * sphere of `segments` whose corners are lifted to the whole-Moon map's height; between corners
+ * its surface is flat, so at Low detail (corners about 28 km apart) it can sit kilometres above
+ * or below the map's own height there. A detailed terrain has to meet that drawn surface at its
+ * edge, or there is a gap to look through. The corner layout is three.js's SphereGeometry: rings
+ * about the y axis, each quad split along the diagonal from its first corner to its last.
+ */
+export function globeMeshHeight(g: GlobalDem, d: Vec3, segments: [number, number]): number {
+  const [W, H] = segments
+  const theta = Math.acos(Math.min(1, Math.max(-1, d[1])))
+  let phi = Math.atan2(d[2], -d[0])
+  if (phi < 0) phi += 2 * Math.PI
+  const u = (phi / (2 * Math.PI)) * W
+  const v = (theta / Math.PI) * H
+  const i = Math.min(Math.floor(u), W - 1)
+  const j = Math.min(Math.floor(v), H - 1)
+  const fu = u - i
+  const fv = v - j
+  const corner = (ci: number, cj: number) => {
+    const ph = (ci / W) * 2 * Math.PI
+    const th = (cj / H) * Math.PI
+    return globalAt(g, [-Math.cos(ph) * Math.sin(th), Math.cos(th), Math.sin(ph) * Math.sin(th)])
+  }
+  const b = corner(i, j)
+  const dd = corner(i + 1, j + 1)
+  if (fu >= fv) {
+    const a = corner(i + 1, j)
+    return b + (a - b) * fu + (dd - a) * fv
+  }
+  const c = corner(i, j + 1)
+  return b + (c - b) * fv + (dd - c) * fu
+}
+
+function buildGeometry(t: Terrain, global: GlobalDem | null, GRID: number, globe: [number, number]): THREE.BufferGeometry {
   const l0 = t.levels[0]
   const fadeKm = fadeKmOf(t)
   const n = GRID + 1
@@ -69,9 +103,11 @@ function buildGeometry(t: Terrain, global: GlobalDem | null, GRID: number): THRE
       let h = sampleXY(t, xs, ys)
       valid[k] = Number.isNaN(h) && !global ? 0 : 1
       if (Number.isNaN(h)) h = hg
-      // Heights ease into the globe's at the edge, so the two surfaces join without a step.
+      // Heights ease into the globe's at the edge, so the two surfaces join without a step. It
+      // is the globe as drawn that they ease into (see globeMeshHeight), not the map behind it.
       const w = edgeFade(x / 1000, y / 1000, edgeKm, fadeKm)
-      const r = rKm + (h * (1 - w) + hg * w) / 1000
+      const drawn = w > 0 && global ? globeMeshHeight(global, d, globe) : hg
+      const r = rKm + (h * (1 - w) + drawn * w) / 1000
       pos[k * 3] = d[0] * r
       pos[k * 3 + 1] = d[1] * r
       pos[k * 3 + 2] = d[2] * r
@@ -401,7 +437,8 @@ export function MoonTerrain({ terrain, sunDir, sunRad, layer, score, dataBase, m
   const gl = useThree((s) => s.gl)
   const global = relief ? relief.dem : null
   const grid = overlays ? detail.grid : Math.min(detail.grid, 384)
-  const geometry = useMemo(() => buildGeometry(terrain, global, grid), [terrain, global, grid])
+  const [globeW, globeH] = detail.globe
+  const geometry = useMemo(() => buildGeometry(terrain, global, grid, [globeW, globeH]), [terrain, global, grid, globeW, globeH])
   const material = useMemo(() => {
     const linear = !!gl.getContext().getExtension('OES_texture_float_linear')
     const l0 = terrain.levels[0]
