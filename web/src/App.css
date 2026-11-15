@@ -2916,3 +2916,136 @@ h2.panel-head {
     animation: none !important;
   }
 }
+
+/* Find a site stands apart from the map layers, which are labelled as a group. */
+@media (min-width: 761px) {
+  .layerbar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    pointer-events: auto;
+  }
+}
+.layerbar .find-btn[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.layerbar .find-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.bar-label {
+  margin-left: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+/* Guides and settings: one menu in the corner. */
+.mainmenu {
+  position: relative;
+  margin-left: auto;
+  pointer-events: auto;
+}
+.mainmenu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.mainmenu > summary::-webkit-details-marker {
+  display: none;
+}
+.mainmenu > summary svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.mainmenu-body {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--sp-2));
+  z-index: 20;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface-1-solid);
+}
+.mainmenu-body .quality {
+  margin: 0;
+  justify-content: space-between;
+}
+.guide-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.app .guide-list button {
+  display: grid;
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+.guide-list small {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
+@media (hover: hover) {
+  .app .guide-list button:hover {
+    background: var(--surface-3);
+  }
+}
+.tour-name {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.app[data-showcase='on'] .tour {
+  z-index: 30;
+}
+.site .card-help {
+  align-self: flex-start;
+}
+@media (max-width: 760px) {
+  .layerbar {
+    align-items: stretch;
+  }
+  .layerbar .seg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-0);
+  }
+  .app .layerbar .find-btn {
+    height: auto;
+    display: grid;
+    justify-content: stretch;
+    gap: 0;
+    padding: var(--sp-2) var(--sp-3);
+    white-space: normal;
+  }
+  .layerbar .find-btn svg {
+    display: none;
+  }
+  .bar-label {
+    margin: var(--sp-2) var(--sp-3) 0;
+  }
+  .mainmenu {
+    margin: 0;
+  }
+  .mainmenu > summary {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .mainmenu-body {
+    position: static;
+    width: auto;
+    margin-top: var(--sp-2);
+    padding: var(--sp-3);
+    box-shadow: none;
+  }
+}

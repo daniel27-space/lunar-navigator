@@ -166,6 +166,46 @@ export function SiteCard({ a, active, all }: Props) {
         </span>
       </header>
 
+      <button
+          type="button"
+          className="disc card-help"
+          aria-expanded={help}
+          onClick={(e) => {
+            e.stopPropagation()
+            setHelp(!help)
+          }}
+        >
+          How to read this card
+        </button>
+      {help && (
+        <ul className="help">
+          <li>
+            <b>Two rows at the top:</b> what is true at the selected time, and how long until it changes.
+          </li>
+          <li>
+            <b>Two bars:</b> the {WINDOW_DAYS} days named above them (the period moves on when the clock leaves it). Yellow means in sunlight, blue means Earth in view, a gap means not. The grey bracket
+            marks the longest night. The white line is the selected time; drag it to move the clock.
+          </li>
+          <li>
+            <b>Four numbers:</b> the share of those {WINDOW_DAYS} days in sunlight and with Earth in view, and the longest unbroken stretch
+            without each.
+          </li>
+          <li>
+            <b>Horizon view:</b> stand on the point and turn a full circle (N, E, S, W). Grey is the ground and hills around you. When the
+            yellow dot (Sun) is above the grey, the point is in sunlight. When the blue dot (Earth) is above it, a radio link to Earth is
+            possible.
+          </li>
+          <li>
+            <b>Observer {horizon.observerHeightM} m:</b> everything is worked out for a solar panel or antenna {horizon.observerHeightM} m above
+            the ground{horizon.observerHeightM === 2 ? ', about the top of a small lander' : ''}. Taller sees over more hills.
+          </li>
+          <li>
+            <b>What counts:</b> sunlit means {sunRuleText(criteria)}; Earth in view means {earthRuleText(criteria)}. Change these under Assumptions,
+            at the top of this panel.
+          </li>
+        </ul>
+      )}
+
       <div className="now">
         <p className={playing ? 'basis live' : 'basis'}>{playing ? 'Now · these two rows follow the clock' : 'At the selected time'}</p>
         <div>
@@ -251,17 +291,6 @@ export function SiteCard({ a, active, all }: Props) {
         >
           Horizon view
         </button>
-        <button
-          type="button"
-          className="disc"
-          aria-expanded={help}
-          onClick={(e) => {
-            e.stopPropagation()
-            setHelp(!help)
-          }}
-        >
-          How to read this
-        </button>
         {missionId && (
           <button
             type="button"
@@ -286,34 +315,6 @@ export function SiteCard({ a, active, all }: Props) {
         </div>
       )}
 
-      {help && (
-        <ul className="help">
-          <li>
-            <b>Two rows at the top:</b> what is true at the selected time, and how long until it changes.
-          </li>
-          <li>
-            <b>Two bars:</b> the {WINDOW_DAYS} days named above them (the period moves on when the clock leaves it). Yellow means in sunlight, blue means Earth in view, a gap means not. The grey bracket
-            marks the longest night. The white line is the selected time; drag it to move the clock.
-          </li>
-          <li>
-            <b>Four numbers:</b> the share of those {WINDOW_DAYS} days in sunlight and with Earth in view, and the longest unbroken stretch
-            without each.
-          </li>
-          <li>
-            <b>Horizon view:</b> stand on the point and turn a full circle (N, E, S, W). Grey is the ground and hills around you. When the
-            yellow dot (Sun) is above the grey, the point is in sunlight. When the blue dot (Earth) is above it, a radio link to Earth is
-            possible.
-          </li>
-          <li>
-            <b>Observer {horizon.observerHeightM} m:</b> everything is worked out for a solar panel or antenna {horizon.observerHeightM} m above
-            the ground{horizon.observerHeightM === 2 ? ', about the top of a small lander' : ''}. Taller sees over more hills.
-          </li>
-          <li>
-            <b>What counts:</b> sunlit means {sunRuleText(criteria)}; Earth in view means {earthRuleText(criteria)}. Change these under Assumptions,
-            at the top of this panel.
-          </li>
-        </ul>
-      )}
 
       <details className="note" onClick={(e) => e.stopPropagation()}>
         <summary>

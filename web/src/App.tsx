@@ -36,7 +36,7 @@ import { ErrorBoundary } from './ui/ErrorBoundary'
 import { FinderPanel } from './ui/FinderPanel'
 import { PRESET_IDS } from './ui/CopyLink'
 import { CRATER_LABEL, Intro } from './ui/Intro'
-import { Tutorial } from './ui/Tutorial'
+import { GUIDES, startGuide, Tutorial } from './ui/Tutorial'
 import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
 import { ShowcaseHero, ShowcasePanel, usePreloadModel, useShowcaseSequence } from './ui/Showcase'
@@ -349,10 +349,10 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
       {sites.length === 0 && waiting.length === 0 && (
         <div className="empty">
           <p>Click or tap the surface, or a mission marker, to pin a point. Pin two or three to compare them.</p>
-          <div className="group">
-            <h3 className="section">Or add a point by coordinates</h3>
+          <details className="disclosure" onClick={(e) => e.stopPropagation()}>
+            <summary>Add a point by coordinates</summary>
             <AddByCoords onAdd={onAddCoords} />
-          </div>
+          </details>
         </div>
       )}
       {sites.length >= 2 && (
@@ -679,6 +679,11 @@ export default function App() {
   }
   // The start card's examples: a polar crest with long sunlight, and a crater floor the Sun never reaches.
   const examplePlace = patchIndex?.patches.find((x) => x.id === 'connecting-ridge') ?? patchIndex?.patches.find((x) => x.kind === 'crest20')
+  const mainMenu = useRef<HTMLDetailsElement>(null)
+  const closeMenus = () => {
+    if (mainMenu.current) mainMenu.current.open = false
+    setMenu(null)
+  }
   const openHelp = () => {
     useStore.getState().setHelp(true)
     setTab('sites')
@@ -817,17 +822,51 @@ export default function App() {
                 </optgroup>
               )}
             </select>
-            <label className="quality">
-              <span>Detail</span>
-              <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} aria-label="3D detail level">
-                <option value="low">Low (phones)</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </label>
-            <button className="btn ghost help-btn" onClick={openHelp} aria-label="Help: what this is for and how to use it">
-              Help
-            </button>
+            <details className="mainmenu" ref={mainMenu}>
+              <summary className="btn" aria-label="Menu: guides, detail and about">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M2 4h12M2 8h12M2 12h12" />
+                </svg>
+                Guides and settings
+              </summary>
+              <div className="mainmenu-body panel-surface">
+                <h3 className="section">Guides: learn by doing</h3>
+                <ul className="guide-list">
+                  {GUIDES.map((g) => (
+                    <li key={g.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          closeMenus()
+                          startGuide(g.id)
+                        }}
+                      >
+                        <b>{g.title}</b>
+                        <small>{g.about}</small>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <h3 className="section">Settings</h3>
+                <label className="quality">
+                  <span>3D detail</span>
+                  <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} aria-label="3D detail level">
+                    <option value="low">Low (phones)</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </label>
+                <button
+                  className="btn ghost help-btn"
+                  onClick={() => {
+                    closeMenus()
+                    openHelp()
+                  }}
+                >
+                  About this app and how it works
+                </button>
+              </div>
+            </details>
             <div className="quality phone-only">
               <span>Speed</span>
               <Segmented label="Playback speed" options={RATES} value={rate} onChange={setRate} />
@@ -835,26 +874,37 @@ export default function App() {
           </div>
 
           <i className="brk" />
-          <div className="layerbar seg" role="group" aria-label="Map layer" data-open={menu === 'layers'}>
-            {LAYERS.map((l) => (
-              <button
-                key={l.value}
-                aria-pressed={l.value === layer}
-                aria-label={`${l.full ?? l.label}: ${l.hint}`}
-                title={`${l.full ?? l.label}. ${l.legend}`}
-                onClick={() => chooseLayer(l.value)}
-              >
-                <span>{l.label}</span>
-                <small>{l.hint}</small>
-                {l.value === layer && l.ramp && (
-                  <span className="ramp">
-                    <span>{l.ends![0]}</span>
-                    <i style={{ background: l.ramp }} />
-                    <span>{l.ends![1]}</span>
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="layerbar" data-open={menu === 'layers'}>
+            <button className="btn find-btn" aria-pressed={layer === 'finder'} title={`${LAYERS[0].label}. ${LAYERS[0].legend}`} onClick={() => chooseLayer(layer === 'finder' ? 'natural' : 'finder')}>
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <circle cx="7" cy="7" r="4.5" />
+                <path d="M10.5 10.5L14 14" />
+              </svg>
+              <span>{LAYERS[0].label}</span>
+              <small>{LAYERS[0].hint}</small>
+            </button>
+            <span className="bar-label">Map layers</span>
+            <div className="seg" role="group" aria-label="Map layer">
+              {LAYERS.slice(1).map((l) => (
+                <button
+                  key={l.value}
+                  aria-pressed={l.value === layer}
+                  aria-label={`${l.full ?? l.label}: ${l.hint}`}
+                  title={`${l.full ?? l.label}. ${l.legend}`}
+                  onClick={() => chooseLayer(l.value)}
+                >
+                  <span>{l.label}</span>
+                  <small>{l.hint}</small>
+                  {l.value === layer && l.ramp && (
+                    <span className="ramp">
+                      <span>{l.ends![0]}</span>
+                      <i style={{ background: l.ramp }} />
+                      <span>{l.ends![1]}</span>
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
@@ -892,15 +942,7 @@ export default function App() {
         {ephem && <TimeBar ephem={ephem} />}
       </div>
 
-      {ephem && terrain && !showcaseId && (
-        <Tutorial
-          onPlan={() => chooseLayer('finder')}
-          onMission={() => {
-            const m = missions.find((x) => x.id === 'apollo-11')
-            if (m) selectMission(m)
-          }}
-        />
-      )}
+      {ephem && terrain && <Tutorial />}
 
       {hover && (
         <div className="tip" style={{ left: hover.x + 12, top: hover.y + 12 }}>

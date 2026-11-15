@@ -3,7 +3,7 @@
 // A card in the sites panel (the phone sheet), never a dialog over the Moon.
 import { useEffect, useRef, useState } from 'react'
 import { assumptionsText } from '../lib/assumptions'
-import { clearProgress } from '../lib/tour'
+import { startGuide } from './Tutorial'
 import { coarsePointer, rememberIntroSeen, useAssumptions, useStore } from '../store'
 import { Badge } from './controls'
 
@@ -30,7 +30,6 @@ export function Intro(props: Props) {
 
 function StartCard({ onRidge, ridgeLabel, onCrater, onPlan }: Props) {
   const setHelp = useStore((s) => s.setHelp)
-  const playing = useStore((s) => s.playing)
   const assumptions = useAssumptions()
   const ridge = useStore((s) => s.pins.find((p) => p.label === ridgeLabel))
   const crater = useStore((s) => s.pins.find((p) => p.label === CRATER_LABEL))
@@ -50,14 +49,6 @@ function StartCard({ onRidge, ridgeLabel, onCrater, onPlan }: Props) {
     if (s.sheet !== 'half') s.setSheet('half')
     f()
   }
-  const play = () => {
-    const s = useStore.getState()
-    if (s.playing) s.setPlaying(false)
-    else {
-      s.setRate(86400)
-      s.setPlaying(true)
-    }
-  }
   const hint =
     ridge && crater
       ? 'Both are pinned: the comparison below sets them side by side. Sunlight and a view of Earth do not always come together.'
@@ -65,48 +56,55 @@ function StartCard({ onRidge, ridgeLabel, onCrater, onPlan }: Props) {
         ? 'A crest with long sunlight. Now try the crater floor next to it.'
         : crater
           ? 'A floor the Sun never reaches, where ice could survive. Now try the ridge.'
-          : playing
-            ? 'One day of Moon time passes each second. Pin a place to see what changes.'
-            : null
+          : null
   return (
     <section className={tried ? 'intro compact' : 'intro'} aria-label="Start here" ref={ref}>
       <header>
-        <h2>{tried ? 'Where would you put a solar lander?' : 'Start here'}</h2>
+        <h2>{tried ? 'Examples' : 'Where would you land on the Moon?'}</h2>
         <button type="button" className="btn ghost icon" aria-label="Close the start card" onClick={() => setHelp(false)}>
           ×
         </button>
       </header>
       {!tried && (
         <>
-          <p>
-            Near the Moon's south pole, hills decide when a lander has sunlight for power and a view of Earth for radio; this shows both for any place
-            and date.
-          </p>
-          <h3 className="intro-q">Where would you put a solar lander?</h3>
+          <p>A lander needs sunlight for power and a view of Earth for radio. Near the Moon's south pole the hills decide both. This shows them for any place and date.</p>
+          <div className="intro-plan first">
+            <p className="caption">New here? Learn the controls by using them.</p>
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                setHelp(false)
+                startGuide('basics')
+              }}
+            >
+              Take the 1-minute tour
+            </button>
+          </div>
         </>
       )}
-      <div className="intro-try" role="group" aria-label="Explore">
-        <button type="button" className="btn" disabled={!onRidge} aria-pressed={!!ridge} onClick={onRidge && act(onRidge)} title="Pin a sunlit crest: the Shackleton-de Gerlache connecting ridge">
-          {ridge ? (
-            <>
-              <Badge slot={ridge.slot} /> Ridge
-            </>
-          ) : (
-            'Try the ridge'
-          )}
-        </button>
-        <button type="button" className="btn" aria-pressed={!!crater} onClick={act(onCrater)} title="Pin a point on the permanently shadowed floor of Shackleton crater">
-          {crater ? (
-            <>
-              <Badge slot={crater.slot} /> Crater
-            </>
-          ) : (
-            'Try the crater'
-          )}
-        </button>
-        <button type="button" className="btn" aria-pressed={playing} onClick={act(play)} title="Run the clock at one day per second">
-          {playing ? 'Pause' : 'Play time'}
-        </button>
+      <div className="intro-plan">
+        <p className="caption">{tried ? 'Pin the other one to compare them.' : 'Or see an example: a sunlit ridge and a crater floor in permanent shadow.'}</p>
+        <div className="intro-try" role="group" aria-label="Examples">
+          <button type="button" className="btn" disabled={!onRidge} aria-pressed={!!ridge} onClick={onRidge && act(onRidge)} title="Pin a sunlit crest: the Shackleton-de Gerlache connecting ridge">
+            {ridge ? (
+              <>
+                <Badge slot={ridge.slot} /> Ridge
+              </>
+            ) : (
+              'Ridge'
+            )}
+          </button>
+          <button type="button" className="btn" aria-pressed={!!crater} onClick={act(onCrater)} title="Pin a point on the permanently shadowed floor of Shackleton crater">
+            {crater ? (
+              <>
+                <Badge slot={crater.slot} /> Crater
+              </>
+            ) : (
+              'Crater'
+            )}
+          </button>
+        </div>
       </div>
       {hint && (
         <p className="caption" role="status">
@@ -116,7 +114,7 @@ function StartCard({ onRidge, ridgeLabel, onCrater, onPlan }: Props) {
       {!tried && (
         <>
           <div className="intro-plan">
-            <p className="caption">Already have mission limits? Rank the ground against them, then compare landing dates.</p>
+            <p className="caption">Have mission limits already? Rank the ground against them.</p>
             <button
               type="button"
               className="btn"
@@ -128,20 +126,7 @@ function StartCard({ onRidge, ridgeLabel, onCrater, onPlan }: Props) {
               Plan a landing
             </button>
           </div>
-          <div className="intro-plan">
-            <p className="caption">New here? Learn the controls by using them.</p>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => {
-                setHelp(false)
-                clearProgress()
-                useStore.getState().setTour(1)
-              }}
-            >
-              Take the 1-minute tour
-            </button>
-          </div>
+          <p className="caption">More guides (map layers, finding a site, comparing, missions) are under Guides and settings, top right.</p>
           <details className="disclosure">
             <summary>How it works</summary>
             <div className="intro-how">
