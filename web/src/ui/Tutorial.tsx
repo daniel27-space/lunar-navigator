@@ -125,7 +125,7 @@ export const GUIDES: Guide[] = [
       {
         kind: 'pin',
         ask: ['Press Find a site, top left.', 'Press the layer button at the top and choose Find a site.'],
-        hint: ['The button with the magnifying glass, left of the Map layers bar.', 'The button with the stack of sheets, next to the title.'],
+        hint: ['The button with the sliders on it, left of the Map layers bar.', 'The button with the stack of sheets, next to the title.'],
         payoff: 'Only ground that meets every limit is coloured, brightest where it fits best.',
         share: (c) => (c.layer === 'finder' ? 1 : 0),
         skipIfMet: true,
@@ -133,8 +133,8 @@ export const GUIDES: Guide[] = [
       },
       {
         kind: 'pin',
-        ask: ['In the finder panel, choose a different mission type or move one of the limits.', 'In the Find tab below, choose a different mission type or move one of the limits.'],
-        hint: both('Solar lander, Base near ice and Long-stay base are ready-made sets of limits. Custom lets you set your own.'),
+        ask: ['In the finder panel, choose a different mission type.', 'In the Find tab below, choose a different mission type.'],
+        hint: both('Solar lander, Ice prospecting and Base near ice are ready-made sets of limits. In the Mission planner mode you can also set your own.'),
         payoff: 'The map and the shortlist are worked out again for the new limits.',
         share: (c) => (c.finder !== c.base.finder ? 1 : 0),
       },

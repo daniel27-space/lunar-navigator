@@ -130,6 +130,8 @@ export function SiteCard({ a, active, all }: Props) {
   // The horizon view follows the active card until the user opens or closes it by hand.
   const [panoChoice, setPanoChoice] = useState<boolean | null>(null)
   const [help, setHelp] = useState(false)
+  // Explorer shows the headline, the two rows and the strip; the figures and the horizon are one press away.
+  const [more, setMore] = useState(false)
   // A spot pinned from the finder's shortlist opens straight on the next question: when to land.
   const fromFinder = useStore((s) => !!s.fromFinder[pin.id])
   const [land, setLand] = useState(fromFinder)
@@ -144,7 +146,7 @@ export function SiteCard({ a, active, all }: Props) {
   const missionId = useStore((s) => s.pinMission[pin.id])
   const startShowcase = useStore((s) => s.startShowcase)
   // In Explorer it starts closed: it is the most technical part of the card.
-  const pano = panoChoice ?? (active && planner)
+  const pano = (planner || more) && (panoChoice ?? (active && planner))
   const [tierShort, rough] = TIER_SHORT[tier]
   const until = (event: string, h: number | null) => (h === null ? `${event} ${fmtDuration(null, WINDOW_DAYS)}` : `${event} in ${fmtDuration(h)}`)
   const head = siteSentence(summary, WINDOW_DAYS)
@@ -246,6 +248,7 @@ export function SiteCard({ a, active, all }: Props) {
         <SiteTimeline sites={[a]} />
       </div>
 
+      {(planner || more) && (
       <div className="stats-block">
         <p className="basis">
           {fmtSpan(series.t0Ms, WINDOW_DAYS)} · {terrainTag(tier)}
@@ -274,6 +277,7 @@ export function SiteCard({ a, active, all }: Props) {
           </div>
         </dl>
       </div>
+      )}
 
       <button
         type="button"
@@ -291,6 +295,20 @@ export function SiteCard({ a, active, all }: Props) {
       {land && <WhenToLand a={a} sites={all} />}
 
       <div className="discs">
+        {!planner && (
+          <button
+            type="button"
+            className="disc"
+            aria-expanded={more}
+            onClick={(e) => {
+              e.stopPropagation()
+              setMore(!more)
+            }}
+          >
+            {more ? 'Less detail' : 'More detail'}
+          </button>
+        )}
+        {(planner || more) && (
         <button
           type="button"
           className="disc"
@@ -303,6 +321,7 @@ export function SiteCard({ a, active, all }: Props) {
         >
           Horizon view
         </button>
+        )}
         {missionId && (
           <button
             type="button"

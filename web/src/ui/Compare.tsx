@@ -59,6 +59,8 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
   const [onlyDiff, setOnlyDiff] = useState(false)
   const assumptions = useAssumptions()
   const playing = useStore((s) => s.playing)
+  const planner = useStore((s) => s.mode === 'plan')
+  const [figures, setFigures] = useState(false)
   // The terrain behind the figures: one name when every site uses the same, else one per site.
   const sameTerrain = sites.every((a) => TERRAIN[a.tier] === TERRAIN[sites[0].tier])
   const terrainUsed = sameTerrain ? terrainTag(sites[0].tier) : `terrain ${sites.map((a) => `${SITE_LETTERS[a.pin.slot]} ${TERRAIN[a.tier]}`).join(', ')}`
@@ -157,6 +159,14 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
         </p>
       </div>
 
+      {/* Explorer reads the verdict and the timeline; the table behind them is one press away. */}
+      {!planner && (
+        <button type="button" className="disc" aria-expanded={figures} onClick={() => setFigures(!figures)}>
+          {figures ? 'Hide the figures' : 'Show the figures'}
+        </button>
+      )}
+      {(planner || figures) && (
+        <>
       <div className="cmp-block">
         <div className="cmp-row cmp-mhead">
           <h3 className="section">Measures</h3>
@@ -271,6 +281,8 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
           <CopyLink sites={sites} />
         </div>
       </details>
+        </>
+      )}
 
       <details className="disclosure wtl-in-compare" ref={landRef} open={landOpen} onToggle={(e) => setLandOpen(e.currentTarget.open)}>
         <summary>When to land</summary>

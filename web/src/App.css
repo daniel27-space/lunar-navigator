@@ -326,6 +326,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
+/* An odd one out at the end takes the whole row, so the grid has no empty cell. */
+.seg.grid2 > button:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
 .seg button {
   flex: 1 1 auto;
   min-height: var(--seg-h);

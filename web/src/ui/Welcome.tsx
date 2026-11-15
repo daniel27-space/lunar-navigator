@@ -41,13 +41,13 @@ const MODES: { id: Mode; title: string; text: string; point: string }[] = [
   {
     id: 'explore',
     title: 'Explorer',
-    text: 'Fly around, discover places and learn as you go.',
+    text: 'Plain words and the essentials. Figures are one press away.',
     point: 'Starts with a one-minute hands-on tour.',
   },
   {
     id: 'plan',
     title: 'Mission planner',
-    text: 'Every layer, exact figures and the assumptions behind them.',
+    text: 'Every control: your own limits, exact figures, export and assumptions.',
     point: 'Height and slope layers, coordinate entry and export.',
   },
 ]

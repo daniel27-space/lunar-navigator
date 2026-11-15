@@ -39,6 +39,7 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
   const preset = useStore((s) => s.preset)
   const set = useStore((s) => s.setFinder)
   const applyPreset = useStore((s) => s.applyPreset)
+  const planner = useStore((s) => s.mode === 'plan')
   const blurb = PRESETS.find((p) => p.id === preset)?.blurb ?? 'Your own limits.'
 
   const limits: [string, number][] = result
@@ -79,16 +80,18 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
             label="Mission preset"
             options={[
               ...PRESETS.map((p) => [p.id, PRESET_LABEL[p.id] ?? p.label, p.label] as const),
-              ['custom', 'Custom', 'Your own limits'] as const,
+              // Custom is offered where its limits can be set; it also stays if it is already in use.
+              ...(planner || preset === 'custom' ? [['custom', 'Custom', 'Your own limits'] as const] : []),
             ]}
             value={preset}
             // Custom keeps the limits as they are and stops them being tied to a preset.
             onChange={(id) => (id === 'custom' ? set({}) : applyPreset(id))}
           />
-          <p className="caption">{preset === 'custom' ? 'Your own limits: set them below.' : blurb}</p>
+          <p className="caption">{preset !== 'custom' ? blurb : planner ? 'Your own limits: set them below.' : 'Your own limits. Change them in the Mission planner mode (Guides and settings).'}</p>
         </div>
 
-        <div className="group">
+        {/* The limits themselves are the planner's: Explorer picks a goal and reads the shortlist. */}
+        <div className="group pro-only">
           <Slider label="Slope at most" text={fmtDegrees(c.maxSlopeDeg)} min={2} max={25} step={1} value={c.maxSlopeDeg} onChange={(v) => upd({ maxSlopeDeg: v })} />
 
           <RangeSlider label="Time in sunlight" text={fmtShareRange(c.sunMin, c.sunMax)} lo={c.sunMin} hi={c.sunMax} onLo={(v) => upd({ sunMin: v })} onHi={(v) => upd({ sunMax: v })} />
@@ -128,7 +131,7 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
         </div>
 
         {preset === 'custom' && (
-          <div className="group">
+          <div className="group pro-only">
             <h3 className="section">What matters most</h3>
             <p className="caption">Changes the order of the shortlist, not which ground passes.</p>
             <div className="weights">
@@ -159,7 +162,7 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
               </div>
             </div>
 
-            <div className="group alone">
+            <div className="group alone pro-only">
               <h3 className="section" title="Share of the mapped ground that passes each limit when the other limits are ignored">
                 Passes this limit alone
               </h3>

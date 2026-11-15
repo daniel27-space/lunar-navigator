@@ -136,7 +136,8 @@ export function WhenToLand({ a, sites }: { a: SiteAnalysis; /** every pinned sit
         {hasBaseline && <p className="caption">{best}</p>}
       </div>
 
-      <div className="wtl-base">
+      {/* Keeping a baseline and slipping from it is the planner's tool; a baseline already kept still shows. */}
+      <div className={hasBaseline ? 'wtl-base' : 'wtl-base pro-only'}>
         {hasBaseline ? (
           <>
             <span className="caption">
