@@ -13,7 +13,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { earthMaterial, earthOrientation } from './landers/earth'
-import { makeGround, startViewAz, type Ground, type GroundStyle, type Rest } from './landers/ground'
+import { makeGround, seedFrom, startViewAz, type Ground, type GroundStyle, type Rest } from './landers/ground'
+import { DISH_DEPTH, wreckLayout, type Wreck, type WreckMat, type WreckPiece } from './landers/wreck'
 
 export const ARCHETYPES = ['apollo-lm', 'surveyor', 'luna-lander', 'lunokhod', 'change-lander', 'small-lander', 'nova-c', 'impactor'] as const
 export type Archetype = (typeof ARCHETYPES)[number]
@@ -370,6 +371,85 @@ function ArchetypeModel({ archetype, heightM, rest }: { archetype: Archetype; he
   )
 }
 
+// ---- wreckage: a craft that was lost on landing, drawn as its broken pieces ----
+
+const WRECK_MAT: Record<WreckMat, typeof METAL> = { foil: FOIL, metal: METAL, paint: PAINT, dark: DARK, cells: CELLS }
+
+/**
+ * Dents a shape so it reads as crushed, not machined. Each corner moves by an amount that
+ * depends only on where it is, so corners shared by two faces stay together and no gap opens.
+ */
+function dent(geo: THREE.BufferGeometry, share: number, seed: number): THREE.BufferGeometry {
+  if (share <= 0) return geo
+  geo.computeBoundingSphere()
+  const size = geo.boundingSphere?.radius ?? 1
+  const pos = geo.getAttribute('position')
+  for (let i = 0; i < pos.count; i++) {
+    const key = (v: number) => Math.round((v / size) * 512)
+    const at = seedFrom(`${seed}:${key(pos.getX(i))}:${key(pos.getY(i))}:${key(pos.getZ(i))}`) / 4294967296
+    const k = 1 + (at - 0.6) * 2 * share
+    pos.setXYZ(i, pos.getX(i) * k, pos.getY(i) * k, pos.getZ(i) * k)
+  }
+  geo.computeVertexNormals()
+  return geo
+}
+
+/** The mesh for one piece of wreckage, centred on the piece's own origin. */
+function pieceGeometry(p: WreckPiece, seed: number): THREE.BufferGeometry {
+  const s = p.shape
+  const make = (): THREE.BufferGeometry => {
+    switch (s.kind) {
+      case 'box':
+        // extra corners along the long sides, so a dented panel bends
+        return new THREE.BoxGeometry(...s.size, 2, 1, 2)
+      case 'cyl':
+        // The body chunk is a torn-open shell with more corners to dent, so it reads as crushed.
+        return p.main ? new THREE.CylinderGeometry(s.rTop, s.rBot, s.h, Math.max(s.seg, 12), 3, true) : new THREE.CylinderGeometry(s.rTop, s.rBot, s.h, s.seg, 1, !!s.open)
+      case 'ball':
+        return new THREE.SphereGeometry(s.r, 14, 10)
+      case 'dish':
+        return new THREE.ConeGeometry(s.r, s.r * DISH_DEPTH, 20, 1, true)
+      case 'leg':
+        return new THREE.CylinderGeometry(s.r, s.r, s.len, 8)
+    }
+  }
+  return dent(make(), p.crumple, seed)
+}
+
+function WreckPieceMesh({ p, seed }: { p: WreckPiece; seed: number }) {
+  const geo = useMemo(() => pieceGeometry(p, seed), [p, seed])
+  useEffect(() => () => geo.dispose(), [geo])
+  const s = p.shape
+  // An open ring or dish is seen from inside too.
+  const open = s.kind === 'dish' || (s.kind === 'cyl' && (p.main || !!s.open))
+  return (
+    <group position={p.pos} quaternion={p.quat}>
+      <mesh geometry={geo} castShadow receiveShadow>
+        <meshStandardMaterial {...WRECK_MAT[p.mat]} flatShading={p.crumple > 0} side={open ? THREE.DoubleSide : THREE.FrontSide} />
+      </mesh>
+      {s.kind === 'leg' && (
+        // the foot pad, still on the end of its strut
+        <mesh position={[0, -s.len / 2, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[s.pad, s.pad, s.r, 14]} />
+          <meshStandardMaterial {...METAL} />
+        </mesh>
+      )}
+    </group>
+  )
+}
+
+/** All the pieces of a wreck, each already at its own place on the ground. */
+function WreckModel({ wreck, seed }: { wreck: Wreck; seed: string }) {
+  const n = seedFrom(seed)
+  return (
+    <>
+      {wreck.pieces.map((p, i) => (
+        <WreckPieceMesh key={i} p={p} seed={n + i} />
+      ))}
+    </>
+  )
+}
+
 const modelFiles = new Map<string, Promise<THREE.Object3D>>()
 /**
  * A mission's model file, fetched once. Called ahead of the scene (while the camera is still
@@ -443,9 +523,11 @@ const SKYLINE_R = 1500
 const BODY_R = 3000
 
 /** The ground mesh: rings that widen with distance, so detail is spent near the craft. */
-function groundGeometry(g: Ground, rings: number, around: number): THREE.BufferGeometry {
+function groundGeometry(g: Ground, rings: number, around: number, soil?: Wreck['soil']): THREE.BufferGeometry {
   const pos: number[] = []
   const uv: number[] = []
+  // Only a wreck site has soil marks; they are painted per corner of the mesh.
+  const tint: number[] = []
   const idx: number[] = []
   for (let i = 0; i <= rings; i++) {
     const r = g.edgeM * Math.pow(i / rings, 2.4)
@@ -455,6 +537,10 @@ function groundGeometry(g: Ground, rings: number, around: number): THREE.BufferG
       const z = Math.sin(a) * r
       pos.push(x, g.height(x, z), z)
       uv.push(x / 5, z / 5)
+      if (soil) {
+        const v = 1 - 0.65 * soil(x, z)
+        tint.push(v, v, v)
+      }
     }
   }
   const row = around + 1
@@ -467,6 +553,7 @@ function groundGeometry(g: Ground, rings: number, around: number): THREE.BufferG
   const geo = new THREE.BufferGeometry()
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  if (soil) geo.setAttribute('color', new THREE.Float32BufferAttribute(tint, 3))
   geo.setIndex(idx)
   geo.computeVertexNormals()
   return geo
@@ -621,6 +708,7 @@ interface SceneProps {
   baseUrl: string
   seed: string
   style: GroundStyle
+  wrecked: boolean
   sky: SceneSky
   detail: SceneDetail
   stand: React.RefObject<Stand>
@@ -630,13 +718,14 @@ interface SceneProps {
   onState: (s: ModelState) => void
 }
 
-function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shift, motion, leaving, onState }: SceneProps) {
+function Scene({ model, fallback, baseUrl, seed, style, wrecked, sky, detail, stand, shift, motion, leaving, onState }: SceneProps) {
   const invalidate = useThree((s) => s.invalidate)
   const h = model.height_m
   const d = DETAIL[detail]
 
   // The craft: a model file when there is one and it loads, otherwise the simplified stand-in.
-  const file = model.kind === 'glb' ? model.file : null
+  // A wreck is always drawn from the stand-in's parts, so no model file is fetched for it.
+  const file = model.kind === 'glb' && !wrecked ? model.file : null
   const [loaded, setLoaded] = useState<{ file: string; object: THREE.Object3D | null } | null>(null)
   useEffect(() => {
     if (!file) return
@@ -662,8 +751,9 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
   }, [state, onState, invalidate])
   const archetype = model.kind === 'archetype' && isArchetype(model.archetype) ? model.archetype : fallback
 
-  const ground = useMemo(() => makeGround(seed, h, style), [seed, h, style])
-  const groundGeo = useMemo(() => groundGeometry(ground, d.rings, d.around), [ground, d.rings, d.around])
+  const ground = useMemo(() => makeGround(seed, h, style, wrecked), [seed, h, style, wrecked])
+  const wreck = useMemo(() => (wrecked ? wreckLayout(seed, archetype, h, ground.height) : null), [wrecked, seed, archetype, h, ground])
+  const groundGeo = useMemo(() => groundGeometry(ground, d.rings, d.around, wreck?.soil), [ground, d.rings, d.around, wreck])
   const grain = useMemo(grainTexture, [])
   const skyline = useMemo(() => skylineGeometry(sky), [sky])
   useEffect(() => () => groundGeo.dispose(), [groundGeo])
@@ -737,7 +827,7 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
       )}
 
       <mesh geometry={groundGeo} receiveShadow>
-        <meshStandardMaterial color={ground.albedo} roughness={1} metalness={0} map={grain} bumpMap={grain} bumpScale={ground.grain} />
+        <meshStandardMaterial key={wreck ? 'marked' : 'plain'} color={ground.albedo} roughness={1} metalness={0} map={grain} bumpMap={grain} bumpScale={ground.grain} vertexColors={!!wreck} />
       </mesh>
       {ground.rocks.map((k, i) => (
         <mesh key={i} position={[k.x, ground.height(k.x, k.z) + k.size[1] * 0.55, k.z]} rotation={[0, k.turn, 0]} scale={k.size} castShadow receiveShadow>
@@ -762,8 +852,9 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
       </group>
 
       {/* the craft stands (or lies) on the ground at the centre, wherever that ground is */}
+      {wreck && <WreckModel wreck={wreck} seed={seed} />}
       <group position={[0, ground.height(0, 0), 0]}>
-        {state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} rest={ground.rest} /> : null}
+        {wreck ? null : state === 'file' && mine?.object ? <primitive object={mine.object} /> : state === 'simplified' ? <ArchetypeModel archetype={archetype} heightM={h} rest={ground.rest} /> : null}
       </group>
     </>
   )
@@ -779,6 +870,8 @@ interface Props {
   seed: string
   /** which of the three illustrative grounds: mare, highland or polar */
   style: GroundStyle
+  /** the craft was lost on landing: draw its wreckage, not the craft */
+  wrecked?: boolean
   sky: SceneSky
   detail: SceneDetail
   /** craft left of centre by this share of the view */
@@ -797,7 +890,7 @@ interface Props {
  * a frame is drawn only when the user drags (look round the craft, raise or lower the camera)
  * or scrolls (closer or further), or when the light changes with the clock.
  */
-export function LanderView({ model, fallback, baseUrl, seed, style, sky, detail, shift, back, motion, leaving, onState }: Props) {
+export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = false, sky, detail, shift, back, motion, leaving, onState }: Props) {
   const h = model.height_m
   const lim = limits(h)
   const stand = useRef<Stand>({ viewAz: startViewAz(sky.sun, sky.earth, seed), eye: 2, dist: Math.min(Math.max(h * back, lim.dist[0]), lim.dist[1]) })
@@ -837,7 +930,7 @@ export function LanderView({ model, fallback, baseUrl, seed, style, sky, detail,
           redraw.current = s.invalidate
         }}
       >
-        <Scene model={model} fallback={fallback} baseUrl={baseUrl} seed={seed} style={style} sky={sky} detail={detail} stand={stand} shift={shift} motion={motion} leaving={leaving} onState={onState} />
+        <Scene model={model} fallback={fallback} baseUrl={baseUrl} seed={seed} style={style} wrecked={wrecked} sky={sky} detail={detail} stand={stand} shift={shift} motion={motion} leaving={leaving} onState={onState} />
       </Canvas>
     </div>
   )

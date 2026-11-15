@@ -162,7 +162,7 @@ const NOVA = { bodyR: 0.19, bodyLow: 0.27, bodyTop: 0.89, footX: 0.46 * Math.cos
  *   a crater a few craft-lengths across.
  */
 interface Custom {
-  rest: Rest
+  rest?: Rest
   /** a bowl centred on the craft: radius and depth, m */
   crater?: { r: number; depth: number }
   mounds: { x: number; z: number; r: number; h: number }[]
@@ -205,19 +205,38 @@ function customGround(missionId: string, h: number): Custom | null {
   }
 }
 
+/**
+ * The shallow scar under a craft that was lost on landing: a wide, soft bowl a little deeper
+ * than a footprint is long. Wide and shallow on purpose, so the ground mesh (coarse rings) and
+ * `height` agree closely and no piece of wreckage placed by `height` hangs above the drawn ground.
+ */
+export function wreckScar(craftHeightM: number): { r: number; depth: number } {
+  const r = Math.max(1.3 * craftHeightM, 2.2)
+  return { r, depth: 0.07 * r }
+}
+
+/** Wreckage is thrown this many craft heights out at most (see wreck.ts). */
+export const WRECK_REACH = 3.2
+
 /** Beyond this distance the ground falls away, so its edge never rises above the real skyline. */
 const FALL_FROM_M = 80
 const FALL_RADIUS_M = 1600
 export const GROUND_EDGE_M = 600
 
-export function makeGround(seedText: string, craftHeightM: number, style: GroundStyle = 'mare'): Ground {
+/**
+ * `wrecked`: the craft was lost on landing, so the ground gets an impact scar and stays level
+ * (apart from the scar) across the whole debris field.
+ */
+export function makeGround(seedText: string, craftHeightM: number, style: GroundStyle = 'mare', wrecked = false): Ground {
   const k = GROUND_STYLES[style]
   const seed = seedFrom(seedText)
   const rand = rng(seed)
   const n = noise2(seed)
   // The craft's pads rest on a level patch; the relief fades in around it.
-  const padM = Math.max(craftHeightM * 0.95, 3)
-  const custom = customGround(seedText, craftHeightM)
+  // For wreckage the patch covers the debris field: the short bumps and small craters beyond it
+  // are finer than the ground mesh, and a small scrap resting on them would seem to float.
+  const padM = Math.max(craftHeightM * (wrecked ? WRECK_REACH + 0.1 : 0.95), 3)
+  const custom: Custom | null = customGround(seedText, craftHeightM) ?? (wrecked ? { crater: wreckScar(craftHeightM), mounds: [], rocks: [] } : null)
   const craters: Crater[] = []
   for (let i = 0; i < k.craters; i++) {
     // Denser near the craft, where the camera stands.

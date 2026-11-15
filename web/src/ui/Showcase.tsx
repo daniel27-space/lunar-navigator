@@ -16,6 +16,7 @@ import { fmtMissionDate } from '../lib/format'
 import { defaultModel, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
 import { subLunarLonDeg } from '../scene/landers/earth'
 import { restNote, groundStyle } from '../scene/landers/ground'
+import { isWrecked, WRECK_NOTE } from '../scene/landers/wreck'
 import { STATUS_COLOR, type Mission } from '../scene/Missions'
 import { useStore, type ViewRequest } from '../store'
 import { isPhone } from './Sheet'
@@ -166,6 +167,7 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
         baseUrl={baseUrl}
         seed={m.id}
         style={style}
+        wrecked={isWrecked(m)}
         sky={sceneSky}
         detail={quality}
         shift={narrow ? 0 : 0.12}
@@ -185,7 +187,8 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
         </p>
         <p>
           {state === 'loading' && <span role="status">Loading the 3D model…</span>}
-          {state === 'simplified' && 'Simplified model, not to scale in detail.'}
+          {state === 'simplified' && !isWrecked(m) && 'Simplified model, not to scale in detail.'}
+          {state === 'simplified' && isWrecked(m) && WRECK_NOTE}
           {restNote(m.id) && <> {restNote(m.id)}</>}
           {state === 'file' && model.kind === 'glb' && (
             <span title={model.license}>
