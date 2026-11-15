@@ -42,6 +42,7 @@ import { GUIDES, startGuide, Tutorial } from './ui/Tutorial'
 import { Welcome } from './ui/Welcome'
 import { ReplacedNotice } from './ui/ReplacedNotice'
 import { isPhone, SheetHead, TabSwitch, useExpandOnTap } from './ui/Sheet'
+import { DataMethod } from './ui/DataMethod'
 import { ShowcaseHero, ShowcasePanel, usePreloadModel, useShowcaseSequence } from './ui/Showcase'
 import { SiteCard } from './ui/SiteCard'
 import { useSiteAnalysis, type SiteAnalysis } from './ui/useSiteAnalysis'
@@ -462,6 +463,8 @@ export default function App() {
   const rate = useStore((s) => s.rate)
   const setRate = useStore((s) => s.setRate)
   const [menu, setMenu] = useState<'layers' | 'more' | null>(null)
+  const [about, setAbout] = useState(false)
+  const closeAbout = useCallback(() => setAbout(false), [])
   const expandOnTap = useExpandOnTap()
   const detail = DETAIL[quality]
   // The 3D view is drawn only when something changes (not 60 times a second), so every
@@ -905,6 +908,15 @@ export default function App() {
                   <AssumptionsPanel />
                 </div>
                 <button
+                  className="btn help-btn"
+                  onClick={() => {
+                    closeMenus()
+                    setAbout(true)
+                  }}
+                >
+                  Data and method: sources and checks
+                </button>
+                <button
                   className="btn ghost help-btn"
                   onClick={() => {
                     closeMenus()
@@ -974,6 +986,12 @@ export default function App() {
                   </div>
                 )}
                 <p>{current.legend}</p>
+                <p className="credit-line">
+                  Data: NASA LOLA terrain, JPL DE440 Sun and Earth positions, NASA GSFC sunlight maps.{' '}
+                  <button type="button" className="link" onClick={() => setAbout(true)}>
+                    Data and method
+                  </button>
+                </p>
               </div>
             )}
           </div>
@@ -993,6 +1011,7 @@ export default function App() {
 
       {ephem && terrain && !welcome && <Tutorial />}
       {welcome && <Welcome ready={!!ephem && !!terrain} />}
+      {about && <DataMethod onClose={closeAbout} />}
 
       {hover && (
         <div className="tip" style={{ left: hover.x + 12, top: hover.y + 12 }}>

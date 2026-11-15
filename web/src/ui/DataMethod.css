@@ -1,0 +1,88 @@
+/* The "Data and method" dialog. Tokens only; see docs/DESIGN.md. */
+.about-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  padding: var(--sp-4);
+  background: var(--scrim);
+  overflow-y: auto;
+}
+.about {
+  margin: auto;
+  width: min(560px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1-solid);
+  color: var(--text-2);
+}
+.about header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-5);
+  border-bottom: var(--hairline) solid var(--border);
+}
+.about h2 {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+}
+.about-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
+  overflow-y: auto;
+}
+.about-body .section {
+  margin-top: var(--sp-2);
+  color: var(--text-1);
+}
+.about-body ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-left: var(--sp-4);
+}
+.about-body b {
+  font-weight: var(--fw-semibold);
+  color: var(--text-1);
+}
+.about-body a {
+  color: var(--text-1);
+  text-underline-offset: var(--sp-0);
+}
+.about-data > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+  border-top: var(--hairline) solid var(--border);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
+.about-data dd {
+  color: var(--text-1);
+}
+/* The corner card's permanent credit line. */
+.legend .credit-line {
+  padding-top: var(--sp-2);
+  border-top: var(--hairline) solid var(--border);
+  font-size: var(--fs-cap);
+  line-height: var(--lh-cap);
+}
+.legend .credit-line .link {
+  color: var(--text-1);
+}
+@media (max-width: 760px) {
+  .about-layer {
+    padding: var(--sp-2);
+  }
+  .about-body {
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  }
+}

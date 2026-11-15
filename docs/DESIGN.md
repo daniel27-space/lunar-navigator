@@ -352,3 +352,5 @@ No new tokens. What changed, and the rule behind each:
 - **Sun in the mission view** has a soft glare from the same texture as the globe view; nothing animates.
 - **Phone:** the sheet starts at peek; the time bar is one row with a short date ("15 Nov 04:58 UTC", still UTC); the 3D view ends above the time bar; guide links are `--touch` high.
 - **Welcome:** "Skip to the Moon" goes straight to the Explorer view; the Explorer card is marked "Recommended for a first visit" with an `--accent` border.
+- **Data and method** (`ui/DataMethod.*`): one dialog with the method, the headline checks, the NASA data used and what is generated. Opened from the corner card's credit line and from the top of the settings in the menu. New token `--scrim` (dims the app behind a dialog).
+- **Planner site card:** the Sun and Earth heights in the two "now" rows are `--fs-md`, medium, `--text-1`; Explorer hides them.

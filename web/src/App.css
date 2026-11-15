@@ -77,6 +77,7 @@
   --timebar-h: 56px;
 
   /* Added during implementation (listed in DESIGN.md "Implementation notes") */
+  --scrim: rgb(0 0 0 / 0.6); /* dims the app behind a dialog */
   --scrim-top: linear-gradient(rgb(0 0 0 / 0.75), transparent); /* keeps the header readable over sunlit ground */
   --hairline: 1px;
   --line: 2px; /* outlines, underlines, brackets */
@@ -3315,9 +3316,11 @@ h2.panel-head {
     border-color: var(--border-strong);
   }
 }
-/* In Explorer the corner card stays only while it is a colour key. */
-.app[data-mode='explore'] .legend:not(:has(.ramp)) {
-  display: none;
+/* In the planner the Sun and Earth heights on a site card read as figures, not asides. */
+.app[data-mode='plan'] .now .aside {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  color: var(--text-1);
 }
 
 .app[data-welcome='on'] .chrome,

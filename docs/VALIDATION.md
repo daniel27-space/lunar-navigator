@@ -70,10 +70,13 @@ discs (JPL DE440 ephemeris). Five checks:
   (80.13S), rays between azimuth 300 and 60 degrees leave the data after 3.5 to 8 km. Missing
   terrain can only hide the Sun: true sunrise may be later and true sunset earlier, never the
   reverse. IM-1's sunset azimuth has 81 km of terrain, its sunrise azimuth 9.5 km.
-- **80 m grid.** The 20 m model was not tested (file still downloading).
+- **80 m grid.** Sections A to E use the 80 m model. The 20 m model was tested afterwards and is now
+  used within 5 km of four crests and rims; see the follow-up section at the end.
 - **Point Sun vs disc:** same average (within 0.1 point), but a sunset moves by up to 4 hours.
-- **Eclipses are not modelled.** On 14 March 2025 the Earth hid the Sun at the IM-2 site from 05:35
-  to 08:15 UTC; the tool shows it lit.
+- **Eclipses were not modelled in this study, and are in the app now.** On 14 March 2025 the Earth hid
+  the Sun at the IM-2 site from 05:35 to 08:15 UTC. The study's figures count that as lit; the app
+  (`eclipseFactor` in `web/src/lib/windows.ts`) treats the site as dark while Earth covers the Sun.
+  Sunlight bent through Earth's atmosphere is ignored.
 - **Period:** 18.6 years from 2024-01-01; NASA's and Gläser's start dates were not found.
 - Finer steps (5 minutes, 0.25 degrees azimuth) change averages by under 0.01 point.
 
