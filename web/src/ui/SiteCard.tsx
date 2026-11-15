@@ -67,14 +67,16 @@ function Panorama({
         </g>
       )
     }
+    // Heights in this picture are stretched many times over (a full turn across, a few degrees
+    // up), so a disc drawn to scale would be a tall thin oval. A round dot marks the centre and
+    // the bar behind it runs from the true bottom of the disc to its true top, which is what
+    // shows how much of it clears the hills.
+    const half = Math.max((b.radius / (yMax - yMin)) * H, 3)
     return (
-      <ellipse
-        cx={X(b.az)}
-        cy={Y(b.el)}
-        rx={Math.max((b.radius / 360) * W, 3)}
-        ry={Math.max((b.radius / (yMax - yMin)) * H, 3)}
-        className={cls}
-      />
+      <g className={cls}>
+        <rect x={X(b.az) - 1.5} y={Y(b.el) - half} width="3" height={half * 2} rx="1.5" className="extent" />
+        <circle cx={X(b.az)} cy={Y(b.el)} r="4.5" />
+      </g>
     )
   }
   // The lowest tick gives way to the off-scale arrow's label when a body is below the picture.
@@ -310,7 +312,8 @@ export function SiteCard({ a, active, all }: Props) {
           <Panorama s={series} elev={horizon.elevDeg} azStep={horizon.azStepDeg} sun={sky.sun} earth={sky.earth} />
           <p className="caption key">
             The view from this point, all the way round. Grey is ground. <i className="dot sun" /> Sun <i className="dot earth" /> Earth; dotted
-            lines are their paths over the next month.
+            lines are their paths over
+            the next month. Heights are stretched, so each dot has a bar showing the true top and bottom of its disc.
           </p>
         </div>
       )}

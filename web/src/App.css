@@ -3184,3 +3184,6 @@ h2.panel-head {
 .app[data-welcome='on'] .status {
   visibility: hidden;
 }
+.pano .extent {
+  opacity: 0.45;
+}
