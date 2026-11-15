@@ -99,6 +99,7 @@ Paste into `:root` (App.css top). Every literal colour, size or radius in CSS an
   --fs-lg: 16px;   --lh-lg: 24px;   /* panel titles, verdict, h1 */
   --fs-xl: 20px;   --lh-xl: 28px;   /* one hero number per panel (finder area) */
   --fw-regular: 400; --fw-medium: 500; --fw-semibold: 600;   /* no 700 */
+  --fw-light: 300; --track-wordmark: 0.22em;   /* the wordmark "UMBRA" in the top bar, and nothing else */
 
   /* 3.6 Shape and depth */
   --r-sm: 4px;  /* chips, bars, swatches */
@@ -174,7 +175,7 @@ All controls: height `--ctl-h`, padding `0 var(--sp-3)`, radius `--r-md`, `--fs-
 **Desktop (>= 1100 px).**
 ```
 +-----------------------------------------------------------------------------------+
-| Umbra  Lunar Landing Site Navigator   [South pole|Whole Moon]  [Go to mission v]   (56)  |
+| UMBRA  (mode)   [South pole|Whole Moon]  [Go to mission v]   (56)  |
 | [Find a site|Sun now|Sun avg|Earth avg|Shadow|Height|Slope]                 (40)  |
 | +-- finder 320 --+                                         +-- sites 400 ---+     |
 | | sticky header  |            3D Moon                      | sticky header  |     |
@@ -190,7 +191,7 @@ All controls: height `--ctl-h`, padding `0 var(--sp-3)`, radius `--r-md`, `--fs-
 **Tablet (761-1099 px).** One side panel at a time (360 px), chosen by a `[Find | Sites]` segmented control in the header; the layer row scrolls horizontally rather than wrapping.
 
 **Phone (<= 760 px).**
-- Top: one 48 px bar: title is the name alone, "Umbra" (the descriptor `.app-sub`, 12 px in `--text-2`, shows only on wider screens), `Layers` button, `⋯` menu (view, mission). `padding-top: env(safe-area-inset-top)`.
+- Top: one 48 px bar: title is the wordmark alone (`.wordmark`: `--fs-xl`, `--fw-light`, capitals spaced by `--track-wordmark`; one 16 px gap on each side of it and between the bar's groups), `Layers` button, `⋯` menu (view, mission). `padding-top: env(safe-area-inset-top)`.
 - One **non-modal bottom sheet** holds both panels, switched by `[Find | Sites]` at its top. Snap points: peek 120 px (handle, switcher, one summary line: "35 926 km² meets every limit" or the verdict sentence), half 50 dvh, full 88 dvh. The Moon stays draggable above the sheet at peek and half. A visible close/minimise button sits at the sheet top, and the browser Back gesture collapses the sheet; never stack a second sheet (NN/g bottom sheets, [checked](https://www.nngroup.com/articles/bottom-sheet/)).
 - The time bar docks above the sheet: row 1 play + date, row 2 full-width scrubber; rate moves into the `⋯` menu. `padding-bottom: env(safe-area-inset-bottom)`.
 - All primary actions (Compare, rank rows, close) sit in the lower 60 % of the screen for one-handed reach; the top bar holds only rarely used items.

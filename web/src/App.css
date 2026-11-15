@@ -61,6 +61,8 @@
   --lh-xl: 28px;
   --fs-display: 28px; /* the mission name in the mission panel, and nothing else */
   --lh-display: 32px;
+  --fw-light: 300; /* the wordmark only */
+  --track-wordmark: 0.22em;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
@@ -583,18 +585,20 @@
   background: var(--scrim-top);
 }
 .top h1 {
-  font-size: var(--fs-lg);
-  line-height: var(--lh-lg);
-  font-weight: var(--fw-semibold);
-  margin-right: var(--sp-2);
+  display: flex;
+  align-items: center;
   white-space: nowrap;
 }
-/* The descriptor beside the name: quieter, so "Umbra" is what is read first. */
-.top h1 .app-sub {
-  margin-left: var(--sp-2);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-regular);
-  color: var(--text-2);
+/* The name as a wordmark: light, spaced capitals, the one place the bar uses them. The
+   negative margin takes back the space that letter-spacing adds after the last letter, so
+   the gap on its right is measured from the A, as the gap on its left is from the U. */
+.wordmark {
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
+  font-weight: var(--fw-light);
+  letter-spacing: var(--track-wordmark);
+  text-transform: uppercase;
+  margin-right: calc(-1 * var(--track-wordmark));
 }
 .menu {
   display: contents;
@@ -3373,7 +3377,7 @@ body[data-over='marker'] .viewport canvas {
     align-items: center;
     vertical-align: middle;
     height: var(--badge);
-    margin-left: var(--sp-2);
+    margin-left: var(--sp-4);
     padding: 0 var(--sp-2);
     border: var(--hairline) solid var(--border-strong);
     border-radius: var(--r-full);
