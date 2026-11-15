@@ -215,7 +215,7 @@ export interface Replaced {
 
 // Every load is treated as a new visitor: the welcome cards always show. The one exception is
 // this key, which only the automated screen checks set, so they can go straight to the app.
-const HELP_KEY = 'lunar-navigator.intro-seen'
+const HELP_KEY = 'lunar-navigator.skip-welcome'
 function firstVisit(): boolean {
   try {
     return localStorage.getItem(HELP_KEY) === null
