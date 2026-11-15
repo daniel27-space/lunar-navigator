@@ -359,6 +359,10 @@ function overlayTexture(base: string, file: string): THREE.Texture {
   }
   return tex
 }
+/** Starts fetching every layer picture, so a layer is already there when it is first chosen. */
+export function preloadOverlays(base: string) {
+  for (const file of Object.values(OVERLAY_FILE)) overlayTexture(base, file)
+}
 const blankOverlay = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1)
 blankOverlay.needsUpdate = true
 

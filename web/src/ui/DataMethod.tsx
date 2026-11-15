@@ -22,9 +22,14 @@ export function DataMethod({ onClose }: { onClose: () => void }) {
   const close = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     close.current?.focus()
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', key)
-    return () => window.removeEventListener('keydown', key)
+    // Heard first (capture) and marked as handled, so one Escape closes this dialog and not also what is under it.
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.preventDefault()
+      onClose()
+    }
+    window.addEventListener('keydown', key, true)
+    return () => window.removeEventListener('keydown', key, true)
   }, [onClose])
   return (
     <div className="about-layer" onClick={onClose}>

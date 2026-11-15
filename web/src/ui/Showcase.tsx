@@ -68,6 +68,15 @@ export function useShowcaseSequence() {
     if (phase && phase !== 'request' && viewSeq !== seq) useStore.getState().setShowcase({ showcase: null, showcasePhase: null })
   }, [phase, viewSeq, seq])
 
+  // On the way in there is no panel yet and so no close button: Escape still calls it off.
+  const inbound = phase === 'flight' || phase === 'approach'
+  useEffect(() => {
+    if (!inbound) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !e.defaultPrevented && useStore.getState().closeShowcase()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [inbound])
+
   // The flight has ended (or the view was asked for from a card): go on down to the site.
   const ready = phase === 'request' || (phase === 'flight' && arrived === seq)
   useEffect(() => {
@@ -228,7 +237,8 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
 function useClose() {
   const close = useStore((s) => s.closeShowcase)
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    // An Escape already used by a dialog or menu on top does not also close the mission view.
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !e.defaultPrevented && close()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [close])

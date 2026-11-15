@@ -1980,6 +1980,17 @@ h2.panel-head {
 }
 .dot.pulse {
   background: var(--text-3);
+  animation: tour-pulse 1.4s ease-in-out infinite;
+}
+/* The Moon can be grabbed and turned; a marker under the pointer can be pressed. */
+.viewport canvas {
+  cursor: grab;
+}
+.viewport canvas:active {
+  cursor: grabbing;
+}
+body[data-over='marker'] .viewport canvas {
+  cursor: pointer;
 }
 .error-block {
   gap: var(--sp-3);
@@ -2984,6 +2995,10 @@ h2.panel-head {
   }
   .tour-meter i {
     transition: none;
+  }
+  .dot.pulse,
+  .about-layer {
+    animation: none;
   }
 }
 

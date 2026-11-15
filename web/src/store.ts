@@ -143,7 +143,8 @@ interface State {
   focusLanding: (id: number | null) => void
   /**
    * interface only: what the last pin(s) pushed out, so the notice can name it and Undo can put
-   * it back. Cleared by Undo, by dismissing the notice, or by the next pin that replaces nothing.
+   * it back; also the site last removed by hand (then `added` is empty). Cleared by Undo, by
+   * dismissing the notice, or by the next pin that replaces nothing.
    */
   replaced: Replaced | null
   undoReplace: () => void
@@ -295,7 +296,11 @@ export const useStore = create<State>((set, get) => ({
   removePin: (id) =>
     set((s) => {
       const pins = s.pins.filter((p) => p.id !== id)
-      return { pins, activePin: s.activePin === id ? (pins.at(-1)?.id ?? null) : s.activePin, replaced: s.replaced?.added.includes(id) ? null : s.replaced }
+      const gone = s.pins.find((p) => p.id === id)
+      // Removing a site can be undone from the same notice as a replacement. Removing a site
+      // that had itself just replaced another only drops that record, as before.
+      const replaced: Replaced | null = s.replaced?.added.includes(id) || !gone ? null : { removed: [gone], added: [], at: Date.now() }
+      return { pins, activePin: s.activePin === id ? (pins.at(-1)?.id ?? null) : s.activePin, replaced }
     }),
   setActivePin: (activePin) => set({ activePin }),
   // The sheet starts minimised, so a phone's first screen is mostly Moon; a pin or a tap opens it.

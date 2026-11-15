@@ -22,7 +22,7 @@ import {
 import { Globe } from './scene/Globe'
 import { insideDisc, MARKER } from './scene/markers'
 import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
-import { MoonTerrain } from './scene/MoonTerrain'
+import { MoonTerrain, preloadOverlays } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
 import { SkyBodies } from './scene/SkyBodies'
 import { SkyCompassChips, SkyCompassDriver } from './scene/SkyCompass'
@@ -30,7 +30,7 @@ import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
 import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
 import { AddByCoords } from './ui/AddByCoords'
-import { AssumptionsHead, AssumptionsPanel } from './ui/Assumptions'
+import { AssumptionsHead, AssumptionsPanel, useAssumptionsChanged } from './ui/Assumptions'
 import { Compare } from './ui/Compare'
 import { DateEditor } from './ui/DateEditor'
 import { INK, ON_ACCENT, Segmented, SITE_LETTERS } from './ui/controls'
@@ -476,6 +476,7 @@ export default function App() {
   const setRate = useStore((s) => s.setRate)
   const [menu, setMenu] = useState<'layers' | 'more' | null>(null)
   const [about, setAbout] = useState(false)
+  const assumeChanged = useAssumptionsChanged()
   const closeAbout = useCallback(() => setAbout(false), [])
   const expandOnTap = useExpandOnTap()
   const detail = DETAIL[quality]
@@ -729,6 +730,31 @@ export default function App() {
     if (mainMenu.current) mainMenu.current.open = false
     setMenu(null)
   }
+  // The Guides and settings menu closes on Escape and on a press anywhere outside it.
+  useEffect(() => {
+    const shut = () => {
+      const open = !!mainMenu.current?.open
+      if (open) mainMenu.current!.open = false
+      return open
+    }
+    const press = (e: PointerEvent) => {
+      if (!mainMenu.current?.contains(e.target as Node)) shut()
+    }
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !e.defaultPrevented && shut()) e.preventDefault()
+    }
+    document.addEventListener('pointerdown', press)
+    window.addEventListener('keydown', key, true)
+    return () => {
+      document.removeEventListener('pointerdown', press)
+      window.removeEventListener('keydown', key, true)
+    }
+  }, [])
+  // The average layers' pictures are fetched once the Moon is up, so choosing one never shows a blank "never" map while it loads.
+  const moonReady = !!ephem && !!terrain
+  useEffect(() => {
+    if (moonReady) preloadOverlays(BASE)
+  }, [moonReady])
   const openHelp = () => {
     useStore.getState().setHelp(true)
     setTab('sites')
@@ -896,9 +922,9 @@ export default function App() {
                 </ul>
                 <h3 className="section">Settings</h3>
                 <div className="quality">
-                  <span>View</span>
+                  <span>Mode</span>
                   <Segmented
-                    label="View"
+                    label="Mode"
                     options={[
                       ['explore', 'Explorer'],
                       ['plan', 'Mission planner'],
@@ -920,7 +946,8 @@ export default function App() {
                     <option value="high">High</option>
                   </select>
                 </label>
-                <div className="pro-only menu-assume">
+                {/* Hidden in Explorer, unless a setting here is not the default: the app's notes then point to it. */}
+                <div className={assumeChanged ? 'menu-assume' : 'pro-only menu-assume'}>
                   <h3 className="section">Assumptions</h3>
                   <AssumptionsPanel />
                 </div>

@@ -102,8 +102,12 @@ export const Missions = memo(function Missions({ missions, heights, onSelect, on
                 if (!e.object.visible) return
                 e.stopPropagation()
                 onHover(m, e.clientX, e.clientY)
+                document.body.dataset.over = 'marker'
               }}
-              onPointerOut={() => onHover(null, 0, 0)}
+              onPointerOut={() => {
+                onHover(null, 0, 0)
+                delete document.body.dataset.over
+              }}
             >
               <spriteMaterial sizeAttenuation={false} depthTest={false} depthWrite={false} transparent opacity={0} />
             </sprite>
