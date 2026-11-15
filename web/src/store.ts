@@ -31,7 +31,6 @@ export const DETAIL: Record<Quality, Detail> = {
 
 /** True on touch-first devices (phones, tablets): chooses the starting detail level and the wording of gestures. */
 export const coarsePointer = () => typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
-const narrowScreen = () => typeof matchMedia !== 'undefined' && matchMedia('(max-width: 760px)').matches
 
 const QUALITY_KEY = 'lunar-navigator.quality'
 function initialQuality(): Quality {
@@ -299,8 +298,8 @@ export const useStore = create<State>((set, get) => ({
       return { pins, activePin: s.activePin === id ? (pins.at(-1)?.id ?? null) : s.activePin, replaced: s.replaced?.added.includes(id) ? null : s.replaced }
     }),
   setActivePin: (activePin) => set({ activePin }),
-  // A first visit on a phone opens the sheet far enough to show the start card's actions.
-  sheet: firstVisit() && narrowScreen() ? 'half' : 'peek',
+  // The sheet starts minimised, so a phone's first screen is mostly Moon; a pin or a tap opens it.
+  sheet: 'peek',
   setSheet: (sheet) => set({ sheet }),
   tab: 'sites',
   setTab: (tab) => set({ tab }),
@@ -368,7 +367,8 @@ export const useStore = create<State>((set, get) => ({
   welcome: firstVisit(),
   setWelcome: (welcome) => set({ welcome }),
   mode: 'plan',
-  setMode: (mode) => set({ mode }),
+  // The Height and Slope layers have no button in Explorer, so neither is left on when switching to it.
+  setMode: (mode) => set((s) => ({ mode, layer: mode === 'explore' && (s.layer === 'elevation' || s.layer === 'slope') ? 'natural' : s.layer })),
   setTour: (tour) => {
     if (tour === null) rememberIntroSeen()
     set({ tour })

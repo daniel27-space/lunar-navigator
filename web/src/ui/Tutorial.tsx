@@ -102,7 +102,7 @@ export const GUIDES: Guide[] = [
       {
         kind: 'pin',
         ask: ['In the Map layers bar at the top, press Avg sunlight.', 'Press the layer button at the top and choose Average sunlight.'],
-        hint: ['The bar is top left, under the title: Sun now, Avg sunlight, Avg Earth view, Shadow, Height, Slope.', 'The button with the stack of sheets, next to the title.'],
+        hint: ['The bar is top left, under the title. It starts with Sun now and Avg sunlight.', 'The button with the stack of sheets, next to the title.'],
         payoff: 'Bright ground is sunlit most of the year, dark ground hardly ever. The colour scale is in the legend.',
         share: (c) => (c.layer === 'sunavg' ? 1 : 0),
         lookAround: true,

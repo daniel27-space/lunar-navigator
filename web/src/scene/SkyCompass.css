@@ -1,0 +1,88 @@
+/* Edge markers that point to the Sun and the Earth (scene/SkyCompass.tsx). Tokens: App.css. */
+
+/* The box is the part of the 3D view the chips may use: clear of the header, the time bar and,
+   on a wide screen, the side panels. The driver reads its size, so the insets live here. */
+.sky-compass {
+  position: absolute;
+  top: calc(var(--header-h) + var(--ctl-h) + var(--sp-4)); /* header row, then the layer row */
+  right: var(--sp-4);
+  bottom: calc(var(--timebar-h) + var(--sp-4) + var(--sp-2));
+  left: var(--sp-4);
+  pointer-events: none;
+}
+/* The layer key sits bottom left, just above the time bar; stay above it. */
+@media (min-width: 761px) {
+  .app:has(.dock-left > .legend) .sky-compass {
+    bottom: calc(var(--timebar-h) + var(--sp-4) + var(--sp-2) + 2 * var(--sp-7));
+  }
+}
+@media (min-width: 1100px) {
+  .app:has(.dock-left > .panel) .sky-compass {
+    left: calc(var(--w-finder) + 2 * var(--sp-4));
+  }
+  .app:has(.dock-right > .panel) .sky-compass {
+    right: calc(var(--w-sites) + 2 * var(--sp-4));
+  }
+  .app:has(.dock-right > .panel.wide) .sky-compass {
+    right: calc(var(--w-compare) + 2 * var(--sp-4));
+  }
+}
+@media (max-width: 760px) {
+  /* The 3D view already ends at the top of the sheet; the time bar sits just above that. */
+  .sky-compass {
+    top: calc(var(--header-h) + var(--sp-2)); /* one header row on a phone */
+    right: var(--sp-2);
+    bottom: var(--phone-timebar);
+    left: var(--sp-2);
+  }
+}
+.app[data-welcome='on'] .sky-compass,
+.app[data-showcase='on'] .sky-compass {
+  display: none;
+}
+
+.sky-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: var(--sp-5);
+  padding: 0 var(--sp-2);
+  background: var(--surface-1);
+  border: var(--hairline) solid var(--border);
+  border-radius: var(--r-full);
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+  visibility: hidden;
+}
+.sky-chip[data-on='true'] {
+  visibility: visible;
+}
+.sky-chip[data-body='sun'] {
+  --body: var(--data-sun);
+}
+.sky-chip[data-body='earth'] {
+  --body: var(--data-earth);
+}
+.sky-chip-disc {
+  flex: none;
+  width: var(--sp-2);
+  height: var(--sp-2);
+  border-radius: var(--r-full);
+  background: var(--body);
+}
+/* Points along +x before the driver turns it; the driver also moves it out to the pill's edge. */
+.sky-chip-wedge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--sp-3);
+  height: var(--sp-2);
+  background: var(--body);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}

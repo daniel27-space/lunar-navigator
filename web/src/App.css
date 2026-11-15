@@ -2219,6 +2219,7 @@ h2.panel-head {
     --seg-h: var(--touch);
     --cmp-col: 56px;
     --fs-input: 16px;
+    --phone-timebar: calc(var(--touch) + 2 * var(--sp-1) + 2 * var(--sp-2)); /* one row: the slider's height, the bar's padding and its margins */
   }
   .phone-only {
     display: inline-flex !important;
@@ -2240,6 +2241,10 @@ h2.panel-head {
     --view-b: var(--sheet-half);
   }
   /* The Moon is drawn in the space above the sheet, so it stays centred and usable. */
+  /* The time bar floats above the sheet, so the Moon is centred in the space above both. */
+  .app:not([data-sheet='full']) .viewport {
+    bottom: calc(var(--view-b) + var(--phone-timebar));
+  }
   .viewport {
     bottom: var(--view-b);
   }
@@ -2345,17 +2350,21 @@ h2.panel-head {
   .timebar .rates {
     display: none;
   }
+  /* One row: play, the slider, then a short date. */
+  .timebar {
+    flex-wrap: nowrap;
+  }
   .app .timebar .date {
-    order: 1;
-    flex: 1;
+    order: 2;
+    flex: none;
     border-color: transparent;
     background: none;
     justify-content: flex-end;
     text-align: right;
   }
   .timebar .scrub {
-    order: 2;
-    flex: 1 0 100%;
+    order: 1;
+    flex: 1 1 0;
     height: var(--touch);
   }
 
@@ -2614,7 +2623,7 @@ h2.panel-head {
     top: 0;
     opacity: 1;
     flex: none;
-    width: var(--sp-5);
+    width: var(--touch);
     height: var(--touch);
   }
   .lbl-wide {
@@ -2939,9 +2948,17 @@ h2.panel-head {
 @media (max-width: 760px) {
   .tour {
     bottom: auto;
-    top: calc(var(--header-h) + var(--sp-7));
+    /* Below the phone's own header and any notch, and never taller than the space above the time bar and sheet. */
+    top: calc(var(--phone-bar) + env(safe-area-inset-top) + var(--sp-2));
+    max-height: calc(100dvh - var(--sheet-h) - var(--phone-timebar) - var(--phone-bar) - env(safe-area-inset-top) - var(--sp-4));
+    overflow-y: auto;
     padding: var(--sp-3);
     gap: var(--sp-2);
+  }
+  /* Links in the guide's foot are finger-sized. */
+  .tour-foot .link {
+    min-height: var(--touch);
+    padding: 0 var(--sp-2);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3061,6 +3078,20 @@ h2.panel-head {
 }
 .app[data-showcase='on'] .tour {
   z-index: 30;
+}
+@media (min-width: 761px) {
+  /* In the mission view the guide sits in the bottom right of the 3D picture, clear of the craft (left of centre) and of the panel. */
+  .app[data-showcase='on'] .tour {
+    left: auto;
+    transform: none;
+    right: calc(var(--w-compare) + 2 * var(--sp-4) + var(--sp-3));
+    bottom: calc(var(--timebar-h) + var(--sp-6) + var(--sp-7) + var(--sp-5));
+    width: min(360px, calc(100vw - var(--w-compare) - 4 * var(--sp-4)));
+  }
+  /* Map layers and the site finder do nothing to the ground-level scene, so they step aside. */
+  .app[data-showcase='on'] .layerbar {
+    display: none;
+  }
 }
 .site .card-help {
   align-self: flex-start;

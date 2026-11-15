@@ -1,7 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, invalidate } from '@react-three/fiber'
 import * as THREE from 'three'
-import { fmtDateTime } from './lib/format'
+import { fmtDateTime, fmtTick } from './lib/format'
 import { bodyVectors, clockRange, loadEphem, type Ephem } from './lib/ephem'
 import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
 import { latLonOf, sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
@@ -25,6 +25,7 @@ import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
 import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
 import { SkyBodies } from './scene/SkyBodies'
+import { SkyCompassChips, SkyCompassDriver } from './scene/SkyCompass'
 import { globalHeightAt } from './lib/globalDem'
 import { useGlobeMap, useGlobeRelief, type Cut } from './scene/shading'
 import { DETAIL, SITE_COLORS, useStore, type LayerMode, type Pin, type Quality } from './store'
@@ -192,7 +193,11 @@ function TimeBar({ ephem }: { ephem: Ephem }) {
           aria-label={`Date and time: ${fmtDateTime(tMs)}. Change`}
           onClick={() => setEditing((on) => !on)}
         >
-          {fmtDateTime(tMs)}
+          <span className="not-phone">{fmtDateTime(tMs)}</span>
+          {/* A phone's one-row time bar has room for the day and the time, still UTC. */}
+          <span className="phone-only">
+            {fmtTick(tMs)} {fmtDateTime(tMs).slice(11)}
+          </span>
         </button>
       </div>
       {editing && <DateEditor range={range} onSet={setCentre} onClose={closeEditor} />}
@@ -399,7 +404,7 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
         )
       )}
       {sites.length > 0 && (
-        <details className="disclosure add-more">
+        <details className="disclosure add-more pro-only">
           <summary>Add a point by coordinates</summary>
           <AddByCoords onAdd={onAddCoords} />
         </details>
@@ -761,7 +766,9 @@ export default function App() {
           <PinMarkers elevation={elevation} />
           {finderResult && <CandidateMarkers candidates={finderResult.candidates} elevation={elevation} onPick={(k) => pickCandidates([k])} />}
           <Rig elevation={elevation} />
+          {bodies && <SkyCompassDriver sun={bodies.sun} earth={bodies.earth} />}
         </Canvas>
+        <SkyCompassChips />
       </div>
 
       <div className="chrome">
