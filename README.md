@@ -106,7 +106,9 @@ property search, product-comparison sites, sun-planning tools); see
   are generated, not observed. IM-1 and IM-2 are shown tipped over on ground made for them. The ground near the craft is generated, in three
   styles (mare, highland, polar), because no terrain data exists at that scale.
 - In the mission view only the Apollo Lunar Module is a real 3D model (NASA). The other craft
-  are simplified stand-ins for their class and are labelled so. 6 missions have no picture
+  are simplified models built by hand from reference pictures: the overall shape follows the
+  real craft, but where instruments sit is partly estimated, and they are labelled as
+  simplified. SLIM is shown on its nose, as it came to rest; how far it leans is an estimate. 6 missions have no picture
   because none could be found under a free licence, and for most non-NASA craft the picture
   is a NASA orbital view of the lander or its site, not a close-up.
 - Inside about 84.6°S the browser uses 80 m terrain. Outside it uses about 300 m terrain, where
