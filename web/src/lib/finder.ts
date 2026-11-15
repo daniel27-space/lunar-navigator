@@ -52,6 +52,20 @@ export interface FinderCriteria {
   psr: 'any' | 'inside' | 'outside'
   /** hard limit: at most this far from permanent shadow (ice access); null = no requirement */
   maxPsrKm: number | null
+  /**
+   * How much each thing counts when the ground that passes is ranked. Left out, everything
+   * counts the same (1), which is how the named presets rank. A lander that copes with slopes
+   * can count flatness for less without having to let steeper ground in.
+   */
+  weights?: FinderWeights
+}
+
+export interface FinderWeights {
+  slope?: number
+  sun?: number
+  earth?: number
+  /** closeness to permanent shadow, when that limit is on */
+  psr?: number
 }
 
 export interface Preset {
@@ -165,26 +179,33 @@ function limits(g: FinderGrid, c: FinderCriteria, i: number) {
   }
 }
 
-/** 0..1 for an eligible cell: the mean of the preference terms that are switched on. */
+/** A weight as it is used: 1 when left out or not a usable number, never negative. */
+const weightOf = (w: number | undefined) => (w === undefined || !Number.isFinite(w) || w < 0 ? 1 : w)
+
+/**
+ * 0..1 for an eligible cell: the average of the preference terms that are switched on, each
+ * counted by its weight. With no weights given this is the plain average.
+ */
 function preference(g: FinderGrid, c: FinderCriteria, i: number): number {
   let sum = 0
   let n = 0
+  const add = (value: number, weight: number | undefined) => {
+    const w = weightOf(weight)
+    sum += value * w
+    n += w
+  }
   // Flatter is always better.
-  sum += 1 - clamp01(g.slope[i] / Math.max(c.maxSlopeDeg, 1e-6))
-  n++
-  const span = (v: number, lo: number, hi: number, p: Prefer) => {
+  add(1 - clamp01(g.slope[i] / Math.max(c.maxSlopeDeg, 1e-6)), c.weights?.slope)
+  const span = (v: number, lo: number, hi: number, p: Prefer, weight: number | undefined) => {
     if (p === 'none') return
     const t = hi > lo ? clamp01((v - lo) / (hi - lo)) : 1
-    sum += p === 'high' ? t : 1 - t
-    n++
+    add(p === 'high' ? t : 1 - t, weight)
   }
-  span(g.sun[i], c.sunMin, c.sunMax, c.sunPrefer)
-  span(g.earth[i], c.earthMin, c.earthMax, c.earthPrefer)
-  if (c.maxPsrKm !== null && c.psr !== 'inside') {
-    sum += 1 - clamp01(g.psrKm[i] / Math.max(c.maxPsrKm, 1e-6))
-    n++
-  }
-  return sum / n
+  span(g.sun[i], c.sunMin, c.sunMax, c.sunPrefer, c.weights?.sun)
+  span(g.earth[i], c.earthMin, c.earthMax, c.earthPrefer, c.weights?.earth)
+  if (c.maxPsrKm !== null && c.psr !== 'inside') add(1 - clamp01(g.psrKm[i] / Math.max(c.maxPsrKm, 1e-6)), c.weights?.psr)
+  // Every weight set to nothing leaves nothing to rank by: all passing ground is then equal.
+  return n > 0 ? sum / n : 1
 }
 
 export function runFinder(

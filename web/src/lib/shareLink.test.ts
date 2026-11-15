@@ -115,4 +115,18 @@ describe('share link', () => {
     // limits alone are a usable link
     expect(decodeShare('f=10_35_100_h_90_100_h_o_x', PRESETS)!.finder!.earthMin).toBe(0.9)
   })
+
+  it('carries how much each thing counts, only when it is not the usual', () => {
+    const finder = { maxSlopeDeg: 15, sunMin: 0.35, sunMax: 1, sunPrefer: 'high' as const, earthMin: 0.5, earthMax: 1, earthPrefer: 'high' as const, psr: 'outside' as const, maxPsrKm: null }
+    expect(encodeShare({ sites: [], finder })).toBe('f=15_35_100_h_50_100_h_o_x')
+    expect(encodeShare({ sites: [], finder: { ...finder, weights: { slope: 1, sun: 1 } } })).toBe('f=15_35_100_h_50_100_h_o_x')
+    const weighted = { ...finder, weights: { slope: 0.5, sun: 2, earth: 1, psr: 1 } }
+    const hash = encodeShare({ sites: [], finder: weighted })
+    expect(hash).toBe('f=15_35_100_h_50_100_h_o_x_lhnn')
+    expect(decodeShare(hash, PRESETS)!.finder).toEqual(weighted)
+    // a link made before weights existed still reads, with no weights
+    expect(decodeShare('f=15_35_100_h_50_100_h_o_x', PRESETS)!.finder).toEqual(finder)
+    // malformed weights drop the whole key, as other malformed parts do
+    for (const bad of ['f=15_35_100_h_50_100_h_o_x_lhn', 'f=15_35_100_h_50_100_h_o_x_lhnz', 'f=15_35_100_h_50_100_h_o_x_lhnnn']) expect(decodeShare(`s=-85.3%2C31.2%2CA&${bad}`, PRESETS)!.finder).toBeUndefined()
+  })
 })

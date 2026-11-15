@@ -898,6 +898,21 @@ h2.panel-head {
 .field > .seg {
   margin-top: var(--sp-2);
 }
+/* "What matters most": a name and a three-step switch per row. */
+.weights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.weights > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-2);
+}
 .check.field-head {
   align-items: center;
   justify-content: flex-start;

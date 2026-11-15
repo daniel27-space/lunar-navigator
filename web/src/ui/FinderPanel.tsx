@@ -3,7 +3,8 @@
 // live "passing area" readout from GIS suitability tools; map-and-shortlist from property
 // search; docs/research/design-references.md.)
 import { fmtArea, fmtDegrees, fmtDistance, fmtLat, fmtLon, fmtShare, fmtShareRange, fmtSlope } from '../lib/format'
-import { PRESETS, type Candidate, type FinderCriteria, type FinderResult, type Prefer } from '../lib/finder'
+import { PRESETS, type Candidate, type FinderCriteria, type FinderResult, type FinderWeights, type Prefer } from '../lib/finder'
+import { IMPORTANCE, importanceOf, importanceText, type Importance } from './importance'
 import { useStore } from '../store'
 import { RangeSlider, Segmented, Slider } from './controls'
 
@@ -19,6 +20,12 @@ const PSR: readonly (readonly [FinderCriteria['psr'], string])[] = [
   ['any', 'Anywhere'],
   ['outside', 'Stay out of it'],
   ['inside', 'Inside it'],
+]
+
+const IMPORTANCE_OPTIONS: readonly (readonly [Importance, string])[] = [
+  ['low', 'Low'],
+  ['normal', 'Normal'],
+  ['high', 'High'],
 ]
 
 interface Props {
@@ -45,6 +52,14 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
   const tightest = limits.length ? limits.reduce((a, b) => (b[1] < a[1] ? b : a)) : null
   const bites = tightest !== null && tightest[1] < 0.999
   const upd = (f: Partial<FinderCriteria>) => set(f)
+  // How much each thing counts in the ranking. Only what is being ranked on is offered.
+  const counted: [keyof FinderWeights, string][] = [
+    ['slope', 'Flat ground'],
+    ...(c.sunPrefer !== 'none' ? ([['sun', 'Sunlight']] as [keyof FinderWeights, string][]) : []),
+    ...(c.earthPrefer !== 'none' ? ([['earth', 'Earth view']] as [keyof FinderWeights, string][]) : []),
+    ...(c.maxPsrKm !== null && c.psr !== 'inside' ? ([['psr', 'Near shadow']] as [keyof FinderWeights, string][]) : []),
+  ]
+  const weighting = importanceText(c)
   const area = result ? (
     <>
       <b>{fmtArea(result.eligibleKm2)}</b> <span>{result.eligibleKm2 < 10 ? 'meets' : 'meet'} every limit</span>
@@ -111,6 +126,26 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
             </div>
           )}
         </div>
+
+        {preset === 'custom' && (
+          <div className="group">
+            <h3 className="section">What matters most</h3>
+            <p className="caption">Changes the order of the shortlist, not which ground passes.</p>
+            <div className="weights">
+              {counted.map(([key, name]) => (
+                <div key={key}>
+                  <span>{name}</span>
+                  <Segmented
+                    label={`${name}: how much it counts`}
+                    options={IMPORTANCE_OPTIONS}
+                    value={importanceOf(c.weights?.[key])}
+                    onChange={(v) => upd({ weights: { ...c.weights, [key]: IMPORTANCE[v] } })}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!result && <p className="caption">Loading the NASA layers…</p>}
         {result && (
@@ -185,6 +220,7 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
               {result.candidates.length > 0 && (
                 <p className="caption">
                   Ranked by how well the ground fits across about 900 m around each spot; the figures shown are for the centre cell only.
+                  {weighting ? ` ${weighting}` : ''}
                 </p>
               )}
               {result.candidates.length > 0 && (

@@ -3,7 +3,7 @@
 // Keys a reader does not know are ignored, so older links and older code both keep working. Everything read back from a hash is
 // checked (numbers in range, at most three sites, short plain-text labels); anything malformed
 // is ignored rather than trusted.
-import type { FinderCriteria, Prefer } from './finder'
+import type { FinderCriteria, FinderWeights, Prefer } from './finder'
 import { DEFAULT_ASSUMPTIONS, EARTH_MASKS, OBSERVER_HEIGHTS, SUN_RULES, sunRuleOf, type Assumptions, type SunRule } from './assumptions'
 
 export const SHARE_LAYERS = ['natural', 'elevation', 'slope', 'sunavg', 'earthavg', 'psr', 'finder'] as const
@@ -71,12 +71,21 @@ const minute = (ms: number) => new Date(ms).toISOString().slice(0, 16) + 'Z'
  * Custom finder limits as one value: slope, sunlight min and max (%), sunlight preference
  * (h, l or n), Earth view min and max (%), Earth preference, shadow rule (a any, o outside,
  * i inside) and the distance to shadow in km, or x for no limit. For example 10_35_100_h_90_100_h_o_x.
+ * Four more letters follow when the ranking weights are not the usual ones (see WEIGHT).
  */
 function finderText(f: FinderCriteria): string {
-  return [f.maxSlopeDeg, pct(f.sunMin), pct(f.sunMax), PREFER[f.sunPrefer], pct(f.earthMin), pct(f.earthMax), PREFER[f.earthPrefer], PSR[f.psr], f.maxPsrKm ?? 'x'].join('_')
+  const base = [f.maxSlopeDeg, pct(f.sunMin), pct(f.sunMax), PREFER[f.sunPrefer], pct(f.earthMin), pct(f.earthMax), PREFER[f.earthPrefer], PSR[f.psr], f.maxPsrKm ?? 'x'].join('_')
+  // How much each thing counts, only when something is not the usual: four letters for slope, sunlight, Earth view and shadow.
+  const w = WEIGHT_KEYS.map((k) => weightLetter(f.weights?.[k])).join('')
+  return w === 'nnnn' ? base : `${base}_${w}`
 }
 
-const FINDER = /^(\d{1,2})_(\d{1,3})_(\d{1,3})_([hln])_(\d{1,3})_(\d{1,3})_([hln])_([aoi])_(\d{1,3}|x)$/
+const WEIGHT_KEYS: (keyof FinderWeights)[] = ['slope', 'sun', 'earth', 'psr']
+/** l counts half, n the same, h double. */
+const WEIGHT: Record<string, number> = { l: 0.5, n: 1, h: 2 }
+const weightLetter = (w: number | undefined) => (w === undefined || !Number.isFinite(w) ? 'n' : w < 0.75 ? 'l' : w > 1.5 ? 'h' : 'n')
+
+const FINDER = /^(\d{1,2})_(\d{1,3})_(\d{1,3})_([hln])_(\d{1,3})_(\d{1,3})_([hln])_([aoi])_(\d{1,3}|x)(?:_([lnh]{4}))?$/
 function finderOf(text: string): FinderCriteria | null {
   const m = FINDER.exec(text)
   if (!m) return null
@@ -93,6 +102,7 @@ function finderOf(text: string): FinderCriteria | null {
     earthPrefer: key(PREFER, m[7]),
     psr: key(PSR, m[8]),
     maxPsrKm: m[9] === 'x' ? null : Number(m[9]),
+    ...(m[10] && m[10] !== 'nnnn' ? { weights: Object.fromEntries(WEIGHT_KEYS.map((k, i) => [k, WEIGHT[m[10][i]]])) as FinderWeights } : {}),
   }
 }
 

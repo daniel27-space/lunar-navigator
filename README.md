@@ -17,7 +17,9 @@ Pick any point near the Moon's south pole and any date from 4 January 2024 to 1 
   longest communication outage;
 - **a site finder**: say what the mission needs (slope limit, how much sunlight, how much Earth
   view, in or near permanent shadow) or pick a goal such as "Ice prospecting", and the map
-  shades the ground that qualifies, brightest where it fits best, with a ranked shortlist;
+  shades the ground that qualifies, brightest where it fits best, with a ranked shortlist. With
+  your own limits you can also say what matters most (flat ground, sunlight, Earth view), which
+  changes the order of the shortlist;
 - **when to land**: for any pinned site, the next year on one strip, the best landing dates
   ranked for a 7, 14 or 30-day stay, and the selected date compared with them. Keep one date
   as a baseline and the app states what a slip to another date gains and loses;

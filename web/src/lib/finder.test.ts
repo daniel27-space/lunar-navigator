@@ -111,6 +111,46 @@ describe('site finder', () => {
   })
 })
 
+describe('how much each thing counts in the ranking', () => {
+  // Sunnier ground is steeper: flatness and sunlight pull opposite ways.
+  const g = grid((g, i, _r, c) => {
+    g.sun[i] = c / 39
+    g.slope[i] = (c / 39) * 10
+  })
+  const base: FinderCriteria = { ...open, maxSlopeDeg: 10, sunPrefer: 'high' }
+
+  it('ranks exactly as before when no weights are given, or when all are 1', () => {
+    const plain = runFinder(g, base)
+    const ones = runFinder(g, { ...base, weights: { slope: 1, sun: 1, earth: 1, psr: 1 } })
+    expect(ones.score).toEqual(plain.score)
+    expect(ones.candidates).toEqual(plain.candidates)
+    // a weight that is not a usable number counts as 1 too
+    expect(runFinder(g, { ...base, weights: { slope: NaN, sun: -3 } }).score).toEqual(plain.score)
+  })
+
+  it('moves the best spot towards what counts for more', () => {
+    const sunny = runFinder(g, { ...base, weights: { sun: 2 } }, { maxCandidates: 1 })
+    const flat = runFinder(g, { ...base, weights: { slope: 2 } }, { maxCandidates: 1 })
+    const flat2 = runFinder(g, { ...base, weights: { sun: 0.5 } }, { maxCandidates: 1 })
+    expect(sunny.candidates[0].sun).toBeGreaterThan(0.9)
+    expect(flat.candidates[0].slopeDeg).toBeLessThan(1)
+    expect(flat2.candidates[0].slopeDeg).toBeLessThan(1)
+  })
+
+  it('changes the order only: the same ground passes whatever the weights', () => {
+    const plain = runFinder(g, base)
+    const weighted = runFinder(g, { ...base, weights: { slope: 0.5, sun: 2 } })
+    expect(weighted.eligibleKm2).toBe(plain.eligibleKm2)
+    expect(Array.from(weighted.score, (v) => v > 0)).toEqual(Array.from(plain.score, (v) => v > 0))
+  })
+
+  it('does not fail when every weight is nothing', () => {
+    const r = runFinder(g, { ...base, weights: { slope: 0, sun: 0 } })
+    expect(r.candidates.length).toBeGreaterThan(0)
+    expect(r.candidates[0].score).toBeLessThanOrEqual(1)
+  })
+})
+
 describe('site finder on the published layers', () => {
   const dir = new URL('../../public/data/', import.meta.url)
   const rgba = (f: string) => {
