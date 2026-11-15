@@ -143,6 +143,8 @@ interface State {
   setPlaying: (p: boolean) => void
   setRate: (r: number) => void
   setLayer: (l: LayerMode) => void
+  /** Turns the site finder off if it is on; any other map layer is left alone. */
+  leaveFinder: () => void
   addPin: (p: Omit<Pin, 'id' | 'label' | 'slot'> & { label?: string }) => void
   removePin: (id: number) => void
   setActivePin: (id: number | null) => void
@@ -294,6 +296,12 @@ export const useStore = create<State>((set, get) => ({
   setPlaying: (playing) => set({ playing }),
   setRate: (rate) => set({ rate }),
   setLayer: (layer) => set({ layer }),
+  // The finder greys out all ground that does not fit, and stays on until it is switched off.
+  // People pick a spot, move on, and the grey veil stays over the Moon. So it goes off here
+  // when its panel is closed, when a mission view opens, and when the header's South Pole or
+  // Whole Moon is pressed. Pinning from the shortlist does not call this: picking several
+  // spots to compare is what the finder is for.
+  leaveFinder: () => set((s) => (s.layer === 'finder' ? { layer: 'natural' } : s)),
   addPin: (p) =>
     set((s) => {
       const id = nextId++
@@ -354,7 +362,10 @@ export const useStore = create<State>((set, get) => ({
   showcasePhase: null,
   showcaseSeq: 0,
   showcaseHome: null,
-  startShowcase: (showcase, showcasePhase) => set((s) => ({ showcase, showcasePhase, showcaseSeq: s.view.seq, tab: 'sites' })),
+  startShowcase: (showcase, showcasePhase) => {
+    get().leaveFinder()
+    set((s) => ({ showcase, showcasePhase, showcaseSeq: s.view.seq, tab: 'sites' }))
+  },
   setShowcase: (p) => set(p.showcasePhase === 'ground' ? { ...p, showcaseUp: true } : p.showcasePhase === null ? { ...p, showcaseUp: false } : p),
   showcaseUp: false,
   // From the ground scene or the approach down to it, closing plays the way out; earlier, the camera

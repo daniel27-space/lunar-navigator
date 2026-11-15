@@ -909,6 +909,7 @@ export default function App() {
               ]}
               value={viewKind === 'pole' || viewKind === 'globe' ? viewKind : null}
               onChange={(k) => {
+                useStore.getState().leaveFinder()
                 later(() => goTo({ kind: k }))
                 setMenu(null)
               }}

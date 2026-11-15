@@ -687,6 +687,20 @@ h2.panel-head {
   line-height: var(--lh-lg);
   font-weight: var(--fw-semibold);
 }
+/* The finder's head: its question, and the close button at the right as on the mission panel. */
+.finder-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+}
+.finder-head h2 {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-lg);
+  line-height: var(--lh-lg);
+  font-weight: var(--fw-semibold);
+}
 .panel-body {
   display: flex;
   flex-direction: column;
@@ -2495,6 +2509,9 @@ body[data-over='marker'] .viewport canvas {
   h2.panel-head,
   .hint {
     padding: var(--sp-2) var(--sp-3);
+  }
+  .finder-head {
+    padding: 0 var(--sp-1) 0 var(--sp-3);
   }
   /* Showcase on a phone: the craft in the space above the time bar, the facts in the sheet. */
   .mission-hero {

@@ -40,6 +40,7 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
   const set = useStore((s) => s.setFinder)
   const applyPreset = useStore((s) => s.applyPreset)
   const planner = useStore((s) => s.mode === 'plan')
+  const leave = useStore((s) => s.leaveFinder)
   const blurb = PRESETS.find((p) => p.id === preset)?.blurb ?? 'Your own limits.'
 
   const limits: [string, number][] = result
@@ -72,7 +73,12 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
   return (
     <aside className="panel finder" aria-label="Site finder">
       <p className="peek-line hero">{area}</p>
-      <h2 className="panel-head">What do you need from a site?</h2>
+      <header className="panel-head finder-head">
+        <h2>What do you need from a site?</h2>
+        <button type="button" className="btn ghost icon" aria-label="Close the site finder" onClick={leave}>
+          ×
+        </button>
+      </header>
       <div className="panel-body">
         <div className="group">
           <Segmented
