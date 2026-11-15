@@ -1020,7 +1020,9 @@ h2.panel-head {
   font-weight: var(--fw-medium);
   color: var(--text-1);
 }
-.sites .tabs.panel-head {
+/* The tabs stick below the head row only when that row is there (it shows when a setting is not the default);
+   otherwise they would sit a row too low and cover the first site's name. */
+.sites .sites-head ~ .tabs.panel-head {
   top: var(--sites-head-h);
 }
 .assume {

@@ -338,3 +338,17 @@ Built in `web/src/App.css`, `App.tsx`, `ui/*`, `lib/format.ts`. Where the build 
 - `web/index.html` needs `viewport-fit=cover` in the viewport meta for the `env(safe-area-inset-*)` paddings to take effect on notched phones; without it the browser keeps the page inside the safe area itself.
 - The finder's map colours in the terrain shader still end in the old lemon; the panel legend uses `--data-fit-ramp`. Only the permanent-shadow overlay colour was changed in the shader.
 - Preset names in `lib/finder.ts` are unchanged; the short names ("Solar lander") are mapped in `ui/FinderPanel.tsx`.
+
+## 11. Changes of 15 Nov 2026 (polish pass)
+
+No new tokens. What changed, and the rule behind each:
+
+- **Mission panel as a cover.** The picture runs edge to edge at the top and fades into the panel (the mask is on the image only, so the credit stays readable). Then the name at `--fs-xl`, an uppercase caption with operator and kind, and a strip of three facts every mission has: date, craft height, country. The fact list below drops what the strip and caption already say. On a phone the name comes first so it shows in the minimised sheet.
+- **Site card headline.** One sentence under the header: the share of the 60 days in sunlight at `--fs-xl`, then Earth in `--text-2`. It states and does not judge (`ui/siteSentence.ts`). In Explorer the Sun and Earth elevation asides are hidden.
+- **Two views that differ at a glance.** The view's name is a pill beside the title; planner panels use `--r-md` and `--border-strong`. In Explorer the corner legend shows only while it is a colour key.
+- **"Map layers" label** is joined onto the left end of its segmented control (`--surface-2`), so it reads over lit ground.
+- **Guide and welcome dots:** done is `--text-3`, the current step is a longer `--accent` bar, the tick is `--accent`. `--data-ok` green stays reserved for landed missions.
+- **Sun and Earth edge chips** (`scene/SkyCompass.*`): a 24 px pill at the edge of the 3D view with a disc in `--data-sun` or `--data-earth`, the body's name and a wedge pointing to it; shown only while the body is off screen or behind the Moon. Not clickable.
+- **Sun in the mission view** has a soft glare from the same texture as the globe view; nothing animates.
+- **Phone:** the sheet starts at peek; the time bar is one row with a short date ("15 Nov 04:58 UTC", still UTC); the 3D view ends above the time bar; guide links are `--touch` high.
+- **Welcome:** "Skip to the Moon" goes straight to the Explorer view; the Explorer card is marked "Recommended for a first visit" with an `--accent` border.

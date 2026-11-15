@@ -170,6 +170,11 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
           {fmtSpan(sites[0].series.t0Ms, WINDOW_DAYS)} · {terrainUsed}
           {playing ? ' · fixed period' : ''}
         </p>
+        {/* Beside the rows it filters. */}
+        <label className="check">
+          <input type="checkbox" checked={onlyDiff} onChange={(e) => setOnlyDiff(e.target.checked)} />
+          <span>Show only differences</span>
+        </label>
         {shown.map((m) => {
           const equal = aboutEqual(m)
           const hint = m.higherIsBetter ? 'higher is better for this mission' : 'lower is better for this mission'
@@ -201,10 +206,6 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
       <details className="disclosure">
         <summary>Details</summary>
         <div className="cmp-details">
-          <label className="check">
-            <input type="checkbox" checked={onlyDiff} onChange={(e) => setOnlyDiff(e.target.checked)} />
-            <span>Show only differences</span>
-          </label>
           <ul className="cmp-sitelist">
             {sites.map((a) => (
               <li key={a.pin.id}>
