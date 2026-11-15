@@ -12,7 +12,7 @@
 // `arrivedSeq`; any camera request that is not part of the sequence cancels it.
 import { useMemo, useCallback, useEffect, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
-import { fmtMissionDate } from '../lib/format'
+import { fmtDay, fmtMissionDate } from '../lib/format'
 import { defaultModel, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
 import { subLunarLonDeg } from '../scene/landers/earth'
 import { restNote, groundStyle } from '../scene/landers/ground'
@@ -205,6 +205,7 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
             ? `Skyline, Sun and Earth: real directions and sizes for this site and time. Ground near the craft is illustrative.`
             : `The Sun is below the skyline here now: soft fill light shows the craft. Skyline and Earth are real; the ground is illustrative.`}
         </p>
+        <p>Sky for {fmtDay(clock)} UTC, the date on the time bar, not the landing day.</p>
         <p className="phone-only">
           {sky.sun.up ? `Skyline, Sun and Earth are real, at true size; ground is illustrative.` : `Sun is down: fill light. Skyline and Earth are real; ground is illustrative.`}
         </p>

@@ -1,11 +1,18 @@
 // Gathers what the scenario export needs from the pinned sites and the store, and hands the
 // finished text to the browser as a download. The text itself is built in lib/exportScenario.ts.
 import { scenarioCsv, scenarioFileName, type ExportStays, type ScenarioInput } from '../lib/exportScenario'
+import type { FinderCriteria } from '../lib/finder'
 import { assumptionsOf, useStore } from '../store'
 import { SITE_LETTERS } from './controls'
 import { TERRAIN, TIER_NOTE } from './tiers'
 import { WINDOW_DAYS, type SiteAnalysis } from './useSiteAnalysis'
 import { MISSION } from './verdictSentence'
+
+const pct = (share: number) => `${Math.round(share * 100)}%`
+/** Custom finder limits written out, so the file records what the shortlist was ranked against. */
+function customGoal(f: FinderCriteria): string {
+  return `Custom limits: slope at most ${f.maxSlopeDeg} deg, sunlight ${pct(f.sunMin)} to ${pct(f.sunMax)}, Earth view ${pct(f.earthMin)} to ${pct(f.earthMax)}, permanent shadow ${f.psr}${f.maxPsrKm !== null ? `, within ${f.maxPsrKm} km of shadow` : ''}`
+}
 
 export function scenarioInput(sites: SiteAnalysis[], stays?: ExportStays): ScenarioInput {
   const s = useStore.getState()
@@ -14,7 +21,7 @@ export function scenarioInput(sites: SiteAnalysis[], stays?: ExportStays): Scena
     clockMs: s.tMs,
     periodStartMs: sites[0].series.t0Ms,
     periodDays: WINDOW_DAYS,
-    goal: (MISSION[s.preset] ?? MISSION.custom)[1],
+    goal: s.preset === 'custom' ? customGoal(s.finder) : (MISSION[s.preset] ?? MISSION.custom)[1],
     assumptions: assumptionsOf(s),
     kernels: sites[0].ephem.kernels ?? [],
     sites: sites.map((a) => ({

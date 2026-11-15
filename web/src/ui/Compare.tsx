@@ -3,7 +3,7 @@
 // details stay folded away.
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { assumptionsText } from '../lib/assumptions'
-import { fmtAngle, fmtCoord, fmtElevation, fmtMeasure, fmtPeriod, fmtSpan } from '../lib/format'
+import { fmtAngle, fmtCoord, fmtDay, fmtElevation, fmtMeasure, fmtPeriod, fmtSpan } from '../lib/format'
 import { measures, type Measure, type SiteFacts } from '../lib/verdict'
 import { useAssumptions, useStore } from '../store'
 import { Badge, Segmented, SITE_LETTERS } from './controls'
@@ -134,7 +134,7 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
           {v.leader >= 0 && <Badge slot={sites[v.leader].pin.slot} />} {v.text}
         </p>
         <p className="caption">
-          {v.sub} Judged for:{' '}
+          Over the 60 days from {fmtDay(sites[0].series.t0Ms)}. {v.sub} Judged for:{' '}
           <button
             type="button"
             className="link"

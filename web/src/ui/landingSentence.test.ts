@@ -19,6 +19,13 @@ const ice = { sunHigh: false, earthHigh: true }
 const later = T + 40 * 86400000
 
 describe('landingSentence', () => {
+  it('says "that is the selected time" only for the very same start, and names a short night five hours away', () => {
+    expect(landingSentence(stay({}), stay({}), 14, solar)).toBe('Landing 3 Mar 2027 gives 14 days of unbroken sunlight. That is the selected time.')
+    expect(landingSentence(stay({}), stay({ startMs: T - 5 * 3600000, sunShare: 333 / 336, longestDarkH: 3 }), 14, solar)).toBe(
+      'Landing 3 Mar 2027 gives 14 days of unbroken sunlight; the selected time is almost as good, with one night of 3.0 hours.',
+    )
+  })
+
   it('compares the best stay with the selected time', () => {
     expect(landingSentence(stay({}), stay({ startMs: later, sunShare: 6 / 14, longestDarkH: 120 }), 14, solar)).toBe(
       'Landing 3 Mar 2027 gives 14 days of unbroken sunlight; at the selected time you would get 6.0 days and a night of 5.0 days.',

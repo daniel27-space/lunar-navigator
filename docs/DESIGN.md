@@ -351,10 +351,11 @@ No new tokens. What changed, and the rule behind each:
 - **Sun and Earth edge chips** (`scene/SkyCompass.*`): a 24 px pill at the edge of the 3D view with a disc in `--data-sun` or `--data-earth`, the body's name and a wedge pointing to it; shown only while the body is off screen or behind the Moon. Not clickable.
 - **Sun in the mission view** has a soft glare from the same texture as the globe view; nothing animates.
 - **Phone:** the sheet starts at peek; the time bar is one row with a short date ("15 Nov 04:58 UTC", still UTC); the 3D view ends above the time bar; guide links are `--touch` high.
-- **Welcome:** "Skip to the Moon" goes straight to the Explorer view; the Explorer card is marked "Recommended for a first visit" with an `--accent` border.
+- **Welcome:** "Skip to the Moon" goes straight to the Explorer view with no guide (the tour is a link in the empty sites panel and in the menu); the Explorer card is marked "Recommended for a first visit" with an `--accent` border.
 - **Data and method** (`ui/DataMethod.*`): one dialog with the method, the headline checks, the NASA data used and what is generated. Opened from the corner card's credit line and from the top of the settings in the menu. New token `--scrim` (dims the app behind a dialog).
 - **Planner site card:** the Sun and Earth heights in the two "now" rows are `--fs-md`, medium, `--text-1`; Explorer hides them.
 - **New tokens:** `--fs-display: 28px` / `--lh-display: 32px`, used only for the mission name in the mission panel. On phones `--fs-cap` is 12 px.
 - **Explorer time bar** has no speed chips; the speed is under Guides and settings. (Departs from section 5's time bar spec, for Explorer only.)
 - **Explorer site card** starts with the Horizon view closed.
 - **Mission view light:** the Sun's light comes from its real height (floor 1.5 degrees), so shadows have their real length; level ground dims to about half below 5 degrees. Day and night lights are mixed by the share of the Sun's disc above the skyline, so sunrise and sunset are gradual. The night fill light stays, so the craft can always be seen.
+- **After the simulated-user test:** "Find a site" carries a sliders icon (24 px grid, stroke 1.5, `currentColor`), not a magnifying glass. The corner legend adds the marker key (landed, lost on landing, planned) on the Whole Moon view. A site card's period heading ends with "drag to move the clock". A new point is named by its badge letter.

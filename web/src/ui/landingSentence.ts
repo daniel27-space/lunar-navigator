@@ -40,9 +40,12 @@ export function landingSentence(best: WindowStats | null, selected: WindowStats 
   else lead = best.sunShare === 0 ? `Landing ${d} gives ${days} days without direct sunlight` : `Landing ${d} ranks best, sunlit for ${sunTime(best)} of ${days} days`
 
   if (!selected) return `${lead}; the selected time is outside the period that can be checked.`
-  if (Math.abs(selected.startMs - best.startMs) < 6 * 3600000) return `${lead}. That is the selected time.`
+  // Only the very same start: within a few hours the selected stay can still hold a short night.
+  if (selected.startMs === best.startMs) return `${lead}. That is the selected time.`
 
   const diff = differs(best, selected)
+  if (!diff.sun && !diff.earth && best.sunShare >= FULL && selected.longestDarkH > 0)
+    return `${lead}; the selected time is almost as good, with one night of ${fmtDurationWords(selected.longestDarkH)}.`
   if (!diff.sun && !diff.earth && Math.abs(fitScore(best, wants) - fitScore(selected, wants)) < 0.03) return `${lead}; the selected time is as good.`
 
   const gap =

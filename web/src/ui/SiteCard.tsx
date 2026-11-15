@@ -240,7 +240,9 @@ export function SiteCard({ a, active, all }: Props) {
       </div>
 
       <div>
-        <h3 className="section period">{fmtPeriod(series.t0Ms, WINDOW_DAYS)}</h3>
+        <h3 className="section period">
+          {fmtPeriod(series.t0Ms, WINDOW_DAYS)} <span className="drag-hint">· drag to move the clock</span>
+        </h3>
         <SiteTimeline sites={[a]} />
       </div>
 

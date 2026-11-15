@@ -2,7 +2,7 @@
 // use this, so they always show the same numbers; horizons are cached because they are the
 // slow part.
 import { useMemo } from 'react'
-import { skyAt, type Ephem, type Sky } from '../lib/ephem'
+import { ephemEndMs, skyAt, type Ephem, type Sky } from '../lib/ephem'
 import { upVector } from '../lib/geo'
 import type { GlobalDem } from '../lib/globalDem'
 import { computeHorizon, discVisibleFraction, horizonAt, type Horizon } from '../lib/horizon'
@@ -50,6 +50,16 @@ export interface SiteAnalysis {
 
 const horizons = new Map<string, Horizon>()
 
+/**
+ * The next change of state after tMs: looked for in the chart's own period first, then in the
+ * period after it. Without the second search a countdown read near the end of the chart said
+ * "more than 60 days" when the change was only just past the chart's end.
+ */
+export function changeAhead<S extends Pick<Series, 't0Ms' | 'stepMs' | 'count'>>(series: S, ahead: S | null, tMs: number, now: boolean, test: (s: S, i: number) => boolean): NextChange {
+  const a = changeAfter(series as unknown as Series, tMs, now, (i) => test(series, i))
+  return a.inHours !== null || !ahead ? a : changeAfter(ahead as unknown as Series, tMs, now, (i) => test(ahead, i))
+}
+
 export function useSiteAnalysis(
   pin: Pin | null,
   ephem: Ephem,
@@ -94,6 +104,15 @@ export function useSiteAnalysis(
     () => (fixed ? computeSeries(ephem, fixed.horizon, fixed.hM, windowStart, windowStart + WINDOW_DAYS * DAY, STEP_MS) : null),
     [ephem, fixed, windowStart],
   )
+  // Sixty more days past the chart, searched only for the next rise or set, so a countdown read
+  // near the end of the chart still looks a full period ahead. It stops where the Sun and Earth table ends.
+  const ahead = useMemo(
+    () =>
+      fixed
+        ? computeSeries(ephem, fixed.horizon, fixed.hM, windowStart + WINDOW_DAYS * DAY + STEP_MS, Math.min(windowStart + 2 * WINDOW_DAYS * DAY, ephemEndMs(ephem)), STEP_MS)
+        : null,
+    [ephem, fixed, windowStart],
+  )
   const summary = useMemo(() => (series ? summarise(series, criteria) : null), [series, criteria])
 
   if (!pin || !fixed || !series || !summary) return null
@@ -112,8 +131,8 @@ export function useSiteAnalysis(
     sunFrac,
     earthClear,
     // The state now is judged from the same two figures the card prints, by the same rules as the period.
-    sunNext: changeAfter(series, tMs, sunFrac >= criteria.minSunFrac, (i) => isSunlit(series, i, criteria)),
-    commNext: changeAfter(series, tMs, earthClear >= criteria.earthMaskDeg, (i) => hasComm(series, i, criteria)),
+    sunNext: changeAhead(series, ahead, tMs, sunFrac >= criteria.minSunFrac, (s, i) => isSunlit(s, i, criteria)),
+    commNext: changeAhead(series, ahead, tMs, earthClear >= criteria.earthMaskDeg, (s, i) => hasComm(s, i, criteria)),
   }
 }
 

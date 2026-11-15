@@ -1,7 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, invalidate } from '@react-three/fiber'
 import * as THREE from 'three'
-import { fmtDateTime, fmtTick } from './lib/format'
+import { fmtDateTime, fmtLat, fmtLon, fmtTick } from './lib/format'
 import { bodyVectors, clockRange, loadEphem, type Ephem } from './lib/ephem'
 import { loadFinderGrid, PRESETS, runFinder, type Candidate, type FinderGrid } from './lib/finder'
 import { latLonOf, sitePosKm, SUN_RADIUS_KM, unit, type Vec3 } from './lib/geo'
@@ -389,6 +389,11 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
       {sites.length === 0 && waiting.length === 0 && (
         <div className="empty">
           <p>Click or tap the surface, or a mission marker, to pin a point. Pin two or three to compare them.</p>
+          <p>
+            <button type="button" className="link" onClick={() => startGuide('basics')}>
+              Take the 1-minute tour
+            </button>
+          </p>
           <details className="disclosure pro-only" onClick={(e) => e.stopPropagation()}>
             <summary>Add a point by coordinates</summary>
             <AddByCoords onAdd={onAddCoords} />
@@ -613,7 +618,12 @@ export default function App() {
   const later = useStore((s) => s.whenShowcaseClosed)
   const selectMission = useCallback(
     (m: Mission) => later(() => {
-      pick(m.lat, m.lon, m.name)
+      // A mission that is already pinned is shown again, not pinned a second time (picking it
+      // twice, or typing in the closed menu, used to fill all three places with the same site).
+      const s0 = useStore.getState()
+      const had = s0.pins.find((p) => s0.pinMission[p.id] === m.id)
+      if (had) s0.setActivePin(had.id)
+      else pick(m.lat, m.lon, m.name)
       if (terrain && (terrainTier(terrain, m.lat, m.lon) !== 'none' || patchIdFor(m.lat, m.lon))) {
         goTo({ kind: 'site', lat: m.lat, lon: m.lon, hM: elevation(m.lat, m.lon) })
       } else {
@@ -621,7 +631,7 @@ export default function App() {
       }
       // The showcase opens over the site; the pin underneath remembers which mission it is.
       const st = useStore.getState()
-      if (st.activePin !== null) st.linkMission(st.activePin, m.id)
+      if (!had && st.activePin !== null) st.linkMission(st.activePin, m.id)
       // The mission view follows once this flight has ended (ui/Showcase.tsx drives the sequence).
       st.startShowcase(m.id, 'flight')
     }),
@@ -674,7 +684,7 @@ export default function App() {
   const pickCandidates = useCallback(
     (ks: Candidate[], fly = true) => later(() => ks.forEach((k) => {
       const name = PRESETS.find((p) => p.id === preset)?.short ?? 'Custom'
-      pick(k.lat, k.lon, `${name} #${k.rank}`)
+      pick(k.lat, k.lon, `${name} #${k.rank} (${fmtLat(k.lat)}, ${fmtLon(k.lon)})`)
       // Remember that this pin came from the finder: its card opens on "When to land".
       const id = useStore.getState().activePin
       if (id !== null) useStore.getState().markFromFinder(id)
@@ -871,7 +881,7 @@ export default function App() {
                 setMenu(null)
               }}
             >
-              <option value="">Go to a mission site or place…</option>
+              <option value="">Go to a mission or place…</option>
               {(['landed', 'crashed', 'planned'] as const).map((st) => (
                 <optgroup key={st} label={st === 'landed' ? 'Landed' : st === 'crashed' ? 'Lost on landing' : 'Planned (target area)'}>
                   {missions
@@ -980,9 +990,11 @@ export default function App() {
           <i className="brk" />
           <div className="layerbar" data-open={menu === 'layers'}>
             <button className="btn find-btn" aria-pressed={layer === 'finder'} title={`${LAYERS[0].label}. ${LAYERS[0].legend}`} onClick={() => chooseLayer(layer === 'finder' ? 'natural' : 'finder')}>
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <circle cx="7" cy="7" r="4.5" />
-                <path d="M10.5 10.5L14 14" />
+              {/* Sliders, not a magnifying glass: this ranks ground against limits, it is not a search box. */}
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+                <circle cx="15" cy="7" r="2" />
+                <circle cx="9" cy="17" r="2" />
               </svg>
               <span>{LAYERS[0].label}</span>
               <small>{LAYERS[0].hint}</small>
@@ -1030,6 +1042,11 @@ export default function App() {
                   </div>
                 )}
                 <p>{current.legend}</p>
+                {viewKind === 'globe' && (
+                  <p className="marker-key">
+                    <i className="mk ok" /> landed <i className="mk lost" /> lost on landing <i className="mk planned" /> planned
+                  </p>
+                )}
                 <p className="credit-line">
                   Data: NASA LOLA terrain, JPL DE440 Sun and Earth positions, NASA GSFC sunlight maps.{' '}
                   <button type="button" className="link" onClick={() => setAbout(true)}>

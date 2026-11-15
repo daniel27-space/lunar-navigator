@@ -8,7 +8,7 @@ Singapore Local Event. Built from scratch during the hackathon (14–15 November
 
 ## What it does
 
-Pick any point near the Moon's south pole and any date from 2024 to 2036, and see:
+Pick any point near the Moon's south pole and any date from 4 January 2024 to 1 November 2035, and see:
 
 - the surface in 3D, lit by the Sun where it really is, with terrain shadows;
 - where the Sun and Earth sit relative to that point's real terrain horizon;

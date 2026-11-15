@@ -31,7 +31,7 @@ const CARDS: { title: string; text: string; img: string; alt: string }[] = [
   },
   {
     title: 'Stand where others landed',
-    text: 'Visit the sites of 41 missions, from Apollo 11 to the landers planned next, with the Sun and Earth in the sky where they really were.',
+    text: 'Visit the sites of 41 missions, from Apollo 11 to the landers planned next, with the Sun and Earth in the sky for any date you pick.',
     img: 'welcome/4.jpg',
     alt: 'The Apollo 11 lunar module standing on the surface',
   },
@@ -61,6 +61,12 @@ export function Welcome({ ready, error }: { ready: boolean; error?: string | nul
     st.setWelcome(false)
     // Explorers go straight into the hands-on tour; planners go straight to work (guides are in the menu).
     if (mode === 'explore') startGuide('basics')
+  }
+  // The tour stays one press away: in the empty sites panel and under Guides and settings.
+  const skip = () => {
+    const st = useStore.getState()
+    st.setMode('explore')
+    st.setWelcome(false)
   }
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -121,8 +127,8 @@ export function Welcome({ ready, error }: { ready: boolean; error?: string | nul
           )}
           {card && (
             <>
-              {/* Straight to the Moon in the Explorer view. Held until the data is in, because the guide starts with it. */}
-              <button type="button" className="btn ghost" onClick={() => choose('explore')} disabled={!ready}>
+              {/* Straight to the Moon in the Explorer view, with no guide: a skip means skip. Held until the data is in. */}
+              <button type="button" className="btn ghost" onClick={skip} disabled={!ready}>
                 Skip to the Moon
               </button>
               <button type="button" className="btn primary" onClick={() => setI(i + 1)} autoFocus>

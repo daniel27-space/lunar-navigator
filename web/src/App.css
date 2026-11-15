@@ -3361,6 +3361,16 @@ body[data-over='marker'] .viewport canvas {
     display: flex;
   }
 }
+.marker-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+}
+.section .drag-hint {
+  font-weight: var(--fw-regular);
+  color: var(--text-3);
+}
 /* In the planner the Sun and Earth heights on a site card read as figures, not asides. */
 .app[data-mode='plan'] .now .aside {
   font-size: var(--fs-md);

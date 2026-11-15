@@ -184,6 +184,11 @@ export function FinderPanel({ result, onPick, onCompareTop }: Props) {
               </ol>
               {result.candidates.length > 0 && (
                 <p className="caption">
+                  Ranked by how well the ground fits across about 900 m around each spot; the figures shown are for the centre cell only.
+                </p>
+              )}
+              {result.candidates.length > 0 && (
+                <p className="caption">
                   Pick a spot, then see when to land there. Shortlist figures are 18.6-year averages on 300 m cells; a pinned site shows its own
                   period on finer terrain, so its numbers can differ.
                 </p>
