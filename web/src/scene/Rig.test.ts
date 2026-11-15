@@ -2,8 +2,8 @@
 // glitch when going from the south pole to the whole Moon), and must end where they should.
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { R_KM } from '../lib/geo'
-import { reverseTurn, aboveGround, CLEARANCE_KM, nearFor, APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
+import { localFrame, R_KM, sitePosKm } from '../lib/geo'
+import { reverseTurn, aboveGround, CLEARANCE_KM, nearFor, APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt, alongPath, flightSeconds, standSide } from './Rig'
 
 const cameraAt = (pos: number[], up: number[]) => {
   const c = new THREE.PerspectiveCamera()
@@ -76,7 +76,7 @@ describe('camera moves', () => {
     expect(pose.pos.clone().sub(pose.target).dot(pose.up)).toBeGreaterThan(0)
   })
 
-  it('the site pose is unchanged: 26 km up and 48 km out, a two-second move with the usual arc', () => {
+  it('the site pose is unchanged: 26 km up and 48 km out, with the usual arc and a duration that follows the distance', () => {
     const cam = cameraAt(POLE_POSE.pos, POLE_POSE.up)
     const pose = poseFor({ kind: 'site', lat: 26.13, lon: 3.63, hM: -1900, seq: 1 }, cam, new THREE.Vector3(0, 0, -R_KM))
     const off = pose.pos.clone().sub(pose.target)
@@ -209,5 +209,43 @@ describe('camera moves', () => {
     expect(reverseTurn(site, 0.8)).toBe(false)
     expect(reverseTurn(new THREE.Vector3(), 0.2)).toBe(false)
     expect(reverseTurn(new THREE.Vector3(), 0.8)).toBe(false)
+  })
+})
+
+describe('flight pacing and heading', () => {
+  it('starts at 0, ends at 1 and never goes back', () => {
+    for (const [h0, h1] of [[5000, 50], [50, 5000], [300, 300.1], [40, 4]]) {
+      expect(alongPath(0, h0, h1)).toBeCloseTo(0, 9)
+      expect(alongPath(1, h0, h1)).toBeCloseTo(1, 9)
+      for (let e = 0.05; e <= 1; e += 0.05) expect(alongPath(e, h0, h1)).toBeGreaterThan(alongPath(e - 0.05, h0, h1))
+    }
+  })
+
+  it('changes the height by equal ratios in equal steps', () => {
+    const h = (e: number) => 5000 + (50 - 5000) * alongPath(e, 5000, 50)
+    expect(h(0.5) / h(0)).toBeCloseTo(h(1) / h(0.5), 6)
+    expect(h(0.5)).toBeCloseTo(Math.sqrt(5000 * 50), 6)
+  })
+
+  it('takes longer the further and the deeper the flight, within 0.8 to 2.8 seconds', () => {
+    expect(flightSeconds(50, 50, 5)).toBeCloseTo(0.8, 1)
+    expect(flightSeconds(4000, 50, 3000)).toBeGreaterThan(flightSeconds(330, 50, 100))
+    expect(flightSeconds(9000, 1, 5000)).toBe(2.8)
+  })
+
+  it('ends a site flight on the side the camera came from, level with the ground there', () => {
+    const lat = -89
+    const f = localFrame(lat, 40)
+    const site = new THREE.Vector3(...sitePosKm(lat, 40, 0))
+    const u = new THREE.Vector3(...f.u)
+    for (const lon of [40, 130, 220, 310]) {
+      const cam = new THREE.PerspectiveCamera()
+      cam.position.copy(new THREE.Vector3(...sitePosKm(-87, lon, 0)).multiplyScalar(1.1))
+      const side = standSide(cam, new THREE.Vector3(0, 0, -R_KM), site, f)
+      expect(side.length()).toBeCloseTo(1, 9)
+      expect(side.dot(u)).toBeCloseTo(0, 9)
+      // towards the camera, whichever side of the pole it is on
+      expect(side.dot(cam.position.clone().sub(site))).toBeGreaterThan(0)
+    }
   })
 })

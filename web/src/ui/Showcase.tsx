@@ -40,6 +40,10 @@ const LEAVE_MS = 550
 /** The cross-fade starts this long before the approach ends, ms, so the two moves read as one. */
 const OVERLAP_MS = 450
 const APPROACH_MS = 1400
+/** The approach from far away (Rig.tsx gives it 2.4 s), so the ground scene does not fade in over a distant Moon. */
+const FAR_APPROACH_MS = 2400
+/** The length of the approach under way. */
+let approachMs = APPROACH_MS
 /** Longest a queued pick waits for the camera to finish rising after the view has closed, ms. */
 const RISE_LIMIT_MS = 3000
 
@@ -76,6 +80,9 @@ export function useShowcaseSequence() {
       st.setShowcase({ showcasePhase: 'ground', showcaseHome: home, showcaseSeq: st.view.seq })
       return
     }
+    // From the site view the way down is short; asked for from anywhere else it is the long one.
+    const atSite = st.view.kind === 'site' && Math.abs(st.view.lat - pin.lat) < 0.01 && Math.abs(st.view.lon - pin.lon) < 0.01
+    approachMs = atSite ? APPROACH_MS : FAR_APPROACH_MS
     st.goTo({ kind: 'approach', lat: pin.lat, lon: pin.lon, hM: pin.hM })
     st.setShowcase({ showcasePhase: 'approach', showcaseHome: home, showcaseSeq: useStore.getState().view.seq })
   }, [ready, pin])
@@ -85,7 +92,7 @@ export function useShowcaseSequence() {
     if (phase !== 'approach') return
     const up = () => useStore.getState().showcasePhase === 'approach' && useStore.getState().setShowcase({ showcasePhase: 'ground' })
     if (arrived === seq) return void up()
-    const t = setTimeout(up, APPROACH_MS - OVERLAP_MS)
+    const t = setTimeout(up, approachMs - OVERLAP_MS)
     return () => clearTimeout(t)
   }, [phase, arrived, seq])
 

@@ -3299,6 +3299,10 @@ h2.panel-head {
 .welcome-load {
   white-space: nowrap;
 }
+.welcome-load.failed {
+  white-space: normal;
+  color: var(--text-1);
+}
 
 /* The two views differ at a glance: the view's name beside the title, and squarer, firmer panels for the planner. */
 @media (min-width: 761px) {

@@ -331,7 +331,19 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
   }, [pins])
   // Always three calls (hooks cannot be called in a loop of changing length).
   // A point whose terrain is still downloading is not analysed yet (it shows as loading).
-  const ready = p.map((x) => (x && !pending(x.lat, x.lon) ? x : null))
+  // A new pin also waits one frame: working out its horizon takes a moment and would otherwise
+  // hold back the frame that draws its marker, so the click would seem to do nothing.
+  const [seen, setSeen] = useState<ReadonlySet<number>>(() => new Set())
+  useEffect(() => {
+    const ids = new Set(pins.map((x) => x.id))
+    let timer = 0
+    const frame = requestAnimationFrame(() => (timer = window.setTimeout(() => setSeen(ids))))
+    return () => {
+      cancelAnimationFrame(frame)
+      clearTimeout(timer)
+    }
+  }, [pins])
+  const ready = p.map((x) => (x && seen.has(x.id) && !pending(x.lat, x.lon) ? x : null))
   const waiting = p.filter((x, i): x is Pin => x !== null && ready[i] === null)
   const a0 = useSiteAnalysis(ready[0], ephem, terrain, ready[0] ? patchOf(ready[0].lat, ready[0].lon) : NO_PATCHES, global)
   const a1 = useSiteAnalysis(ready[1], ephem, terrain, ready[1] ? patchOf(ready[1].lat, ready[1].lon) : NO_PATCHES, global)
@@ -371,7 +383,7 @@ function SitesPanel({ pins, activePin, ephem, terrain, patchOf, pending, global,
       <AssumptionsHead />
       {waiting.map((x) => (
         <p key={x.id} className="empty loading" role="status">
-          <i className="dot pulse" /> Loading detailed terrain for {x.label}…
+          <i className="dot pulse" /> {pending(x.lat, x.lon) ? 'Loading detailed terrain for' : 'Working out the horizon for'} {x.label}…
         </p>
       ))}
       {sites.length === 0 && waiting.length === 0 && (
@@ -1015,7 +1027,7 @@ export default function App() {
       </div>
 
       {ephem && terrain && !welcome && <Tutorial />}
-      {welcome && <Welcome ready={!!ephem && !!terrain} />}
+      {welcome && <Welcome ready={!!ephem && !!terrain} error={error} />}
       {about && <DataMethod onClose={closeAbout} />}
 
       {hover && (

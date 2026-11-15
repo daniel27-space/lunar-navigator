@@ -52,7 +52,7 @@ const MODES: { id: Mode; title: string; text: string; point: string }[] = [
   },
 ]
 
-export function Welcome({ ready }: { ready: boolean }) {
+export function Welcome({ ready, error }: { ready: boolean; error?: string | null }) {
   const [i, setI] = useState(0)
   const last = CARDS.length
   const choose = (mode: Mode) => {
@@ -110,8 +110,9 @@ export function Welcome({ ready }: { ready: boolean }) {
               <li key={n} className={n === i ? 'now' : n < i ? 'on' : ''} />
             ))}
           </ol>
-          <span className="caption welcome-load" role="status">
-            {ready ? 'Moon ready' : 'Loading the Moon…'}
+          {/* A failed download is said here: the app's own error box is hidden behind these cards. */}
+          <span className={error ? 'caption welcome-load failed' : 'caption welcome-load'} role="status">
+            {error ? `${error}. Reload the page to try again.` : ready ? 'Moon ready' : 'Loading the Moon…'}
           </span>
           {i > 0 && (
             <button type="button" className="btn ghost" onClick={() => setI(i - 1)}>

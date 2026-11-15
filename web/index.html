@@ -4,10 +4,22 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#000000" />
     <title>Lunar Landing Site Navigator</title>
+    <!-- Dark from the first paint, before the app's own styles arrive. -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #000;
+        color: #ccc;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app starts and replaces it. -->
+    <div id="root"><p style="position: fixed; inset: auto 0 45%; text-align: center; font: 14px system-ui, sans-serif">Loading the Moon…</p></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

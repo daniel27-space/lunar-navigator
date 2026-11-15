@@ -62,19 +62,21 @@ export function decodeHeights(rgba: Uint8ClampedArray, n: number, scale = 0.5, o
 
 export async function loadTerrain(base: string): Promise<Terrain> {
   const meta = await (await fetch(`${base}terrain/sp_meta.json`)).json()
-  const levels: Level[] = []
-  for (const l of meta.levels) {
-    const img = await decodePng(`${base}terrain/${l.file}`)
-    levels.push({
-      size: l.size,
-      xMin: l.x_min_m,
-      xMax: l.x_max_m,
-      yMin: l.y_min_m,
-      yMax: l.y_max_m,
-      pixel: l.pixel_m,
-      h: decodeHeights(img.data, l.size * l.size),
-    })
-  }
+  // The tiles download side by side: one after the other, the larger one only started once the smaller had finished.
+  const levels: Level[] = await Promise.all(
+    (meta.levels as { file: string; size: number; x_min_m: number; x_max_m: number; y_min_m: number; y_max_m: number; pixel_m: number }[]).map(async (l) => {
+      const img = await decodePng(`${base}terrain/${l.file}`)
+      return {
+        size: l.size,
+        xMin: l.x_min_m,
+        xMax: l.x_max_m,
+        yMin: l.y_min_m,
+        yMax: l.y_max_m,
+        pixel: l.pixel_m,
+        h: decodeHeights(img.data, l.size * l.size),
+      }
+    }),
+  )
   return { radiusM: meta.radius_m, levels, frame: POLAR_FRAME }
 }
 

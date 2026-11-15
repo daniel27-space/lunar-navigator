@@ -19,7 +19,7 @@ interface Pose {
   minDistance: number
   /** direction the up vector swings through when it has to turn right over */
   via: THREE.Vector3
-  /** how long the move to this pose takes, seconds (default 2) */
+  /** how long the move to this pose takes, seconds (by default it follows the distance and the change of height) */
   seconds?: number
   /** how far the path rises above the straight line mid-way, as a share of its length (default 0.25) */
   lift?: number
@@ -61,6 +61,22 @@ function screenUp(camera: THREE.Camera, target: THREE.Vector3): THREE.Vector3 {
   return camera.up.clone().addScaledVector(view, -camera.up.dot(view)).normalize()
 }
 
+/**
+ * Which side of a site the camera ends on: the side it is already on, so the heading stays the
+ * same through the flight and the ground glides instead of whirling round. (Always standing on
+ * the equator side turned the view by the difference in longitude, which near the pole can be
+ * half a turn.) Seen from straight overhead there is no side, so the bottom of the screen is used.
+ */
+export function standSide(camera: THREE.Camera, target: THREE.Vector3, site: THREE.Vector3, f: ReturnType<typeof localFrame>): THREE.Vector3 {
+  const u = new THREE.Vector3(...f.u)
+  const level = (v: THREE.Vector3) => v.addScaledVector(u, -v.dot(u))
+  const off = camera.position.clone().sub(site)
+  const far = off.length()
+  let side = level(off)
+  if (side.length() < 0.05 * far) side = level(screenUp(camera, target).negate())
+  return side.lengthSq() > 1e-9 ? side.normalize() : new THREE.Vector3(...f.n)
+}
+
 export function poseFor(goal: ViewGoal, camera: THREE.Camera, target: THREE.Vector3): Pose {
   const northUp = camera.up.z > 0
   if (goal.kind === 'pole') {
@@ -96,16 +112,16 @@ export function poseFor(goal: ViewGoal, camera: THREE.Camera, target: THREE.Vect
     // side as the site pose so the camera only sinks and closes in, without swinging round.
     const site = new THREE.Vector3(...sitePosKm(goal.lat, goal.lon, goal.hM))
     const f = localFrame(goal.lat, goal.lon)
-    const pos = site.clone().addScaledVector(new THREE.Vector3(...f.u), APPROACH_KM.up).addScaledVector(new THREE.Vector3(...f.n), APPROACH_KM.out)
+    const pos = site.clone().addScaledVector(new THREE.Vector3(...f.u), APPROACH_KM.up).addScaledVector(standSide(camera, target, site, f), APPROACH_KM.out)
     // From close by it is a short descent; from far away (no detailed terrain, whole-Moon view) allow longer.
     const near = camera.position.distanceTo(site) < 200
     return { pos, target: site, up: new THREE.Vector3(...f.u), minDistance: 1, via: horizontal(pos), seconds: near ? 1.4 : 2.4, lift: near ? 0 : 0.25 }
   }
-  // Fly-in: stop a few tens of km out, looking at the site from the equator side, with the
-  // site's own vertical as up.
+  // Fly-in: stop a few tens of km out, looking at the site from the side the camera came from,
+  // with the site's own vertical as up.
   const site = new THREE.Vector3(...sitePosKm(goal.lat, goal.lon, goal.hM))
   const f = localFrame(goal.lat, goal.lon)
-  const pos = site.clone().addScaledVector(new THREE.Vector3(...f.u), 26).addScaledVector(new THREE.Vector3(...f.n), 48)
+  const pos = site.clone().addScaledVector(new THREE.Vector3(...f.u), 26).addScaledVector(standSide(camera, target, site, f), 48)
   return { pos, target: site, up: new THREE.Vector3(...f.u), minDistance: 4, via: horizontal(pos) }
 }
 
@@ -140,7 +156,26 @@ export function surfaceSlide(
   return q
 }
 
-const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+const ease = (t: number) => t * t * (3 - 2 * t)
+
+/** Height above the ground in view, km: above the looked-at point's radius, or above the sphere when looking at the whole Moon. */
+const heightKm = (p: THREE.Vector3, look: THREE.Vector3) => Math.max(p.length() - (look.length() > 1 ? look.length() : R_KM), 0.5)
+
+/**
+ * How far along a flight the camera is, for eased time `e` (0 to 1), when its height goes from
+ * h0 to h1. Height then changes by equal ratios in equal times, which is what looks like a
+ * steady zoom: changing it by equal amounts makes the Moon sit still and then lunge.
+ */
+export function alongPath(e: number, h0: number, h1: number): number {
+  const r = h1 / h0
+  return Math.abs(Math.log(r)) < 1e-3 ? e : (Math.pow(r, e) - 1) / (r - 1)
+}
+
+/** How long a flight takes, seconds: longer the more the view zooms and the further it travels, within limits. */
+export function flightSeconds(h0: number, h1: number, arcKm: number): number {
+  const len = Math.abs(Math.log(h1 / h0)) + 2 * Math.log(1 + arcKm / (h0 + h1))
+  return THREE.MathUtils.clamp(0.7 + 0.3 * len, 0.8, 2.8)
+}
 
 interface Move {
   /** the request this move answers, reported to the store when it ends */
@@ -150,6 +185,12 @@ interface Move {
   fromTarget: THREE.Vector3
   fromUp: THREE.Vector3
   to: Pose
+  /** heights above the ground at the start and end, km */
+  h0: number
+  h1: number
+  seconds: number
+  /** the point the camera is looking at now, so a new request part-way starts from what is on screen */
+  look: THREE.Vector3
 }
 
 /** The camera is kept at least this far above the ground beneath it, km. */
@@ -199,13 +240,23 @@ export function Rig({ elevation }: RigProps) {
   useEffect(() => {
     const c = controls.current
     if (!c || goal.seq === 0) return
+    const look = (move.current?.look ?? c.target).clone()
+    const to = poseFor(goal, camera, look)
+    const h0 = heightKm(camera.position, look)
+    const h1 = heightKm(to.pos, to.target)
+    // With reduced motion asked for, the view goes straight to where it is going.
+    const still = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
     move.current = {
       seq: goal.seq,
-      t: 0,
+      t: still ? 1 : 0,
       fromPos: camera.position.clone(),
-      fromTarget: c.target.clone(),
+      fromTarget: look.clone(),
       fromUp: camera.up.clone().normalize(),
-      to: poseFor(goal, camera, c.target),
+      to,
+      h0,
+      h1,
+      look,
+      seconds: to.seconds ?? flightSeconds(h0, h1, camera.position.angleTo(to.pos) * R_KM),
     }
     c.enabled = false
     invalidate() // the view only redraws on demand; start the move
@@ -298,8 +349,8 @@ export function Rig({ elevation }: RigProps) {
   useFrame((_, dt) => {
     const m = move.current
     if (!m) return
-    m.t = Math.min(1, m.t + Math.min(dt, 0.05) / (m.to.seconds ?? 2.0))
-    const k = ease(m.t)
+    m.t = Math.min(1, m.t + Math.min(dt, 0.05) / m.seconds)
+    const k = alongPath(ease(m.t), m.h0, m.h1)
     // Direction and distance are interpolated separately, so the path arcs around the Moon
     // instead of cutting through it.
     const fromLen = m.fromPos.length()
@@ -308,6 +359,7 @@ export function Rig({ elevation }: RigProps) {
     const lift = Math.sin(Math.PI * k) * (m.to.lift ?? 0.25) * m.fromPos.distanceTo(m.to.pos)
     camera.position.copy(dir.multiplyScalar(THREE.MathUtils.lerp(fromLen, toLen, k) + lift))
     const target = m.fromTarget.clone().lerp(m.to.target, k)
+    m.look.copy(target)
     camera.up.copy(upAt(m.fromUp, m.to.up, m.to.via, k))
     camera.lookAt(target)
     invalidate() // keep drawing until the move ends
