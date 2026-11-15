@@ -200,20 +200,6 @@ export const GUIDES: Guide[] = [
     ],
   },
   {
-    id: 'slide',
-    title: 'Slide across the surface',
-    about: 'Move along the ground without turning. 20 seconds.',
-    steps: [
-      {
-        kind: 'slide',
-        ask: ['Press the wheel down (or hold the right button) and drag to slide across the surface.', 'Drag with two fingers to slide across the surface.'],
-        hint: ['The wheel is also a button: press it in, hold it and move the mouse. The right button does the same.', 'Keep two fingers the same distance apart and move them together.'],
-        payoff: 'Sliding keeps your height, so you can follow a ridge or a crater rim.',
-        share: (c) => c.camera.slide / NEED.slide,
-      },
-    ],
-  },
-  {
     id: 'missions',
     title: 'Visit a past mission',
     about: 'Fly to a real landing site and stand next to the craft.',
