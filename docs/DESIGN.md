@@ -93,7 +93,7 @@ Paste into `:root` (App.css top). Every literal colour, size or radius in CSS an
 
   /* 3.5 Type: one family, tabular figures on every panel */
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --fs-cap: 11px;  --lh-cap: 16px;  /* axis ticks, chip text. Min size anywhere, incl. SVG */
+  --fs-cap: 11px;  --lh-cap: 16px;  /* axis ticks, chip text. Min size anywhere, incl. SVG; 12px on phones (15 Nov) */
   --fs-sm: 12px;   --lh-sm: 16px;   /* captions, labels, legend */
   --fs-md: 14px;   --lh-md: 20px;   /* body, buttons, values */
   --fs-lg: 16px;   --lh-lg: 24px;   /* panel titles, verdict, h1 */
@@ -354,3 +354,7 @@ No new tokens. What changed, and the rule behind each:
 - **Welcome:** "Skip to the Moon" goes straight to the Explorer view; the Explorer card is marked "Recommended for a first visit" with an `--accent` border.
 - **Data and method** (`ui/DataMethod.*`): one dialog with the method, the headline checks, the NASA data used and what is generated. Opened from the corner card's credit line and from the top of the settings in the menu. New token `--scrim` (dims the app behind a dialog).
 - **Planner site card:** the Sun and Earth heights in the two "now" rows are `--fs-md`, medium, `--text-1`; Explorer hides them.
+- **New tokens:** `--fs-display: 28px` / `--lh-display: 32px`, used only for the mission name in the mission panel. On phones `--fs-cap` is 12 px.
+- **Explorer time bar** has no speed chips; the speed is under Guides and settings. (Departs from section 5's time bar spec, for Explorer only.)
+- **Explorer site card** starts with the Horizon view closed.
+- **Mission view light:** the Sun's light comes from its real height (floor 1.5 degrees), so shadows have their real length; level ground dims to about half below 5 degrees. Day and night lights are mixed by the share of the Sun's disc above the skyline, so sunrise and sunset are gradual. The night fill light stays, so the craft can always be seen.

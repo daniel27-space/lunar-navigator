@@ -123,6 +123,7 @@ export function SiteCard({ a, active, all }: Props) {
   const criteria = useStore((s) => s.criteria)
   const assumptions = useAssumptions()
   const playing = useStore((s) => s.playing)
+  const planner = useStore((s) => s.mode === 'plan')
   const removePin = useStore((s) => s.removePin)
   const setActivePin = useStore((s) => s.setActivePin)
   const { pin, hM, slope, horizon, series, summary, sky, eclipse, sunFrac, earthClear, sunNext, commNext, tier } = a
@@ -142,7 +143,8 @@ export function SiteCard({ a, active, all }: Props) {
   }, [landingFocus, pin.id, focusLanding])
   const missionId = useStore((s) => s.pinMission[pin.id])
   const startShowcase = useStore((s) => s.startShowcase)
-  const pano = panoChoice ?? active
+  // In Explorer it starts closed: it is the most technical part of the card.
+  const pano = panoChoice ?? (active && planner)
   const [tierShort, rough] = TIER_SHORT[tier]
   const until = (event: string, h: number | null) => (h === null ? `${event} ${fmtDuration(null, WINDOW_DAYS)}` : `${event} in ${fmtDuration(h)}`)
   const head = siteSentence(summary, WINDOW_DAYS)

@@ -895,6 +895,11 @@ export default function App() {
                     onChange={setMode}
                   />
                 </div>
+                {/* Explorer's time bar has no speed chips, so the speed is set here. */}
+                <div className="quality explore-speed">
+                  <span>Speed</span>
+                  <Segmented label="Playback speed" options={RATES} value={rate} onChange={setRate} />
+                </div>
                 <label className="quality">
                   <span>3D detail</span>
                   <select value={quality} onChange={(e) => setQuality(e.target.value as Quality)} aria-label="3D detail level">

@@ -59,6 +59,8 @@
   --lh-lg: 24px;
   --fs-xl: 20px;
   --lh-xl: 28px;
+  --fs-display: 28px; /* the mission name in the mission panel, and nothing else */
+  --lh-display: 32px;
   --fw-regular: 400;
   --fw-medium: 500;
   --fw-semibold: 600;
@@ -2069,15 +2071,15 @@ h2.panel-head {
 }
 .showcase-head {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
+  grid-template-columns: 1fr auto;
+  align-items: start;
   gap: 0 var(--sp-2);
   padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
 }
 .showcase-head h2 {
   min-width: 0;
-  font-size: var(--fs-xl);
-  line-height: var(--lh-xl);
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
   font-weight: var(--fw-semibold);
   overflow-wrap: anywhere;
 }
@@ -2088,6 +2090,14 @@ h2.panel-head {
   line-height: var(--lh-cap);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+}
+.showcase-head .chip {
+  text-transform: none;
+  letter-spacing: 0;
 }
 .chip {
   display: inline-flex;
@@ -2144,8 +2154,8 @@ h2.panel-head {
   color: var(--text-2);
 }
 .showcase-stats dd {
-  font-size: var(--fs-lg);
-  line-height: var(--lh-lg);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-xl);
   font-weight: var(--fw-semibold);
   color: var(--text-1);
   font-variant-numeric: tabular-nums;
@@ -2222,6 +2232,7 @@ h2.panel-head {
     --seg-h: var(--touch);
     --cmp-col: 56px;
     --fs-input: 16px;
+    --fs-cap: 12px; /* the smallest text is a step larger on a phone */
     --phone-timebar: calc(var(--touch) + 2 * var(--sp-1) + 2 * var(--sp-2)); /* one row: the slider's height, the bar's padding and its margins */
   }
   .phone-only {
@@ -3314,6 +3325,18 @@ h2.panel-head {
   .app[data-mode='plan'] .panel-surface {
     border-radius: var(--r-md);
     border-color: var(--border-strong);
+  }
+}
+/* Explorer's time bar is play, slider and date; the speed moves to the menu. */
+.explore-speed {
+  display: none;
+}
+@media (min-width: 761px) {
+  .app[data-mode='explore'] .timebar .rates {
+    display: none;
+  }
+  .app[data-mode='explore'] .explore-speed {
+    display: flex;
   }
 }
 /* In the planner the Sun and Earth heights on a site card read as figures, not asides. */

@@ -612,21 +612,48 @@ function skylineGeometry(sky: SceneSky): THREE.BufferGeometry {
   return geo
 }
 
+/** The lowest height the light is given, degrees. Near the pole the Sun stays below about 1.6 degrees, so this is close to the real thing. */
+export const LOW_SUN_DEG = 1.5
+
 /**
- * Light for the ground scene. On the Moon a camera is exposed for the scene in front of it, so
- * this keeps level ground at a steady brightness whatever the Sun's height, instead of letting
- * it go black as the Sun nears the horizon. The Sun's compass direction is always the real one.
- * Its height is the real one down to 5 degrees; below that the light is kept at 5 degrees so
- * that ground which the app counts as sunlit (for a panel 2 m up) is not drawn black.
+ * Light for the ground scene. The light comes from the Sun's real direction and height, so
+ * shadows have their real length: at 1.5 degrees a 2 m craft throws a shadow about 75 m long.
+ * (Only below 1.5 degrees is the light held at 1.5, so it never runs along the ground.)
+ * On the Moon a camera is exposed for the scene in front of it, so the light is made stronger
+ * as the Sun gets lower and level ground stays visible instead of going black. Down to 5
+ * degrees level ground keeps a steady brightness; below that it is allowed to dim to about half,
+ * because holding it up would turn every upright surface of the craft plain white.
  */
 export function sceneLight(sunElDeg: number): { elDeg: number; sun: number; bounce: number } {
-  const elDeg = Math.max(sunElDeg, 5)
+  const elDeg = Math.max(sunElDeg, LOW_SUN_DEG)
   const s = Math.sin(elDeg * D2R)
-  // level ground receives sun * s: about 1.7 at 30 degrees and above, easing down to 0.6 at 5 degrees
-  const sun = Math.min(Math.max(1.7 / s, 3), 7)
+  // what level ground receives (sun * s): 1.7 from 30 degrees up, 0.6 at 5 degrees, 0.35 at 1.5 degrees
+  const low = 0.35 + (0.25 * (Math.min(elDeg, 5) - LOW_SUN_DEG)) / (5 - LOW_SUN_DEG)
+  const sun = elDeg >= 5 ? Math.min(Math.max(1.7 / s, 3), 7) : low / s
   // sunlit ground throws light back into shadows; more of it reaches the craft when the ground is bright
   const bounce = 0.55 + 0.5 * Math.min(sun * s, 1.7) / 1.7
   return { elDeg, sun, bounce }
+}
+
+/**
+ * How much of daylight the scene shows, 0 to 1: the share of the Sun's disc above the skyline in
+ * its direction. Sunrise and sunset are gradual on the Moon (the disc takes about an hour to
+ * clear a level horizon at the equator, and far longer near the poles), so day and night lights
+ * are mixed by this instead of switching. `up` is the app's own test (half the disc, eclipses
+ * included) and has the last word on which side of half the mix is.
+ */
+export function daylight(sky: Pick<SceneSky, 'sun' | 'horizon' | 'azStepDeg'>): number {
+  let skyline = 0
+  if (sky.horizon && sky.horizon.length > 0) {
+    const n = sky.horizon.length
+    const x = (((sky.sun.az / sky.azStepDeg) % n) + n) % n
+    const i = Math.floor(x)
+    skyline = sky.horizon[i] + (sky.horizon[(i + 1) % n] - sky.horizon[i]) * (x - i)
+  }
+  const share = Math.min(Math.max((sky.sun.el - skyline + sky.sun.radius) / (2 * sky.sun.radius), 0), 1)
+  if (sky.sun.up) return Math.max(share, 0.5)
+  // The app says dark although the disc clears the skyline: Earth is in front of the Sun.
+  return share > 0.75 ? 0 : Math.min(share, 0.5)
 }
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
@@ -827,6 +854,8 @@ function Scene({ model, fallback, baseUrl, seed, style, wrecked, planned, sky, d
   const [skyGroup, setSkyGroup] = useState<THREE.Group | null>(null)
 
   const light = sceneLight(sky.sun.el)
+  // 0 at night, 1 in full daylight, in between while the Sun's disc is crossing the skyline
+  const day = daylight(sky)
   const sunDir = toward(sky.sun.az, light.elDeg)
   const reach = Math.max(14, h * 5)
   const body = (b: { az: number; el: number; radius: number }): { p: V3; r: number } => {
@@ -856,38 +885,31 @@ function Scene({ model, fallback, baseUrl, seed, style, wrecked, planned, sky, d
     <>
       <color attach="background" args={['#000000']} />
       <StandingCamera heightM={h} ground={ground} stand={stand} shift={shift} motion={motion} leaving={leaving} sky={skyGroup} />
-      {sky.sun.up ? (
-        <>
-          {/* Each light has its own key and an explicit colour. Day and night lights are different
-              elements: without keys the night light was reused for the Sun and, losing its colour
-              prop, shone black, so daylight after a night was pitch dark. */}
-          <directionalLight
-            key="sun"
-            color="#ffffff"
-            position={[sunDir[0] * 80, sunDir[1] * 80, sunDir[2] * 80]}
-            intensity={light.sun}
-            castShadow
-            shadow-mapSize={[d.shadow, d.shadow]}
-            shadow-camera-left={-reach}
-            shadow-camera-right={reach}
-            shadow-camera-top={reach}
-            shadow-camera-bottom={-reach}
-            shadow-camera-near={1}
-            shadow-camera-far={200}
-            shadow-bias={-0.0008}
-            shadow-normalBias={0.03}
-          />
-          {/* sunlight bounced back up from the ground, which is what lights the shadowed side of a craft */}
-          <hemisphereLight key="bounce" args={['#2a2d33', ground.albedo, light.bounce]} />
-          <ambientLight key="ambient" color="#ffffff" intensity={0.22} />
-        </>
-      ) : (
-        <>
-          {/* night: soft fill so the craft can be seen, from Earth's side when Earth is up */}
-          <directionalLight key="fill" position={[earthDir[0] * 80, earthDir[1] * 80, earthDir[2] * 80]} intensity={sky.earth.el > 0 ? 0.9 : 0.5} color="#b4c4dc" />
-          <hemisphereLight key="night" args={['#6f7a8c', '#3a3835', 1.3]} />
-        </>
-      )}
+      {/* Day and night lights are both always there and are mixed by how much of the Sun's disc
+          is above the skyline, so sunrise and sunset are gradual. Each light keeps its own key
+          and an explicit colour: without them one was once reused for another and shone black. */}
+      <directionalLight
+        key="sun"
+        color="#ffffff"
+        position={[sunDir[0] * 80, sunDir[1] * 80, sunDir[2] * 80]}
+        intensity={light.sun * day}
+        castShadow
+        shadow-mapSize={[d.shadow, d.shadow]}
+        shadow-camera-left={-reach}
+        shadow-camera-right={reach}
+        shadow-camera-top={reach}
+        shadow-camera-bottom={-reach}
+        shadow-camera-near={1}
+        shadow-camera-far={200}
+        shadow-bias={-0.0008}
+        shadow-normalBias={0.03}
+      />
+      {/* sunlight bounced back up from the ground, which is what lights the shadowed side of a craft */}
+      <hemisphereLight key="bounce" args={['#2a2d33', ground.albedo]} intensity={light.bounce * day} />
+      <ambientLight key="ambient" color="#ffffff" intensity={0.22 * day} />
+      {/* night: soft fill so the craft can be seen, from Earth's side when Earth is up */}
+      <directionalLight key="fill" position={[earthDir[0] * 80, earthDir[1] * 80, earthDir[2] * 80]} intensity={(sky.earth.el > 0 ? 0.9 : 0.5) * (1 - day)} color="#b4c4dc" />
+      <hemisphereLight key="night" args={['#6f7a8c', '#3a3835']} intensity={1.3 * (1 - day)} />
 
       <mesh geometry={groundGeo} receiveShadow>
         <meshStandardMaterial key={wreck ? 'marked' : 'plain'} color={ground.albedo} roughness={1} metalness={0} map={grain} bumpMap={grain} bumpScale={ground.grain} vertexColors={!!wreck} />
@@ -910,9 +932,9 @@ function Scene({ model, fallback, baseUrl, seed, style, wrecked, planned, sky, d
         </mesh>
         {/* The glare around the Sun, as in the globe view. Depth-tested at the disc's distance, so
             the skyline hides it with the disc; it is a still picture and nothing moves. */}
-        {sky.sun.up && (
+        {day > 0 && (
           <sprite position={sunDisc.p} scale={[sunDisc.r * 22, sunDisc.r * 22, 1]}>
-            <spriteMaterial map={sunGlow} transparent depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+            <spriteMaterial map={sunGlow} transparent opacity={day} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
           </sprite>
         )}
         {/* Earth: a small globe lit from the true Sun direction, so its phase is the real one */}
@@ -991,7 +1013,8 @@ export function LanderView({ model, fallback, baseUrl, seed, style, wrecked = fa
       onPointerMove={(e) => {
         const d = drag.current
         if (!d) return
-        stand.current.viewAz = d.az - (e.clientX - d.x) * 0.35
+        // The craft and the ground near it follow the pointer: dragging right carries the camera round to the left.
+        stand.current.viewAz = d.az + (e.clientX - d.x) * 0.35
         stand.current.eye = clamp(d.eye + (e.clientY - d.y) * 0.03, lim.eye)
         redraw.current()
       }}

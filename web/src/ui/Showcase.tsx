@@ -269,15 +269,17 @@ export function ShowcasePanel({ mission: m, baseUrl }: { mission: Mission; baseU
       )}
       <header className="panel-head showcase-head">
         <h2>{m.name}</h2>
-        <span className="chip">
-          <i className="dot" style={{ background: STATUS_COLOR[m.status] }} />
-          {STATUS_WORD[m.status]}
-        </span>
         <button type="button" className="btn ghost icon" aria-label="Close mission details" onClick={close}>
           ×
         </button>
         <p className="caption">
-          {m.agency} · {m.kind}
+          <span className="chip">
+            <i className="dot" style={{ background: STATUS_COLOR[m.status] }} />
+            {STATUS_WORD[m.status]}
+          </span>
+          <span>
+            {m.agency} · {m.kind}
+          </span>
         </p>
       </header>
       <div className="panel-body showcase-body">

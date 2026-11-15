@@ -72,13 +72,6 @@ export const GUIDES: Guide[] = [
         share: (c) => c.camera.zoom / NEED.zoom,
       },
       {
-        kind: 'slide',
-        ask: ['Press the wheel down (or hold the right button) and drag to slide across the surface.', 'Drag with two fingers to slide across the surface.'],
-        hint: ['The wheel is also a button: press it in, hold it and move the mouse. The right button does the same.', 'Keep two fingers the same distance apart and move them together.'],
-        payoff: 'Sliding keeps your height, so you can follow a ridge or a crater rim.',
-        share: (c) => c.camera.slide / NEED.slide,
-      },
-      {
         kind: 'pin',
         ask: ['Click any spot on the Moon to pin a site there.', 'Tap any spot on the Moon to pin a site there.'],
         hint: ['A single click without dragging. Bright ridges and dark crater floors make good first picks.', 'A single tap without dragging.'],
@@ -168,6 +161,13 @@ export const GUIDES: Guide[] = [
         skipIfMet: true,
       },
       {
+        kind: 'slide',
+        ask: ['Press the wheel down (or hold the right button) and drag to slide across the surface.', 'Drag with two fingers to slide across the surface.'],
+        hint: ['The wheel is also a button: press it in, hold it and move the mouse. The right button does the same.', 'Keep two fingers the same distance apart and move them together.'],
+        payoff: 'Sliding keeps your height, so you can move along a ridge to a second place.',
+        share: (c) => c.camera.slide / NEED.slide,
+      },
+      {
         kind: 'pin',
         ask: ['Pin a second site somewhere different, such as a dark crater floor.', 'Pin a second site somewhere different, such as a dark crater floor.'],
         hint: both('Each pin gets a letter and a colour: A, B, C. Three at most.'),
@@ -226,7 +226,7 @@ export function startGuide(id: string) {
 
 const HINT_AFTER_MS = 8000
 /** How long a finished step's result stays up before the next step. */
-const TICK_MS = 3500
+const TICK_MS = 2500
 /** A look-around step moves on once the view has been moved this much (the same units as the camera steps). */
 const LOOKED = 0.15
 
