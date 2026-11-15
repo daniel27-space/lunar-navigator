@@ -3,6 +3,7 @@ import { memo, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { sitePosKm } from '../lib/geo'
+import { insideDisc, MARKER } from './markers'
 
 export interface Mission {
   id: string
@@ -91,8 +92,9 @@ export const Missions = memo(function Missions({ missions, heights, onSelect, on
               }}
               position={at}
               scale={[HIT_SCALE, HIT_SCALE, 1]}
+              userData={MARKER}
               onClick={(e) => {
-                if (e.delta > 4 || !e.object.visible) return
+                if (e.delta > 4 || !e.object.visible || !insideDisc(e)) return
                 e.stopPropagation()
                 onSelect(m)
               }}

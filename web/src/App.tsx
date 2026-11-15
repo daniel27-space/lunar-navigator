@@ -20,6 +20,7 @@ import {
   type Terrain,
 } from './lib/terrain'
 import { Globe } from './scene/Globe'
+import { insideDisc, MARKER } from './scene/markers'
 import { Missions, STATUS_COLOR, type Mission } from './scene/Missions'
 import { MoonTerrain } from './scene/MoonTerrain'
 import { POLE_POSE, Rig } from './scene/Rig'
@@ -209,8 +210,9 @@ function PinMarkers({ elevation }: { elevation: (lat: number, lon: number) => nu
         <sprite key={p.id} position={sitePosKm(p.lat, p.lon, elevation(p.lat, p.lon) + 250)} scale={p.id === active ? [0.05, 0.05, 1] : [0.04, 0.04, 1]}
           renderOrder={6}
           // Clicking a site's badge selects that site (not a new point beside it).
+          userData={MARKER}
           onClick={(e) => {
-            if (e.delta > 4) return
+            if (e.delta > 4 || !insideDisc(e)) return
             e.stopPropagation()
             useStore.getState().setActivePin(p.id)
           }}
@@ -262,8 +264,9 @@ function CandidateMarkers({ candidates, elevation, onPick }: { candidates: Candi
           scale={[0.04, 0.04, 1]}
           renderOrder={5}
           // Clicking the numbered marker pins that shortlisted place (not a new point beside it).
+          userData={MARKER}
           onClick={(e) => {
-            if (e.delta > 4) return
+            if (e.delta > 4 || !insideDisc(e)) return
             e.stopPropagation()
             onPick(k)
           }}

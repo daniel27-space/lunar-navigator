@@ -4,6 +4,7 @@
 // so the two never overlap; the terrain fades into this same shading at its edge (shading.ts).
 import { useMemo } from 'react'
 import * as THREE from 'three'
+import { overMarker } from './markers'
 import type { ThreeEvent } from '@react-three/fiber'
 import { latLonOf, R_KM, type Vec3 } from '../lib/geo'
 import {
@@ -76,6 +77,7 @@ export function Globe({ sunDir, cuts, map, relief, segments, onPick }: Props) {
 
   const handleClick = (ev: ThreeEvent<MouseEvent>) => {
     if (ev.delta > 4) return
+    if (overMarker(ev.intersections)) return // the click belongs to a marker drawn over this ground
     ev.stopPropagation()
     const ll = latLonOf([ev.point.x, ev.point.y, ev.point.z])
     onPick(ll.lat, ll.lon)
