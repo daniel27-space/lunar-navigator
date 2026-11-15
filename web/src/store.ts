@@ -113,6 +113,9 @@ interface State {
   /** interface only: the 3D view is turning, zooming or flying, so frames are drawn more cheaply (scene/MovingDetail.tsx) */
   moving: boolean
   setMoving: (moving: boolean) => void
+  /** interface only: in Explorer, the comparison's table of figures has been opened */
+  compareFigures: boolean
+  setCompareFigures: (on: boolean) => void
   /** simulated seconds per real second */
   rate: number
   layer: LayerMode
@@ -254,6 +257,8 @@ export const useStore = create<State>((set, get) => ({
   playing: false,
   moving: false,
   setMoving: (moving) => set({ moving }),
+  compareFigures: false,
+  setCompareFigures: (compareFigures) => set({ compareFigures }),
   rate: 6 * 3600,
   layer: 'natural',
   quality: initialQuality(),

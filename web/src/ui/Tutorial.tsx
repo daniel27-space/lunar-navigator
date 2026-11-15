@@ -17,6 +17,8 @@ interface Seen {
   layer: string
   finder: unknown
   showcase: boolean
+  /** the comparison's table of figures is showing */
+  figures: boolean
 }
 interface Ctx extends Seen {
   camera: Progress
@@ -37,6 +39,8 @@ interface Step {
   lookAround?: boolean
   /** a step that is already done when it begins is passed over without a tick */
   skipIfMet?: boolean
+  /** how long the result stays up before moving on, ms: longer where there is a sentence to read on the panel */
+  hold?: number
 }
 interface Guide {
   id: string
@@ -150,37 +154,62 @@ export const GUIDES: Guide[] = [
   {
     id: 'compare',
     title: 'Compare sites',
-    about: 'Pin two or three places and see which is better, and why.',
+    about: 'Pin two places and read which is better, and why.',
     steps: [
       {
         kind: 'pin',
-        ask: ['Pin a first site: click anywhere on the Moon.', 'Pin a first site: tap anywhere on the Moon.'],
-        hint: both('A bright ridge is a good first pick.'),
-        payoff: 'One site pinned.',
+        ask: ['Pin a first site: click a bright ridge or crater rim.', 'Pin a first site: tap a bright ridge or crater rim.'],
+        hint: both('Any spot will do. Bright ground gets more sunlight.'),
+        payoff: 'One site pinned. Its card says how much sunlight and Earth view it gets.',
         share: (c) => (c.pins >= 1 ? 1 : 0),
         skipIfMet: true,
       },
       {
-        kind: 'slide',
-        ask: ['Press the wheel down (or hold the right button) and drag to slide across the surface.', 'Drag with two fingers to slide across the surface.'],
-        hint: ['The wheel is also a button: press it in, hold it and move the mouse. The right button does the same.', 'Keep two fingers the same distance apart and move them together.'],
-        payoff: 'Sliding keeps your height, so you can move along a ridge to a second place.',
-        share: (c) => c.camera.slide / NEED.slide,
-      },
-      {
         kind: 'pin',
-        ask: ['Pin a second site somewhere different, such as a dark crater floor.', 'Pin a second site somewhere different, such as a dark crater floor.'],
-        hint: both('Each pin gets a letter and a colour: A, B, C. Three at most.'),
-        payoff: 'With two or more sites the panel becomes a comparison, with a verdict at the top.',
+        ask: ['Now pin somewhere very different: the dark floor of a crater.', 'Now pin somewhere very different: the dark floor of a crater.'],
+        hint: both('Each pin gets a letter and a colour: A, B, C.'),
+        payoff: 'The panel is now a comparison. Read the sentence at its top: it names the better site and says why.',
         share: (c) => (c.pins >= 2 ? 1 : 0),
         skipIfMet: true,
+        hold: 6000,
       },
       {
         kind: 'time',
-        ask: both('Move the clock: drag the time bar, or the white line in the comparison.'),
-        hint: both('The yellow bars show when each site is in sunlight, the blue bars when Earth is in view.'),
-        payoff: 'The rows line the sites up on the same days, so gaps in sunlight or Earth view are easy to spot.',
+        ask: both('In the comparison, drag the white line across the coloured rows.'),
+        hint: both('Each row is one site over the same 60 days. Yellow is sunlight, blue is Earth in view.'),
+        payoff: 'Where one row is yellow and the other is empty, only one site has sunlight then. That is the difference the sentence describes.',
         share: clockMoved,
+        hold: 6000,
+      },
+      {
+        kind: 'pin',
+        ask: both('Press Show the figures, under the rows.'),
+        hint: both('It is the underlined line below the coloured rows.'),
+        payoff: 'One row per measure. The bold value with a dot is the better one, and the arrow says whether more or less is better.',
+        share: (c) => (c.figures ? 1 : 0),
+        skipIfMet: true,
+        hold: 6000,
+      },
+      {
+        kind: 'pin',
+        ask: ['Pin a third site, or remove one with its × button.', 'Pin a third site, or remove one with its × button.'],
+        hint: both('Three sites at most. A removed site can be put back with Undo.'),
+        payoff: 'The sentence and the rows are worked out again for the sites you have.',
+        share: (c) => (c.pins !== c.base.pins || c.newestPin > c.base.newestPin ? 1 : 0),
+      },
+    ],
+  },
+  {
+    id: 'slide',
+    title: 'Slide across the surface',
+    about: 'Move along the ground without turning. 20 seconds.',
+    steps: [
+      {
+        kind: 'slide',
+        ask: ['Press the wheel down (or hold the right button) and drag to slide across the surface.', 'Drag with two fingers to slide across the surface.'],
+        hint: ['The wheel is also a button: press it in, hold it and move the mouse. The right button does the same.', 'Keep two fingers the same distance apart and move them together.'],
+        payoff: 'Sliding keeps your height, so you can follow a ridge or a crater rim.',
+        share: (c) => c.camera.slide / NEED.slide,
       },
     ],
   },
@@ -287,7 +316,8 @@ function TourCard({ guide, step }: { guide: Guide; step: number }) {
   const layer = useStore((s) => s.layer)
   const finder = useStore((s) => s.finder)
   const showcase = useStore((s) => s.showcase !== null)
-  const seen: Seen = { pins, newestPin, tMs, layer, finder, showcase }
+  const figures = useStore((s) => s.mode === 'plan' || s.compareFigures)
+  const seen: Seen = { pins, newestPin, tMs, layer, finder, showcase, figures }
   const [touch] = useState(coarsePointer)
   const which = touch ? 1 : 0
   const steps = guide.steps
@@ -334,7 +364,7 @@ function TourCard({ guide, step }: { guide: Guide; step: number }) {
   // the clock back, say) cancelled the move and the guide sat on "Done" for good.
   useEffect(() => {
     if (!done || !s || s.lookAround) return
-    const t = setTimeout(() => go(step + 1), TICK_MS)
+    const t = setTimeout(() => go(step + 1), s.hold ?? TICK_MS)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done, s, step])

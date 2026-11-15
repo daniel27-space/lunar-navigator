@@ -60,7 +60,9 @@ export function Compare({ sites }: { sites: SiteAnalysis[] }) {
   const assumptions = useAssumptions()
   const playing = useStore((s) => s.playing)
   const planner = useStore((s) => s.mode === 'plan')
-  const [figures, setFigures] = useState(false)
+  // Kept in the store so the Compare guide can tell when the figures have been opened.
+  const figures = useStore((s) => s.compareFigures)
+  const setFigures = useStore((s) => s.setCompareFigures)
   // The terrain behind the figures: one name when every site uses the same, else one per site.
   const sameTerrain = sites.every((a) => TERRAIN[a.tier] === TERRAIN[sites[0].tier])
   const terrainUsed = sameTerrain ? terrainTag(sites[0].tier) : `terrain ${sites.map((a) => `${SITE_LETTERS[a.pin.slot]} ${TERRAIN[a.tier]}`).join(', ')}`
