@@ -379,7 +379,15 @@ export function fetchModel(baseUrl: string, file: string): Promise<THREE.Object3
   const url = `${baseUrl}data/${file}`
   let p = modelFiles.get(url)
   if (!p) {
-    p = import('./landers/loadGlb').then(({ loadGlb }) => loadGlb(url))
+    // A failed download or decode is tried twice more before the stand-in is shown.
+    const attempt = (left: number): Promise<THREE.Object3D> =>
+      import('./landers/loadGlb')
+        .then(({ loadGlb }) => loadGlb(url))
+        .catch((e) => {
+          if (left <= 0) throw e
+          return new Promise<void>((ok) => setTimeout(ok, 800)).then(() => attempt(left - 1))
+        })
+    p = attempt(2)
     modelFiles.set(url, p)
     p.catch(() => modelFiles.delete(url))
   }
@@ -426,8 +434,6 @@ const DETAIL: Record<SceneDetail, { rings: number; around: number; shadow: numbe
   high: { rings: 96, around: 144, shadow: 2048 },
 }
 
-/** The Sun and Earth are drawn this many times their real angular size, so they can be seen. */
-export const DISC_SCALE = 2
 
 const D2R = Math.PI / 180
 /** Unit vector towards a compass direction and elevation: north is -z, east is +x, up is +y. */
@@ -672,7 +678,7 @@ function Scene({ model, fallback, baseUrl, seed, style, sky, detail, stand, shif
   const reach = Math.max(14, h * 5)
   const body = (b: { az: number; el: number; radius: number }): { p: V3; r: number } => {
     const t = toward(b.az, b.el)
-    return { p: [t[0] * BODY_R, t[1] * BODY_R, t[2] * BODY_R], r: BODY_R * Math.tan(b.radius * D2R) * DISC_SCALE }
+    return { p: [t[0] * BODY_R, t[1] * BODY_R, t[2] * BODY_R], r: BODY_R * Math.tan(b.radius * D2R) }
   }
   const sunDisc = body(sky.sun)
   const earthDisc = body(sky.earth)

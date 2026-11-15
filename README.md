@@ -98,8 +98,8 @@ property search, product-comparison sites, sun-planning tools); see
 - At a mission site the horizon uses 80 m terrain out to about 30 km, 160 m to about 60 km and
   the whole-Moon map beyond, so a peak further away than that can be underestimated. The four
   polar landers also have 20 m terrain within 5 km; the 20 m product does not exist elsewhere.
-- In the mission view the skyline, the Sun and the Earth are real for that site and time (the
-  discs are drawn at twice their size). Earth's surface is NASA's Blue Marble image, and
+- In the mission view the skyline, the Sun and the Earth are real for that site and time, and
+  the two discs are drawn at their true size. Earth's surface is NASA's Blue Marble image, and
   its phase and the side it turns towards the Moon are real (to about a degree); its clouds
   are generated, not observed. IM-1 and IM-2 are shown tipped over on ground made for them. The ground near the craft is generated, in three
   styles (mare, highland, polar), because no terrain data exists at that scale.

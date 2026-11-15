@@ -3,7 +3,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { R_KM } from '../lib/geo'
-import { aboveGround, CLEARANCE_KM, nearFor, APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
+import { reverseTurn, aboveGround, CLEARANCE_KM, nearFor, APPROACH_KM, horizontal, POLE_POSE, poseFor, slerpUnit, surfaceSlide, upAt } from './Rig'
 
 const cameraAt = (pos: number[], up: number[]) => {
   const c = new THREE.PerspectiveCamera()
@@ -201,5 +201,13 @@ describe('camera moves', () => {
     expect(nearFor(350)).toBe(1)
     // never further than the camera's own height above the ground
     for (const h of [0.06, 0.5, 3, 40]) expect(nearFor(h)).toBeLessThan(h)
+  })
+
+  it('a left drag that starts above the centre line turns the other way over the surface, never over the whole Moon', () => {
+    const site = new THREE.Vector3(0, 0, -R_KM)
+    expect(reverseTurn(site, 0.2)).toBe(true)
+    expect(reverseTurn(site, 0.8)).toBe(false)
+    expect(reverseTurn(new THREE.Vector3(), 0.2)).toBe(false)
+    expect(reverseTurn(new THREE.Vector3(), 0.8)).toBe(false)
   })
 })

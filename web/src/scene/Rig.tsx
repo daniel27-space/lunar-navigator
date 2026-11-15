@@ -169,6 +169,18 @@ export function nearFor(heightKm: number): number {
   return Math.min(Math.max(heightKm * 0.2, 0.01), 1)
 }
 
+/**
+ * Whether a left drag that starts at this height on the screen should turn the other way.
+ * Orbiting spins the ground about the point at the centre of the screen, so ground beyond that
+ * point (above the centre line) moves against the pointer. Reversing the turn there makes the
+ * ground under the pointer follow it wherever the drag starts. Looking at the whole Moon the
+ * near side is all in front of the centre, so nothing is reversed.
+ * `y` is the pointer's height in the view: 0 at the top, 1 at the bottom.
+ */
+export function reverseTurn(target: THREE.Vector3, y: number): boolean {
+  return target.length() > 1 && y < 0.5
+}
+
 interface RigProps {
   /** elevation in metres above the 1737.4 km sphere at a latitude and longitude */
   elevation?: (lat: number, lon: number) => number
@@ -206,6 +218,10 @@ export function Rig({ elevation }: RigProps) {
     const el = gl.domElement
     let last: { x: number; y: number } | null = null
     const down = (e: PointerEvent) => {
+      if (e.button === 0 && controls.current) {
+        const box = el.getBoundingClientRect()
+        controls.current.reverseHorizontalOrbit = reverseTurn(controls.current.target, (e.clientY - box.top) / box.height)
+      }
       if ((e.button !== 1 && e.button !== 2) || move.current || !controls.current) return
       e.preventDefault()
       last = { x: e.clientX, y: e.clientY }

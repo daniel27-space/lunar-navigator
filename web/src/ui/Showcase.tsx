@@ -13,7 +13,7 @@
 import { useMemo, useCallback, useEffect, useState } from 'react'
 import { skyAt, type Ephem } from '../lib/ephem'
 import { fmtMissionDate } from '../lib/format'
-import { defaultModel, DISC_SCALE, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
+import { defaultModel, fetchModel, LanderView, type Archetype, type ModelState, type SceneSky } from '../scene/LanderModel'
 import { subLunarLonDeg } from '../scene/landers/earth'
 import { restNote, groundStyle } from '../scene/landers/ground'
 import { STATUS_COLOR, type Mission } from '../scene/Missions'
@@ -177,11 +177,11 @@ export function ShowcaseHero({ mission: m, ephem, baseUrl }: { mission: Mission;
       <div className="hero-notes">
         <p className="not-phone">
           {sky.sun.up
-            ? `Skyline, Sun and Earth: real directions for this site and time (discs drawn ${DISC_SCALE}× size). Ground near the craft is illustrative.`
-            : `The Sun is below the skyline here now: soft fill light shows the craft. Skyline and Earth are real (Earth drawn ${DISC_SCALE}× size); the ground is illustrative.`}
+            ? `Skyline, Sun and Earth: real directions and sizes for this site and time. Ground near the craft is illustrative.`
+            : `The Sun is below the skyline here now: soft fill light shows the craft. Skyline and Earth are real; the ground is illustrative.`}
         </p>
         <p className="phone-only">
-          {sky.sun.up ? `Skyline, Sun and Earth are real (${DISC_SCALE}× size); ground is illustrative.` : `Sun is down: fill light. Skyline and Earth are real; ground is illustrative.`}
+          {sky.sun.up ? `Skyline, Sun and Earth are real, at true size; ground is illustrative.` : `Sun is down: fill light. Skyline and Earth are real; ground is illustrative.`}
         </p>
         <p>
           {state === 'loading' && <span role="status">Loading the 3D model…</span>}
